@@ -45,6 +45,9 @@ public enum ErrorCode {
 
     // Company
     COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "CP001", "업체를 찾을 수 없습니다."),
+
+    // Product
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "제품을 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
