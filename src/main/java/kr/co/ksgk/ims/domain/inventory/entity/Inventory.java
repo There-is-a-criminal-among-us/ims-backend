@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.inventory.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,4 +30,23 @@ public class Inventory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @Builder
+    public Inventory(String inventoryDate, Integer quantity, Product product) {
+        this.inventoryDate = inventoryDate;
+        this.quantity = quantity;
+        this.product = product;
+    }
+
+    public void updateQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void updateInventoryDate(String inventoryDate) {
+        this.inventoryDate = inventoryDate;
+    }
+
+    public void updateProduct(Product product) {
+        this.product = product;
+    }
 }
