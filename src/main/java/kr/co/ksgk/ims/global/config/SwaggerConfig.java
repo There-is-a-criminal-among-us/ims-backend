@@ -6,11 +6,15 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
+    @Value("${api.base-url}")
+    private String baseUrl;
 
     @Bean
     public OpenAPI openAPI() {
@@ -22,7 +26,8 @@ public class SwaggerConfig {
                 .scheme("bearer")
                 .bearerFormat("JWT")
         );
-        Server server = new Server().url("http://localhost:8080");
+        Server server = new Server();
+        server.setUrl(baseUrl);
         return new OpenAPI()
                 .info(apiInfo())
                 .components(components)
