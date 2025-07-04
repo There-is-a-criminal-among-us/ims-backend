@@ -1,8 +1,11 @@
 package kr.co.ksgk.ims.domain.company.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -16,4 +19,7 @@ public class Company {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @OneToMany(mappedBy = "company")
+    List<Brand> brands;
 }
