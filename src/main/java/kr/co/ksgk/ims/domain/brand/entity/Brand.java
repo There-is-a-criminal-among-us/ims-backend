@@ -6,8 +6,8 @@ import kr.co.ksgk.ims.domain.product.entity.Product;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -27,5 +27,5 @@ public class Brand {
     private Company company;
 
     @OneToMany(mappedBy = "brand")
-    List<Product> products = new ArrayList<>();
+    Set<Product> products = new HashSet<>();
 }
