@@ -24,22 +24,54 @@ public class Inventory {
     @Column(length = 3, nullable = false)
     private String inventoryDate;
 
-    @Column(nullable = false)
-    private Integer quantity;
+    @Column
+    private Integer stock;
+
+    @Column
+    private Integer outgoing;
+
+    @Column
+    private Integer fulfillment;
+
+    @Column
+    private Integer incoming;
+
+    @Column
+    private Integer returnIncoming;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Builder
-    public Inventory(String inventoryDate, Integer quantity, Product product) {
+    public Inventory(String inventoryDate, Integer stock, Integer outgoing, Integer fulfillment, Integer incoming, Integer returnIncoming, Product product) {
         this.inventoryDate = inventoryDate;
-        this.quantity = quantity;
         this.product = product;
+        this.stock = stock;
+        this.outgoing = outgoing;
+        this.fulfillment = fulfillment;
+        this.incoming = incoming;
+        this.returnIncoming = returnIncoming;
     }
 
-    public void updateQuantity(int quantity) {
-        this.quantity = quantity;
+    public void updateStock(int stock) {
+        this.stock = stock;
+    }
+
+    public void updateOutgoing(int outgoing) {
+        this.outgoing = outgoing;
+    }
+
+    public void updateFulfillment(int fulfillment) {
+        this.fulfillment = fulfillment;
+    }
+
+    public void updateIncoming(int incoming) {
+        this.incoming = incoming;
+    }
+
+    public void updateReturnIncoming(int returnIncoming) {
+        this.returnIncoming = returnIncoming;
     }
 
     public void updateInventoryDate(String inventoryDate) {

@@ -41,8 +41,20 @@ public class InventoryService {
     public InventoryResponse updateInventory(int inventoryId, InventoryRequest request) {
         Inventory inventory = inventoryRepository.findById(inventoryId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVENTORY_NOT_FOUND));
-        if (request.quantity() != null) {
-            inventory.updateQuantity(request.quantity());
+        if (request.stock() != null) {
+            inventory.updateStock(request.stock());
+        }
+        if (request.outgoing() != null) {
+            inventory.updateOutgoing(request.outgoing());
+        }
+        if (request.fulfillment() != null) {
+            inventory.updateFulfillment(request.fulfillment());
+        }
+        if (request.incoming() != null) {
+            inventory.updateIncoming(request.incoming());
+        }
+        if (request.returnIncoming() != null) {
+            inventory.updateReturnIncoming(request.returnIncoming());
         }
         if (request.inventoryDate() != null) {
             inventory.updateInventoryDate(request.inventoryDate());
