@@ -25,4 +25,9 @@ public class CompanyController {
     ResponseEntity<SuccessResponse<?>> getCompanyById(@PathVariable int companyId) {
         return SuccessResponse.ok(companyService.getCompanyById(companyId));
     }
+
+    @GetMapping("/tree")
+    ResponseEntity<SuccessResponse<?>> getCompanyTree() {
+        return SuccessResponse.ok(companyService.getCompanyTree());
+    }
 }
