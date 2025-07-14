@@ -1,11 +1,9 @@
 package kr.co.ksgk.ims.domain.member.dto;
 
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 
 @Getter
-@NoArgsConstructor
 public class MemberSignupRequestDto
 {
     private String username;
@@ -14,5 +12,5 @@ public class MemberSignupRequestDto
     private String company_name;
     private String phone;
     private String note;
-
+    private Role role;
 }
