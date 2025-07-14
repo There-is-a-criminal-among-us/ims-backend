@@ -2,18 +2,20 @@ package kr.co.ksgk.ims.domain.member.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+@AllArgsConstructor //MemberService 에서 builder 사용을 위해 추가
+@Builder    //MemberService 에서 builder 사용을 위해 추가
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member extends BaseEntity {
+public class Member extends BaseEntity
+{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
