@@ -10,4 +10,5 @@ public class MemberLoginResponseDto
 {
     private long id;
     private Role role;
+    private String token;
 }

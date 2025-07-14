@@ -7,6 +7,7 @@ import kr.co.ksgk.ims.domain.member.entity.Member;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
+import kr.co.ksgk.ims.global.jwt.JwtProvider;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class MemberService
 {
     private final MemberRepository memberRepository;
+    private final JwtProvider jwtProvider;
 
     public void signup(MemberSignupRequestDto dto)
     {
@@ -41,6 +43,8 @@ public class MemberService
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        return new MemberLoginResponseDto(member.getId(), member.getRole());
+        String token=jwtProvider.createToken(member.getUsername());
+
+        return new MemberLoginResponseDto(member.getId(),member.getRole(),token);
     }
 }
