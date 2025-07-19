@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.company.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
@@ -35,6 +36,9 @@ public class Company extends BaseEntity {
     private String note;
 
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Brand> brands = new ArrayList<>();
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberCompany> memberCompanies = new ArrayList<>();
