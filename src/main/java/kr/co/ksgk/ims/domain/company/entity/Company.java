@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +15,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Company extends BaseEntity {
 
     @Id
@@ -41,4 +45,8 @@ public class Company extends BaseEntity {
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Invoice> invoices = new ArrayList<>();
+
+    public void markAsDeleted() {
+        this.deletedAt = LocalDateTime.now();
+    }
 }
