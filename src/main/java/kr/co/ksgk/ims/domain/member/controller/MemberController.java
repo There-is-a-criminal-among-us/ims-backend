@@ -42,4 +42,10 @@ public class MemberController
         return  SuccessResponse.ok("logout success");
     }
 
+    @GetMapping("/me")
+    ResponseEntity<SuccessResponse<?>> getMyInfo()
+    {
+        return SuccessResponse.ok(memberService.getMyInfo());
+    }
+
 }
