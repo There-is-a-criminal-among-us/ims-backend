@@ -197,4 +197,11 @@ public class MemberService
         member.changePassword(dto.getNewPassword());
     }
 
+    public void resetPassword(Long id)
+    {
+        Member member=memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        member.resetPassword();
+    }
+
 }

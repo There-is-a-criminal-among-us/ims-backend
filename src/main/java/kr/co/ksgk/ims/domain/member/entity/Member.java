@@ -61,4 +61,9 @@ public class Member extends BaseEntity
     {
         this.password = newPassword;
     }
+
+    public void resetPassword()
+    {
+        this.password="1234";
+    }
 }

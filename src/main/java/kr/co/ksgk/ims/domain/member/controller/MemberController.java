@@ -61,10 +61,18 @@ public class MemberController
         return SuccessResponse.ok(result);
     }
 
-    @PatchMapping("/{id}/password")
+    @PatchMapping("/{id}/change-password")
     ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long id, @RequestBody MemberPasswordChangeRequestDto dto)
     {
         memberService.changePassword(id,dto);
+
+        return SuccessResponse.noContent();
+    }
+
+    @PatchMapping("/{id}/reset-password")
+    ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long id)
+    {
+        memberService.resetPassword(id);
 
         return SuccessResponse.noContent();
     }
