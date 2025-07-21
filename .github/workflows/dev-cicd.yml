@@ -65,7 +65,7 @@ jobs:
             echo "🚀 Redis 컨테이너 배포 중..."
             if [ "$(sudo docker inspect --format='{{.State.Running}}' redis 2>/dev/null)" != "true" ]; then
               sudo docker pull redis:alpine
-              sudo docker run -d --name redis --network ims-network -p 6379:6379 redis:alpine
+              sudo docker run -d --name redis --network ims-network -p 6380:6379 redis:alpine
             fi
             
             echo "🚀 최신 Docker 이미지 Pull 중..."
