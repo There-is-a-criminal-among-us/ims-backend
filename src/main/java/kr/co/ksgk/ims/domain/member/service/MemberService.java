@@ -204,4 +204,11 @@ public class MemberService
         member.resetPassword();
     }
 
+    public void deleteMember(Long id)
+    {
+        Member member=memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        memberRepository.delete(member);
+    }
+
 }
