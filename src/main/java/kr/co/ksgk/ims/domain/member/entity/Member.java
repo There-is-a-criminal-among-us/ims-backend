@@ -1,7 +1,9 @@
 package kr.co.ksgk.ims.domain.member.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -47,4 +49,11 @@ public class Member extends BaseEntity
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberBrand> memberBrands = new ArrayList<>();
+
+    public void update(String name,String phone, String note)
+    {
+        this.name = name;
+        this.phone = phone;
+        this.note = note;
+    }
 }

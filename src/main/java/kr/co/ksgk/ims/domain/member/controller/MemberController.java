@@ -1,17 +1,15 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
+import kr.co.ksgk.ims.domain.member.dto.MemberInfoResponseDto;
 import kr.co.ksgk.ims.domain.member.dto.MemberLoginResponseDto;
 import kr.co.ksgk.ims.domain.member.dto.MemberSignupRequestDto;
 import kr.co.ksgk.ims.domain.member.dto.MemberLoginRequestDto;
+import kr.co.ksgk.ims.domain.member.dto.MemberEditRequestDto;
 import  kr.co.ksgk.ims.domain.member.service.MemberService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,4 +46,12 @@ public class MemberController
         return SuccessResponse.ok(memberService.getMyInfo());
     }
 
+    @PutMapping("/{id}")
+    ResponseEntity<SuccessResponse<?>> editMemberInfo(@PathVariable Long id,MemberEditRequestDto dto)
+    {
+
+        MemberInfoResponseDto response=memberService.editMemberInfo(id,dto);
+
+        return SuccessResponse.ok(response);
+    }
 }

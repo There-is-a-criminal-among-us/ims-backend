@@ -1,10 +1,13 @@
 package kr.co.ksgk.ims.domain.member.service;
 
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginResponseDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberSignupRequestDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginRequestDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberInfoResponseDto;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
+import kr.co.ksgk.ims.domain.company.entity.Company;
+import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
+import kr.co.ksgk.ims.domain.member.dto.*;
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
+import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
@@ -14,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import kr.co.ksgk.ims.domain.member.dto.SimpleInfoDto;
 
 import java.util.List;
 
@@ -23,6 +25,8 @@ import java.util.List;
 public class MemberService
 {
     private final MemberRepository memberRepository;
+    private final CompanyRepository companyRepository;
+    private final BrandRepository brandRepository;
     private final JwtProvider jwtProvider;
 
     public void signup(MemberSignupRequestDto dto)
@@ -81,6 +85,62 @@ public class MemberService
                     member.getCreatedAt().toString(),
                     member.getUpdatedAt().toString()
                 );
+    }
+
+    public MemberInfoResponseDto getMemberInfoById(Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
+                .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
+                .toList();
+
+        List<SimpleInfoDto> brandDtos = member.getMemberBrands().stream()
+                .map(mb -> new SimpleInfoDto(mb.getBrand().getId(), mb.getBrand().getName()))
+                .toList();
+
+        return new MemberInfoResponseDto(
+                member.getId(),
+                member.getUsername(),
+                member.getName(),
+                member.getPhone(),
+                member.getRole(),
+                companyDtos,
+                brandDtos,
+                member.getNote(),
+                member.getCreatedAt().toString(),
+                member.getUpdatedAt().toString()
+        );
+    }
+
+    public MemberInfoResponseDto editMemberInfo(Long id,MemberEditRequestDto dto)
+    {
+        Member member=memberRepository.findById(id).orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        member.getMemberCompanies().clear();
+        member.getMemberBrands().clear();
+
+        List<Company> companyList = companyRepository.findAllById(dto.getManagingCompanies());
+        List<Brand> brandList = brandRepository.findAllById(dto.getManagingBrands());
+
+        for (Company company : companyList)
+        {
+            MemberCompany mc = new MemberCompany(member,company);
+            member.getMemberCompanies().add(mc);
+        }
+
+        for (Brand brand : brandList)
+        {
+            MemberBrand mb = new MemberBrand(member,brand);
+            member.getMemberBrands().add(mb);
+        }
+
+        member.update(dto.getName(), dto.getPhone(), dto.getNote());
+
+        memberRepository.save(member);
+
+        return getMemberInfoById(id);
+
     }
 
 }
