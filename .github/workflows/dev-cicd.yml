@@ -87,7 +87,10 @@ jobs:
             sudo chmod 644 /home/root/ims-dev/src/main/resources/application.yml  # 모든 사용자 읽기 가능, 소유자만 쓰기 가능
             
             echo "🚀 새 컨테이너 실행 중..."
-            sudo docker run -d --log-driver=syslog --name ims-dev --network ims-network -p 8080:8080 \
+            sudo docker run -d --log-driver=syslog --name ims-dev \
+              --network ims-network \
+              --add-host host.docker.internal:host-gateway \
+              -p 8080:8080 \
               -v /home/root/ims-dev/src/main/resources:/ims-dev/src/main/resources \
               --restart always \
               ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }}
