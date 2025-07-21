@@ -51,7 +51,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DEV_SERVER_HOST }}
-          username: ubuntu
+          username: root
           key: ${{ secrets.DEV_SERVER_PRIVATE_KEY }}
           script: |
             set -e  # 에러 발생 시 즉시 스크립트 종료
@@ -78,17 +78,17 @@ jobs:
             fi
             
             echo "📂 yml 파일을 저장할 디렉토리 생성"
-            sudo mkdir -p /home/ubuntu/ims-dev/src/main/resources
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/ims-dev  # ubuntu 사용자가 접근 가능하도록 변경
-            sudo chmod -R 755 /home/ubuntu/ims-dev            # 디렉토리에 읽기, 쓰기, 실행 권한 부여
+            sudo mkdir -p /home/root/ims-dev/src/main/resources
+            sudo chown -R root:root /home/root/ims-dev  # root 사용자가 접근 가능하도록 변경
+            sudo chmod -R 755 /home/root/ims-dev            # 디렉토리에 읽기, 쓰기, 실행 권한 부여
             
             echo "📄 yml 파일 생성 및 GitHub Secrets 값 적용"
-            echo "${{ secrets.DEVELOPMENT_APPLICATION }}" | sudo tee /home/ubuntu/ims-dev/src/main/resources/application.yml > /dev/null
-            sudo chmod 644 /home/ubuntu/ims-dev/src/main/resources/application.yml  # 모든 사용자 읽기 가능, 소유자만 쓰기 가능
+            echo "${{ secrets.DEVELOPMENT_APPLICATION }}" | sudo tee /home/root/ims-dev/src/main/resources/application.yml > /dev/null
+            sudo chmod 644 /home/root/ims-dev/src/main/resources/application.yml  # 모든 사용자 읽기 가능, 소유자만 쓰기 가능
             
             echo "🚀 새 컨테이너 실행 중..."
             sudo docker run -d --log-driver=syslog --name ims-dev --network ims-network -p 8080:8080 \
-              -v /home/ubuntu/ims-dev/src/main/resources:/ims-dev/src/main/resources \
+              -v /home/root/ims-dev/src/main/resources:/ims-dev/src/main/resources \
               --restart always \
               ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }}
             
