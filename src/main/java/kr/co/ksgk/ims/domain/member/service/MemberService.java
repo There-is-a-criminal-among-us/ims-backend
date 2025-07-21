@@ -29,7 +29,8 @@ public class MemberService
     private final BrandRepository brandRepository;
     private final JwtProvider jwtProvider;
 
-    private MemberInfoResponseDto toDto(Member member) {
+    private MemberInfoResponseDto toDto(Member member)
+    {
         List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
                 .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
                 .toList();
@@ -68,24 +69,24 @@ public class MemberService
 
     public MemberLoginResponseDto login(MemberLoginRequestDto dto)
     {
-        Member member=memberRepository.findByUsername(dto.getUsername())
-                .orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberRepository.findByUsername(dto.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        if(!dto.getPassword().equals(member.getPassword()))
+        if (!dto.getPassword().equals(member.getPassword()))
         {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        String token=jwtProvider.createToken(member.getId());
+        String token = jwtProvider.createToken(member.getId());
 
-        return new MemberLoginResponseDto(member.getId(),member.getRole(),token);
+        return new MemberLoginResponseDto(member.getId(), member.getRole(), token);
     }
 
     public MemberInfoResponseDto getMyInfo()
     {
         Long id = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        Member member=memberRepository.findById(id).orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
                 .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
@@ -97,20 +98,21 @@ public class MemberService
 
         return new MemberInfoResponseDto
                 (
-                    member.getId(),
-                    member.getUsername(),
-                    member.getName(),
-                    member.getPhone(),
-                    member.getRole(),
-                    companyDtos,
-                    brandDtos,
-                    member.getNote(),
-                    member.getCreatedAt().toString(),
-                    member.getUpdatedAt().toString()
+                        member.getId(),
+                        member.getUsername(),
+                        member.getName(),
+                        member.getPhone(),
+                        member.getRole(),
+                        companyDtos,
+                        brandDtos,
+                        member.getNote(),
+                        member.getCreatedAt().toString(),
+                        member.getUpdatedAt().toString()
                 );
     }
 
-    public MemberInfoResponseDto getMemberInfoById(Long id) {
+    public MemberInfoResponseDto getMemberInfoById(Long id)
+    {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -136,9 +138,9 @@ public class MemberService
         );
     }
 
-    public MemberInfoResponseDto editMemberInfo(Long id,MemberEditRequestDto dto)
+    public MemberInfoResponseDto editMemberInfo(Long id, MemberEditRequestDto dto)
     {
-        Member member=memberRepository.findById(id).orElseThrow(()-> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         member.getMemberCompanies().clear();
         member.getMemberBrands().clear();
@@ -148,13 +150,13 @@ public class MemberService
 
         for (Company company : companyList)
         {
-            MemberCompany mc = new MemberCompany(member,company);
+            MemberCompany mc = new MemberCompany(member, company);
             member.getMemberCompanies().add(mc);
         }
 
         for (Brand brand : brandList)
         {
-            MemberBrand mb = new MemberBrand(member,brand);
+            MemberBrand mb = new MemberBrand(member, brand);
             member.getMemberBrands().add(mb);
         }
 
@@ -171,16 +173,28 @@ public class MemberService
     {
         List<Member> members;
 
-        if(keyword==null||keyword.isBlank())
+        if (keyword == null || keyword.isBlank())
         {
-            members=memberRepository.findAll();
+            members = memberRepository.findAll();
         }
         else
         {
-            members=memberRepository.searchByUsernameOrCompanyName(keyword);
+            members = memberRepository.searchByUsernameOrCompanyName(keyword);
         }
 
         return members.stream().map(this::toDto).toList();
+    }
+
+    public void changePassword(Long id, MemberPasswordChangeRequestDto dto)
+    {
+        Member member = memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (!dto.getOldPassword().equals(member.getPassword()))
+        {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+
+        member.changePassword(dto.getNewPassword());
     }
 
 }

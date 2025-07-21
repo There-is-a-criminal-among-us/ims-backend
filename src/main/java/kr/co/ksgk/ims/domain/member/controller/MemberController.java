@@ -1,10 +1,6 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
-import kr.co.ksgk.ims.domain.member.dto.MemberInfoResponseDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginResponseDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberSignupRequestDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginRequestDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberEditRequestDto;
+import kr.co.ksgk.ims.domain.member.dto.*;
 import  kr.co.ksgk.ims.domain.member.service.MemberService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,11 +53,19 @@ public class MemberController
         return SuccessResponse.ok(response);
     }
 
-
+    @GetMapping("")
     ResponseEntity<SuccessResponse<?>> getAllMemberInfo(@RequestParam(required = false) String keyword)
     {
         List<MemberInfoResponseDto> result=memberService.getMembers(keyword);
 
         return SuccessResponse.ok(result);
+    }
+
+    @PatchMapping("/{id}/password")
+    ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long id, @RequestBody MemberPasswordChangeRequestDto dto)
+    {
+        memberService.changePassword(id,dto);
+
+        return SuccessResponse.noContent();
     }
 }

@@ -56,4 +56,9 @@ public class Member extends BaseEntity
         this.phone = phone;
         this.note = note;
     }
+
+    public void changePassword(String newPassword)
+    {
+        this.password = newPassword;
+    }
 }
