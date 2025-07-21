@@ -29,7 +29,7 @@ public class MemberService
     private final BrandRepository brandRepository;
     private final JwtProvider jwtProvider;
 
-    private MemberInfoResponseDto toDto(Member member)
+    private MemberInfoResponseDto memberToResponseDto(Member member)
     {
         List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
                 .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
@@ -88,11 +88,11 @@ public class MemberService
 
         Member member = memberRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
+        List<SimpleInfoDto> managingCompanies = member.getMemberCompanies().stream()
                 .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
                 .toList();
 
-        List<SimpleInfoDto> brandDtos = member.getMemberBrands().stream()
+        List<SimpleInfoDto> managingBrands = member.getMemberBrands().stream()
                 .map(mb -> new SimpleInfoDto(mb.getBrand().getId(), mb.getBrand().getName()))
                 .toList();
 
@@ -103,8 +103,8 @@ public class MemberService
                         member.getName(),
                         member.getPhone(),
                         member.getRole(),
-                        companyDtos,
-                        brandDtos,
+                        managingCompanies,
+                        managingBrands,
                         member.getNote(),
                         member.getCreatedAt().toString(),
                         member.getUpdatedAt().toString()
@@ -116,11 +116,11 @@ public class MemberService
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
+        List<SimpleInfoDto> managingCompanies = member.getMemberCompanies().stream()
                 .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
                 .toList();
 
-        List<SimpleInfoDto> brandDtos = member.getMemberBrands().stream()
+        List<SimpleInfoDto> managingBrands = member.getMemberBrands().stream()
                 .map(mb -> new SimpleInfoDto(mb.getBrand().getId(), mb.getBrand().getName()))
                 .toList();
 
@@ -130,8 +130,8 @@ public class MemberService
                 member.getName(),
                 member.getPhone(),
                 member.getRole(),
-                companyDtos,
-                brandDtos,
+                managingCompanies,
+                managingBrands,
                 member.getNote(),
                 member.getCreatedAt().toString(),
                 member.getUpdatedAt().toString()
@@ -169,7 +169,7 @@ public class MemberService
     }
 
 
-    public List<MemberInfoResponseDto> getMembers(String keyword)
+    public List<MemberInfoResponseDto> getAllMemberInfo(String keyword)
     {
         List<Member> members;
 
@@ -182,7 +182,7 @@ public class MemberService
             members = memberRepository.searchByUsernameOrCompanyName(keyword);
         }
 
-        return members.stream().map(this::toDto).toList();
+        return members.stream().map(this::memberToResponseDto).toList();
     }
 
     public void changePassword(Long id, MemberPasswordChangeRequestDto dto)

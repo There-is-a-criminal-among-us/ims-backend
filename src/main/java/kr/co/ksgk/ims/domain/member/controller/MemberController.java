@@ -17,7 +17,7 @@ public class MemberController
     private final MemberService memberService;
 
     @PostMapping
-    ResponseEntity<SuccessResponse<?>> signup(MemberSignupRequestDto dto)
+    ResponseEntity<SuccessResponse<?>> signup(@RequestBody MemberSignupRequestDto dto)
     {
         memberService.signup(dto);
 
@@ -25,7 +25,7 @@ public class MemberController
     }
 
     @PostMapping("/login")
-    ResponseEntity<SuccessResponse<?>> login(MemberLoginRequestDto dto)
+    ResponseEntity<SuccessResponse<?>> login(@RequestBody MemberLoginRequestDto dto)
     {
         MemberLoginResponseDto response=memberService.login(dto);
 
@@ -45,7 +45,7 @@ public class MemberController
     }
 
     @PutMapping("/{id}")
-    ResponseEntity<SuccessResponse<?>> editMemberInfo(@PathVariable Long id,MemberEditRequestDto dto)
+    ResponseEntity<SuccessResponse<?>> editMemberInfo(@PathVariable Long id,@RequestBody MemberEditRequestDto dto)
     {
 
         MemberInfoResponseDto response=memberService.editMemberInfo(id,dto);
@@ -56,7 +56,7 @@ public class MemberController
     @GetMapping("")
     ResponseEntity<SuccessResponse<?>> getAllMemberInfo(@RequestParam(required = false) String keyword)
     {
-        List<MemberInfoResponseDto> result=memberService.getMembers(keyword);
+        List<MemberInfoResponseDto> result=memberService.getAllMemberInfo(keyword);
 
         return SuccessResponse.ok(result);
     }
