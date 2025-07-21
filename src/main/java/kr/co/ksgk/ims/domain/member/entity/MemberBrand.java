@@ -2,8 +2,10 @@ package kr.co.ksgk.ims.domain.member.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.http.ResponseEntity;
 
 @Entity
 @Getter

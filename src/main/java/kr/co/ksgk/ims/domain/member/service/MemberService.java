@@ -29,6 +29,29 @@ public class MemberService
     private final BrandRepository brandRepository;
     private final JwtProvider jwtProvider;
 
+    private MemberInfoResponseDto toDto(Member member) {
+        List<SimpleInfoDto> companyDtos = member.getMemberCompanies().stream()
+                .map(mc -> new SimpleInfoDto(mc.getCompany().getId(), mc.getCompany().getName()))
+                .toList();
+
+        List<SimpleInfoDto> brandDtos = member.getMemberBrands().stream()
+                .map(mb -> new SimpleInfoDto(mb.getBrand().getId(), mb.getBrand().getName()))
+                .toList();
+
+        return new MemberInfoResponseDto(
+                member.getId(),
+                member.getUsername(),
+                member.getName(),
+                member.getPhone(),
+                member.getRole(),
+                companyDtos,
+                brandDtos,
+                member.getNote(),
+                member.getCreatedAt().toString(),
+                member.getUpdatedAt().toString()
+        );
+    }
+
     public void signup(MemberSignupRequestDto dto)
     {
         Member member = Member.builder()
@@ -141,6 +164,23 @@ public class MemberService
 
         return getMemberInfoById(id);
 
+    }
+
+
+    public List<MemberInfoResponseDto> getMembers(String keyword)
+    {
+        List<Member> members;
+
+        if(keyword==null||keyword.isBlank())
+        {
+            members=memberRepository.findAll();
+        }
+        else
+        {
+            members=memberRepository.searchByUsernameOrCompanyName(keyword);
+        }
+
+        return members.stream().map(this::toDto).toList();
     }
 
 }

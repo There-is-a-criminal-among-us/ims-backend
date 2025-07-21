@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
@@ -53,5 +55,13 @@ public class MemberController
         MemberInfoResponseDto response=memberService.editMemberInfo(id,dto);
 
         return SuccessResponse.ok(response);
+    }
+
+
+    ResponseEntity<SuccessResponse<?>> getAllMemberInfo(@RequestParam(required = false) String keyword)
+    {
+        List<MemberInfoResponseDto> result=memberService.getMembers(keyword);
+
+        return SuccessResponse.ok(result);
     }
 }
