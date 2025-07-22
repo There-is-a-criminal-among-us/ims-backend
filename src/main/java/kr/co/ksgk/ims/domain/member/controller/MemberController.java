@@ -1,87 +1,62 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
-import kr.co.ksgk.ims.domain.member.dto.*;
-import  kr.co.ksgk.ims.domain.member.service.MemberService;
+import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
+import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
+import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.service.MemberService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
-public class MemberController
-{
+public class MemberController {
+
     private final MemberService memberService;
 
-    @PostMapping
-    ResponseEntity<SuccessResponse<?>> signup(@RequestBody MemberSignupRequestDto dto)
-    {
-        memberService.signup(dto);
-
-        return SuccessResponse.ok("signup success");
-    }
-
-    @PostMapping("/login")
-    ResponseEntity<SuccessResponse<?>> login(@RequestBody MemberLoginRequestDto dto)
-    {
-        MemberLoginResponseDto response=memberService.login(dto);
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{memberId}")
+    ResponseEntity<SuccessResponse<?>> updateMemberInfo(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse response = memberService.updateMemberInfo(memberId, request);
         return SuccessResponse.ok(response);
     }
 
-    @PostMapping("/logout")
-    ResponseEntity<SuccessResponse<?>> logout()
-    {
-        return  SuccessResponse.ok("logout success");
-    }
-
-    @GetMapping("/me")
-    ResponseEntity<SuccessResponse<?>> getMyInfo()
-    {
-        return SuccessResponse.ok(memberService.getMyInfo());
-    }
-
-    @PutMapping("/{id}")
-    ResponseEntity<SuccessResponse<?>> editMemberInfo(@PathVariable Long id,@RequestBody MemberEditRequestDto dto)
-    {
-
-        MemberInfoResponseDto response=memberService.editMemberInfo(id,dto);
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{memberId}/management")
+    ResponseEntity<SuccessResponse<?>> updateMemberManagement(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse response = memberService.updateMemberManagement(memberId, request);
         return SuccessResponse.ok(response);
     }
 
-    @GetMapping("")
-    ResponseEntity<SuccessResponse<?>> getAllMemberInfo(@RequestParam(required = false) String keyword)
-    {
-        List<MemberInfoResponseDto> result=memberService.getAllMemberInfo(keyword);
-
-        return SuccessResponse.ok(result);
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable) {
+        PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, pageable);
+        return SuccessResponse.ok(pagingMemberInfoResponse);
     }
 
-    @PatchMapping("/{id}/change-password")
-    ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long id, @RequestBody MemberPasswordChangeRequestDto dto)
-    {
-        memberService.changePassword(id,dto);
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{memberId}")
+    ResponseEntity<SuccessResponse<?>> getMemberInfoById(@PathVariable Long memberId) {
+        MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
+        return SuccessResponse.ok(memberInfoResponse);
+    }
 
+    @PatchMapping("/{id}/password")
+    ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+        memberService.changePassword(id, request);
         return SuccessResponse.noContent();
     }
 
-    @PatchMapping("/{id}/reset-password")
-    ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long id)
-    {
-        memberService.resetPassword(id);
-
-        return SuccessResponse.noContent();
-    }
-
-    @DeleteMapping("/{id}")
-    ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long id)
-    {
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{memberId}")
+    ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long id) {
         memberService.deleteMember(id);
-
         return SuccessResponse.noContent();
     }
 }

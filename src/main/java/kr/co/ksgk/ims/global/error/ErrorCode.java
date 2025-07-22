@@ -40,6 +40,7 @@ public enum ErrorCode {
     // Member
     USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "M001", "이미 존재하는 사용자 이름입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M002", "사용자가 존재하지 않습니다."),
+    MEMBER_MANAGE_CONFLICT(HttpStatus.BAD_REQUEST, "M003", "사용자는 회사와 브랜드 중 하나만 관리할 수 있습니다."),
 
     // Brand
     BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "브랜드를 찾을 수 없습니다."),
