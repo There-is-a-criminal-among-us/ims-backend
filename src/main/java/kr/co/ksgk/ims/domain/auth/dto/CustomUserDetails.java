@@ -8,12 +8,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 public record CustomUserDetails(
-        MemberDto memberDto
+        AuthDto authDto
 ) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + memberDto.role().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + authDto.role().name()));
     }
 
     @Override
@@ -23,6 +23,6 @@ public record CustomUserDetails(
 
     @Override
     public String getUsername() {
-        return String.valueOf(memberDto.memberId());
+        return String.valueOf(authDto.memberId());
     }
 }

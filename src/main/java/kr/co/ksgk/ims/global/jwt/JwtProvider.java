@@ -3,7 +3,7 @@ package kr.co.ksgk.ims.global.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import kr.co.ksgk.ims.domain.auth.dto.CustomUserDetails;
-import kr.co.ksgk.ims.domain.auth.dto.MemberDto;
+import kr.co.ksgk.ims.domain.auth.dto.AuthDto;
 import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.UnauthorizedException;
@@ -75,8 +75,8 @@ public class JwtProvider {
         Long memberId = claims.get("memberId", Long.class);
         String roleStr = claims.get("role", String.class); // "ROLE_ADMIN"
         Role role = Role.valueOf(roleStr.replace("ROLE_", "")); // enum Role.ADMIN
-        MemberDto memberDto = MemberDto.of(memberId, role);
-        UserDetails principal = new CustomUserDetails(memberDto);
+        AuthDto authDto = AuthDto.of(memberId, role);
+        UserDetails principal = new CustomUserDetails(authDto);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
