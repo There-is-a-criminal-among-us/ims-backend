@@ -21,9 +21,7 @@ import java.util.List;
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class Invoice extends BaseEntity
-{
-
+public class Invoice extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
