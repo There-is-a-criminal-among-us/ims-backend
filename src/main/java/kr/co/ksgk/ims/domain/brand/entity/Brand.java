@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.nio.file.FileStore;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Brand extends BaseEntity {
 
     @Id
@@ -33,4 +35,13 @@ public class Brand extends BaseEntity {
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products = new ArrayList<>();
+
+    public void update(String name, String note) {
+        this.name = name;
+        this.note = note;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 }
