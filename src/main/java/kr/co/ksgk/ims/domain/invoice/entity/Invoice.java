@@ -50,6 +50,8 @@ public class Invoice extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    private String InvoiceImageUrl;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
 }

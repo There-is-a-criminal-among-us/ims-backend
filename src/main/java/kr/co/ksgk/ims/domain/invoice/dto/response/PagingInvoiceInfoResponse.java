@@ -10,12 +10,12 @@ import java.util.List;
 @Builder
 public record PagingInvoiceInfoResponse(
         PageResponse page,
-        List<InvoiceProductInfoResponse> invoiceProducts
+        List<SimpleInvoiceProductInfoResponse> invoiceProducts
 ) {
-    public static PagingInvoiceInfoResponse of(Page<InvoiceProduct> pageInvoiceProduct, List<InvoiceProductInfoResponse> invoiceProductInfoResponses) {
+    public static PagingInvoiceInfoResponse of(Page<InvoiceProduct> pageInvoiceProduct, List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoRespons) {
         return PagingInvoiceInfoResponse.builder()
                 .page(PageResponse.from(pageInvoiceProduct))
-                .invoiceProducts(invoiceProductInfoResponses)
+                .invoiceProducts(simpleInvoiceProductInfoRespons)
                 .build();
     }
 

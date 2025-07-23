@@ -3,7 +3,8 @@ package kr.co.ksgk.ims.domain.invoice.service;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
-import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceProductInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceProductInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfo;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
@@ -67,10 +68,17 @@ public class InvoiceService {
             invoiceProductPage=invoiceProductRepository.findInvoiceProductByNameOrNumber(search,pageable);
         }
 
-        List<InvoiceProductInfoResponse> invoiceProductInfoResponses=invoiceProductPage.getContent().stream()
-                .map(InvoiceProductInfoResponse::from)
+        List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoRespons =invoiceProductPage.getContent().stream()
+                .map(SimpleInvoiceProductInfoResponse::from)
                 .toList();
 
-        return PagingInvoiceInfoResponse.of(invoiceProductPage,invoiceProductInfoResponses);
+        return PagingInvoiceInfoResponse.of(invoiceProductPage, simpleInvoiceProductInfoRespons);
+    }
+
+    public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST));
+
+        return InvoiceInfoResponse.from(invoice);
+
     }
 }

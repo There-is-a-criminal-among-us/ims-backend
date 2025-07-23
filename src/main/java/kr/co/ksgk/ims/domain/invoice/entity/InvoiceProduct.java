@@ -25,6 +25,8 @@ public class InvoiceProduct {
     private Integer resaleableQuantity;
     private String note;
 
+    private String productImageUrl;
+
     public InvoiceProduct(Invoice invoice, Product product, Integer returnedQuantity, Integer resaleableQuantity, String note) {
         this.invoice = invoice;
         this.product = product;

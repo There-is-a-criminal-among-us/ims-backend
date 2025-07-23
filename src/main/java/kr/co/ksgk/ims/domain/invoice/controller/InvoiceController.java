@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.invoice.controller;
 
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
+import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfo;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
@@ -28,6 +29,15 @@ public class InvoiceController {
     @GetMapping
     ResponseEntity<SuccessResponse<?>> getInvoice(@RequestParam(required = false) String search, Pageable pageable) {
         PagingInvoiceInfoResponse pagingInvoiceInfoResponse=invoiceService.getInvoiceList(search,pageable);
+
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{invoiceId}")
+    ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
+        InvoiceInfoResponse invoiceInfoResponse=invoiceService.getInvoiceInfo(invoiceId);
+
+        return SuccessResponse.ok(invoiceInfoResponse);
     }
 }
