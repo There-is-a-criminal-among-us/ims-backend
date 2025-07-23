@@ -15,7 +15,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByUsername(String username);
 
-    Page<Member> findAllMember(Pageable pageable);
+    Page<Member> findAll(Pageable pageable);
 
     @Query("""
                 SELECT DISTINCT m

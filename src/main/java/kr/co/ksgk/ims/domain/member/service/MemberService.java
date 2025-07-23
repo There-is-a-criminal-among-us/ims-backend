@@ -70,7 +70,7 @@ public class MemberService {
     public PagingMemberInfoResponse getMemberList(String search, Pageable pageable) {
         Page<Member> memberPage;
         if (search == null || search.isBlank()) {
-            memberPage = memberRepository.findAllMember(pageable);
+            memberPage = memberRepository.findAll(pageable);
         } else {
             memberPage = memberRepository.findMemberByUsernameAndCompanyAndBrand(search, pageable);
         }
