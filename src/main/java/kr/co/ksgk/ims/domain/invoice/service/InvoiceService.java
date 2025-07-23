@@ -3,15 +3,20 @@ package kr.co.ksgk.ims.domain.invoice.service;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
-import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfo;
+import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceProductInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfo;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
+import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +30,10 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
+    private final InvoiceProductRepository invoiceProductRepository;
 
     @Transactional
-    public InvoiceInfo uploadInvoice(UploadedInfo request) {
+    public SimpleInvoiceInfo uploadInvoice(UploadedInfo request) {
 
         Company company = companyRepository.findById(request.companyId()).orElseThrow(() -> new BusinessException(ErrorCode.COMPANY_NOT_FOUND));
 
@@ -50,6 +56,21 @@ public class InvoiceService {
         invoice.getInvoiceProducts().addAll(productEntities);
         Invoice saved = invoiceRepository.save(invoice);
 
-        return InvoiceInfo.from(saved);
+        return SimpleInvoiceInfo.from(saved);
+    }
+
+    public PagingInvoiceInfoResponse getInvoiceList(String search, Pageable pageable) {
+        Page<InvoiceProduct> invoiceProductPage;
+        if (search == null || search.isBlank()) {
+            invoiceProductPage=invoiceProductRepository.findAll(pageable);
+        } else {
+            invoiceProductPage=invoiceProductRepository.findInvoiceProductByNameOrNumber(search,pageable);
+        }
+
+        List<InvoiceProductInfoResponse> invoiceProductInfoResponses=invoiceProductPage.getContent().stream()
+                .map(InvoiceProductInfoResponse::from)
+                .toList();
+
+        return PagingInvoiceInfoResponse.of(invoiceProductPage,invoiceProductInfoResponses);
     }
 }

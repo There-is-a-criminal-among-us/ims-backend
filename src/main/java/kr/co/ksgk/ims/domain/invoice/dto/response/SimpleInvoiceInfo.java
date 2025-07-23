@@ -4,15 +4,15 @@ import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 
 import java.time.LocalDateTime;
 
-public record InvoiceInfo(
+public record SimpleInvoiceInfo(
         Long invoiceId,
         String number,
         String name,
         String phone,
         LocalDateTime createdAt) {
 
-    public static InvoiceInfo from(Invoice invoice) {
-        return new InvoiceInfo(
+    public static SimpleInvoiceInfo from(Invoice invoice) {
+        return new SimpleInvoiceInfo(
                 invoice.getId(),
                 invoice.getNumber(),
                 invoice.getName(),
