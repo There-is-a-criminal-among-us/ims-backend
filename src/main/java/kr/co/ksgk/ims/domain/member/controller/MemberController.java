@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.service.MemberService;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +39,12 @@ public class MemberController {
     ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable) {
         PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, pageable);
         return SuccessResponse.ok(pagingMemberInfoResponse);
+    }
+
+    @GetMapping("/me")
+    ResponseEntity<SuccessResponse<?>> getMyInfo(@Auth Long memberId) {
+        MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
+        return SuccessResponse.ok(memberInfoResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
