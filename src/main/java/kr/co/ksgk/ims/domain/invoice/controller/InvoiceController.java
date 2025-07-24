@@ -26,7 +26,7 @@ public class InvoiceController {
         return SuccessResponse.ok(response);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     ResponseEntity<SuccessResponse<?>> getInvoice(@RequestParam(required = false) String search, Pageable pageable) {
         PagingInvoiceInfoResponse pagingInvoiceInfoResponse=invoiceService.getInvoiceList(search,pageable);
@@ -34,7 +34,7 @@ public class InvoiceController {
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
         InvoiceInfoResponse invoiceInfoResponse=invoiceService.getInvoiceInfo(invoiceId);
@@ -42,11 +42,19 @@ public class InvoiceController {
         return SuccessResponse.ok(invoiceInfoResponse);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
         InvoiceInfoResponse invoiceInfoResponse=invoiceService.updateInvoiceInfo(invoiceId, request);
 
         return SuccessResponse.ok(invoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{invoiceId}")
+    ResponseEntity<SuccessResponse<?>> deleteInvoice(@PathVariable Long invoiceId) {
+        invoiceService.deleteInvoice(invoiceId);
+
+        return SuccessResponse.noContent();
     }
 }

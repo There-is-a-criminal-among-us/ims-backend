@@ -101,6 +101,13 @@ public class InvoiceService {
         invoice.updateInvoiceProduct(invoiceProducts);
 
         return InvoiceInfoResponse.from(invoice);
+    }
 
+    @Transactional
+    public void deleteInvoice(Long invoiceId) {
+        Invoice invoice=invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST));
+
+        invoiceRepository.delete(invoice);
     }
 }
