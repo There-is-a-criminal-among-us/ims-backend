@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class InvoiceProduct {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,4 +20,18 @@ public class InvoiceProduct {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    private Integer returnedQuantity;
+    private Integer resaleableQuantity;
+    private String note;
+
+    private String productImageUrl;
+
+    public InvoiceProduct(Invoice invoice, Product product, Integer returnedQuantity, Integer resaleableQuantity, String note) {
+        this.invoice = invoice;
+        this.product = product;
+        this.returnedQuantity = returnedQuantity;
+        this.resaleableQuantity = resaleableQuantity;
+        this.note = note;
+    }
 }
