@@ -1,7 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.dto.response;
 
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
-import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -15,7 +14,7 @@ public record InvoiceInfoResponse(
         String name,
         String phone,
         String number,
-        String invoiceImageUrl,
+        String invoiceUrl,
         LocalDateTime createdAt,
         List<InvoiceProductInfoResponse> products
 ) {
@@ -27,7 +26,7 @@ public record InvoiceInfoResponse(
                 .name(invoice.getName())
                 .phone(invoice.getPhone())
                 .number(invoice.getNumber())
-                .invoiceImageUrl(invoice.getInvoiceImageUrl())
+                .invoiceUrl(invoice.getInvoiceUrl())
                 .createdAt(invoice.getCreatedAt())
                 .products(invoice.getInvoiceProducts().stream()
                         .map(InvoiceProductInfoResponse::from)

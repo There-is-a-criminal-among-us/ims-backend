@@ -1,9 +1,9 @@
 package kr.co.ksgk.ims.domain.invoice.controller;
 
 import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
-import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
+import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
-import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfo;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -20,8 +20,8 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
 
     @PostMapping
-    ResponseEntity<SuccessResponse<?>> uploadInvoice(@RequestBody UploadedInfo request) {
-        SimpleInvoiceInfo response = invoiceService.uploadInvoice(request);
+    ResponseEntity<SuccessResponse<?>> uploadInvoice(@RequestBody UploadInvoiceInfoRequest request) {
+        SimpleInvoiceInfoResponse response = invoiceService.uploadInvoice(request);
 
         return SuccessResponse.ok(response);
     }

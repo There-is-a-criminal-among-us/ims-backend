@@ -5,14 +5,14 @@ import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 
 import java.util.List;
 
-public record UploadedInfo(
+public record UploadInvoiceInfoRequest(
         Long companyId,
         String name,
         String phone,
         String number,
         String invoiceImageUrl,
         String productImageUrl,
-        List<ProductInfo> products
+        List<SimpleProductInfo> products
 ) {
     public Invoice toEntity(Company company) {
         return Invoice.builder()
