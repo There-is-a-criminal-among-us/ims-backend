@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.invoice.service;
 
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
+import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceProductInfoResponse;
@@ -77,6 +78,27 @@ public class InvoiceService {
 
     public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST));
+
+        return InvoiceInfoResponse.from(invoice);
+    }
+
+    @Transactional
+    public InvoiceInfoResponse updateInvoiceInfo(Long invoiceId, InvoiceUpdateRequest request) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST));
+
+        List<InvoiceProduct> invoiceProducts = request.products().stream()
+                .map(p -> {
+                    Product product = productRepository.findById(p.productId())
+                            .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+                    return new InvoiceProduct(invoice, product, p.returnedQuantity(), p.resaleableQuantity(), p.note());
+                })
+                .toList();
+
+        if(request.name()!=null)invoice.updateName(request.name());
+        if(request.phone()!=null)invoice.updatePhone(request.phone());
+        if(request.invoiceUrl()!=null)invoice.updateInvoiceUrl(request.invoiceUrl());
+        invoice.updateInvoiceProduct(invoiceProducts);
 
         return InvoiceInfoResponse.from(invoice);
 

@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Builder
 @Entity
 @Getter
@@ -50,8 +49,15 @@ public class Invoice extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private String InvoiceImageUrl;
-
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
-}
+
+    public void updateName(String name) {this.name=name;}
+    public void updatePhone(String phone) {this.phone=phone;}
+    public void updateInvoiceUrl(String invoiceUrl) {this.invoiceUrl=invoiceUrl;}
+
+    public void updateInvoiceProduct(List<InvoiceProduct> invoiceProducts) {
+        this.invoiceProducts.clear();
+        this.invoiceProducts.addAll(invoiceProducts);
+        }
+    }

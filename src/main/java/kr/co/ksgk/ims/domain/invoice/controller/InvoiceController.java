@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.controller;
 
+import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadedInfo;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfo;
@@ -37,6 +38,14 @@ public class InvoiceController {
     @GetMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
         InvoiceInfoResponse invoiceInfoResponse=invoiceService.getInvoiceInfo(invoiceId);
+
+        return SuccessResponse.ok(invoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PatchMapping("/{invoiceId}")
+    ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
+        InvoiceInfoResponse invoiceInfoResponse=invoiceService.updateInvoiceInfo(invoiceId, request);
 
         return SuccessResponse.ok(invoiceInfoResponse);
     }
