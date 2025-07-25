@@ -12,16 +12,10 @@ public record PagingInvoiceInfoResponse(
         PageResponse page,
         List<SimpleInvoiceProductInfoResponse> invoiceProducts
 ) {
-    public static PagingInvoiceInfoResponse of(Page<InvoiceProduct> pageInvoiceProduct, List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoRespons) {
+    public static PagingInvoiceInfoResponse of(Page<InvoiceProduct> pageInvoiceProduct, List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoResponses) {
         return PagingInvoiceInfoResponse.builder()
                 .page(PageResponse.from(pageInvoiceProduct))
-                .invoiceProducts(simpleInvoiceProductInfoRespons)
+                .invoiceProducts(simpleInvoiceProductInfoResponses)
                 .build();
     }
-
 }
-
-
-
-
-

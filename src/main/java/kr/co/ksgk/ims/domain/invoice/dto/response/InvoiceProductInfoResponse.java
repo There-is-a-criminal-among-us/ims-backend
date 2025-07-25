@@ -9,16 +9,16 @@ public record InvoiceProductInfoResponse(
         Long productId,
         String productImageUrl,
         Integer returnedQuantity,
-        Integer resaleableQuantity,
+        Integer resalableQuantity,
         String note
 ) {
     public static InvoiceProductInfoResponse from(InvoiceProduct invoiceProduct) {
         return InvoiceProductInfoResponse.builder()
                 .invoiceProductId(invoiceProduct.getId())
                 .productId(invoiceProduct.getProduct().getId())
-                .productImageUrl(invoiceProduct.getProductImageUrl())
+                .productImageUrl(invoiceProduct.getInvoice().getProductUrl())
                 .returnedQuantity(invoiceProduct.getReturnedQuantity())
-                .resaleableQuantity(invoiceProduct.getResaleableQuantity())
+                .resalableQuantity(invoiceProduct.getResalableQuantity())
                 .note(invoiceProduct.getNote())
                 .build();
     }

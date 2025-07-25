@@ -10,7 +10,6 @@ public record SimpleInvoiceInfoResponse(
         String name,
         String phone,
         LocalDateTime createdAt) {
-
     public static SimpleInvoiceInfoResponse from(Invoice invoice) {
         return new SimpleInvoiceInfoResponse(
                 invoice.getId(),

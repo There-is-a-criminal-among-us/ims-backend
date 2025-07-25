@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.invoice.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
