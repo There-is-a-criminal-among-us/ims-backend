@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.brand.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import lombok.Getter;
@@ -9,7 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -28,9 +31,13 @@ public class Brand extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberBrand> memberBrands = new ArrayList<>();
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Product> products = new ArrayList<>();
+    private Set<Product> products = new HashSet<>();
 }
