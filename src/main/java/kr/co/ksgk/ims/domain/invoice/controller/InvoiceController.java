@@ -29,8 +29,7 @@ public class InvoiceController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     ResponseEntity<SuccessResponse<?>> getInvoice(@RequestParam(required = false) String search, Pageable pageable) {
-        PagingInvoiceInfoResponse pagingInvoiceInfoResponse=invoiceService.getInvoiceList(search,pageable);
-
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, pageable);
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 
