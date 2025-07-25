@@ -16,54 +16,54 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
-public class MemberController {
+public class MemberController implements MemberApi {
 
     private final MemberService memberService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{memberId}")
-    ResponseEntity<SuccessResponse<?>> updateMemberInfo(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
-        MemberInfoResponse response = memberService.updateMemberInfo(memberId, request);
-        return SuccessResponse.ok(response);
+    public ResponseEntity<SuccessResponse<?>> updateMemberInfo(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse memberInfoResponse = memberService.updateMemberInfo(memberId, request);
+        return SuccessResponse.ok(memberInfoResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{memberId}/management")
-    ResponseEntity<SuccessResponse<?>> updateMemberManagement(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
-        MemberInfoResponse response = memberService.updateMemberManagement(memberId, request);
-        return SuccessResponse.ok(response);
+    public ResponseEntity<SuccessResponse<?>> updateMemberManagement(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse memberInfoResponse = memberService.updateMemberManagement(memberId, request);
+        return SuccessResponse.ok(memberInfoResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable) {
+    public ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable) {
         PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, pageable);
         return SuccessResponse.ok(pagingMemberInfoResponse);
     }
 
     @GetMapping("/me")
-    ResponseEntity<SuccessResponse<?>> getMyInfo(@Auth Long memberId) {
+    public ResponseEntity<SuccessResponse<?>> getMyInfo(@Auth Long memberId) {
         MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
         return SuccessResponse.ok(memberInfoResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{memberId}")
-    ResponseEntity<SuccessResponse<?>> getMemberInfoById(@PathVariable Long memberId) {
+    public ResponseEntity<SuccessResponse<?>> getMemberInfoById(@PathVariable Long memberId) {
         MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
         return SuccessResponse.ok(memberInfoResponse);
     }
 
-    @PatchMapping("/{id}/password")
-    ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
-        memberService.changePassword(id, request);
+    @PatchMapping("/{memberId}/password")
+    public ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long memberId, @RequestBody ChangePasswordRequest request) {
+        memberService.changePassword(memberId, request);
         return SuccessResponse.noContent();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{memberId}")
-    ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long id) {
-        memberService.deleteMember(id);
+    public ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long memberId) {
+        memberService.deleteMember(memberId);
         return SuccessResponse.noContent();
     }
 }

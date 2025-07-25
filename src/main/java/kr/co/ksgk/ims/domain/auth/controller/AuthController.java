@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController implements  AuthApi {
 
     private final AuthService authService;
 
     @PostMapping("/signup")
-    ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request) {
         MemberResponse memberResponse = authService.signup(request);
         return SuccessResponse.created(memberResponse);
     }
 
     @PostMapping("/login")
-    ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginRequest request) {
         TokenResponse tokenResponse = authService.login(request);
         return SuccessResponse.ok(tokenResponse);
     }
