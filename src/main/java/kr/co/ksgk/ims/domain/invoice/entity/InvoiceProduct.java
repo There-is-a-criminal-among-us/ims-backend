@@ -21,17 +21,21 @@ public class InvoiceProduct {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(nullable = false)
     private Integer returnedQuantity;
-    private Integer resaleableQuantity;
+
+    @Column(nullable = false)
+    private Integer resalableQuantity;
+
+    @Lob
     private String note;
 
-    private String productImageUrl;
-
-    public InvoiceProduct(Invoice invoice, Product product, Integer returnedQuantity, Integer resaleableQuantity, String note) {
+    @Builder
+    public InvoiceProduct(Invoice invoice, Product product, Integer returnedQuantity, Integer resalableQuantity, String note) {
         this.invoice = invoice;
         this.product = product;
         this.returnedQuantity = returnedQuantity;
-        this.resaleableQuantity = resaleableQuantity;
+        this.resalableQuantity = resalableQuantity;
         this.note = note;
     }
 }
