@@ -35,10 +35,12 @@ public enum ErrorCode {
     JSON_PARSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "A001", "JSON 파싱에 실패하였습니다."),
     NO_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "저장된 리프레시 토큰이 없습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A003", "아이디나 비밀번호가 잘못되었습니다."),
+    INVALID_AUTHORITY(HttpStatus.FORBIDDEN, "A004", "권한이 존재하지 않습니다."),
 
     // Member
     USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "M001", "이미 존재하는 사용자 이름입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M002", "사용자가 존재하지 않습니다."),
+    MEMBER_MANAGE_CONFLICT(HttpStatus.BAD_REQUEST, "M003", "사용자는 회사와 브랜드 중 하나만 관리할 수 있습니다."),
 
     // Brand
     BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "브랜드를 찾을 수 없습니다."),

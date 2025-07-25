@@ -21,4 +21,9 @@ public class MemberCompany {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+
+    public MemberCompany(Member member, Company company) {
+        this.member = member;
+        this.company = company;
+    }
 }
