@@ -15,14 +15,14 @@ public record SimpleInvoiceProductInfoResponse(
         Integer resaleableQuantity,
         LocalDateTime createdAt
 ) {
-    public static SimpleInvoiceProductInfoResponse from(InvoiceProduct invoiceProduct){
+    public static SimpleInvoiceProductInfoResponse from(InvoiceProduct invoiceProduct) {
         return SimpleInvoiceProductInfoResponse.builder()
                 .invoiceId(invoiceProduct.getInvoice().getId())
                 .invoiceName(invoiceProduct.getInvoice().getName())
                 .invoiceNumber(invoiceProduct.getInvoice().getNumber())
                 .productName(invoiceProduct.getProduct().getName())
                 .returnedQuantity(invoiceProduct.getReturnedQuantity())
-                .resaleableQuantity(invoiceProduct.getResaleableQuantity())
+                .resaleableQuantity(invoiceProduct.getResalableQuantity())
                 .createdAt(invoiceProduct.getInvoice().getCreatedAt())
                 .build();
     }

@@ -22,7 +22,6 @@ public class InvoiceController {
     @PostMapping
     ResponseEntity<SuccessResponse<?>> uploadInvoice(@RequestBody UploadInvoiceInfoRequest request) {
         SimpleInvoiceInfoResponse response = invoiceService.uploadInvoice(request);
-
         return SuccessResponse.ok(response);
     }
 
@@ -36,16 +35,14 @@ public class InvoiceController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
-        InvoiceInfoResponse invoiceInfoResponse=invoiceService.getInvoiceInfo(invoiceId);
-
+        InvoiceInfoResponse invoiceInfoResponse = invoiceService.getInvoiceInfo(invoiceId);
         return SuccessResponse.ok(invoiceInfoResponse);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
-        InvoiceInfoResponse invoiceInfoResponse=invoiceService.updateInvoiceInfo(invoiceId, request);
-
+        InvoiceInfoResponse invoiceInfoResponse = invoiceService.updateInvoiceInfo(invoiceId, request);
         return SuccessResponse.ok(invoiceInfoResponse);
     }
 
@@ -53,7 +50,6 @@ public class InvoiceController {
     @DeleteMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> deleteInvoice(@PathVariable Long invoiceId) {
         invoiceService.deleteInvoice(invoiceId);
-
         return SuccessResponse.noContent();
     }
 }

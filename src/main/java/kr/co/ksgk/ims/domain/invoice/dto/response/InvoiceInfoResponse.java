@@ -18,7 +18,6 @@ public record InvoiceInfoResponse(
         LocalDateTime createdAt,
         List<InvoiceProductInfoResponse> products
 ) {
-
     public static InvoiceInfoResponse from(Invoice invoice) {
         return InvoiceInfoResponse.builder()
                 .invoiceId(invoice.getId())

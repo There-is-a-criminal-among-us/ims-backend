@@ -18,10 +18,4 @@ public record PagingInvoiceInfoResponse(
                 .invoiceProducts(simpleInvoiceProductInfoRespons)
                 .build();
     }
-
 }
-
-
-
-
-

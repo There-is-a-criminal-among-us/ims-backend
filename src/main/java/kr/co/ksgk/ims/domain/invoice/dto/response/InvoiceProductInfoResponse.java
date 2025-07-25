@@ -16,9 +16,9 @@ public record InvoiceProductInfoResponse(
         return InvoiceProductInfoResponse.builder()
                 .invoiceProductId(invoiceProduct.getId())
                 .productId(invoiceProduct.getProduct().getId())
-                .productImageUrl(invoiceProduct.getProductImageUrl())
+                .productImageUrl(invoiceProduct.getInvoice().getProductUrl())
                 .returnedQuantity(invoiceProduct.getReturnedQuantity())
-                .resaleableQuantity(invoiceProduct.getResaleableQuantity())
+                .resaleableQuantity(invoiceProduct.getResalableQuantity())
                 .note(invoiceProduct.getNote())
                 .build();
     }

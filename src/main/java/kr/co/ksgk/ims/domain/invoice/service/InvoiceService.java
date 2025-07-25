@@ -36,51 +36,43 @@ public class InvoiceService {
 
     @Transactional
     public SimpleInvoiceInfoResponse uploadInvoice(UploadInvoiceInfoRequest request) {
-
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
         Invoice invoice = request.toEntity(company);
-
         List<InvoiceProduct> productEntities = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())
                             .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-
                     return new InvoiceProduct(
                             invoice,
                             product,
                             p.returnedQuantity(),
-                            p.resaleableQuantity(),
+                            p.resalableQuantity(),
                             p.note()
                     );
                 })
                 .toList();
-
         invoice.getInvoiceProducts().addAll(productEntities);
         Invoice saved = invoiceRepository.save(invoice);
-
         return SimpleInvoiceInfoResponse.from(saved);
     }
 
     public PagingInvoiceInfoResponse getInvoiceList(String search, Pageable pageable) {
         Page<InvoiceProduct> invoiceProductPage;
         if (search == null || search.isBlank()) {
-            invoiceProductPage=invoiceProductRepository.findAll(pageable);
+            invoiceProductPage = invoiceProductRepository.findAll(pageable);
         } else {
-            invoiceProductPage=invoiceProductRepository.findInvoiceProductByNameOrNumber(search,pageable);
+            invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumber(search, pageable);
         }
-
-        List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoResponses =invoiceProductPage.getContent().stream()
+        List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoResponses = invoiceProductPage.getContent().stream()
                 .map(SimpleInvoiceProductInfoResponse::from)
                 .toList();
-
         return PagingInvoiceInfoResponse.of(invoiceProductPage, simpleInvoiceProductInfoResponses);
     }
 
     public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
-
         return InvoiceInfoResponse.from(invoice);
     }
 
@@ -88,11 +80,9 @@ public class InvoiceService {
     public InvoiceInfoResponse updateInvoiceInfo(Long invoiceId, InvoiceUpdateRequest request) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
-
-        if(request.name()!=null)invoice.updateName(request.name());
-        if(request.phone()!=null)invoice.updatePhone(request.phone());
-        if(request.invoiceUrl()!=null)invoice.updateInvoiceUrl(request.invoiceUrl());
-
+        if (request.name() != null) invoice.updateName(request.name());
+        if (request.phone() != null) invoice.updatePhone(request.phone());
+        if (request.invoiceUrl() != null) invoice.updateInvoiceUrl(request.invoiceUrl());
         List<InvoiceProduct> invoiceProducts = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())
@@ -101,15 +91,13 @@ public class InvoiceService {
                 })
                 .toList();
         invoice.updateInvoiceProduct(invoiceProducts);
-
         return InvoiceInfoResponse.from(invoice);
     }
 
     @Transactional
     public void deleteInvoice(Long invoiceId) {
-        Invoice invoice=invoiceRepository.findById(invoiceId)
+        Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
-
         invoiceRepository.delete(invoice);
     }
 }
