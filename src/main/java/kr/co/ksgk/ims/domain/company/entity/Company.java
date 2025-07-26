@@ -49,4 +49,23 @@ public class Company extends BaseEntity {
     public void markAsDeleted() {
         this.deletedAt = LocalDateTime.now();
     }
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateBusinessNumber(String businessNumber) {
+        this.businessNumber = businessNumber;
+    }
+
+    public void updateRepresentativeName(String representativeName) {
+        this.representativeName = representativeName;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
+    public void updateNote(String note) {
+        this.note = note;
+    }
 }

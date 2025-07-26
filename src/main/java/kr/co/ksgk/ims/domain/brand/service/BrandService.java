@@ -1,61 +1,63 @@
 package kr.co.ksgk.ims.domain.brand.service;
 
-import kr.co.ksgk.ims.domain.brand.dto.BrandDto;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
+import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
+import kr.co.ksgk.ims.domain.company.entity.Company;
+import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
+import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BrandService {
 
     private final BrandRepository brandRepository;
+    private final CompanyRepository companyRepository;
 
-    public List<BrandDto> getAllBrands() {
-        return brandRepository.findAll().stream()
-                .filter(brand -> brand.getDeletedAt() == null)
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    //등록
+    @Transactional
+    public BrandResponse createBrand(BrandRequest request) {
+        Company company = companyRepository.findById(request.companyId())
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
+        Brand brand = request.toEntity(company);
+        Brand saved = brandRepository.save(brand);
+        return BrandResponse.from(saved);
     }
 
-    public BrandDto getBrand(Long id) {
+    //조회
+    public BrandResponse getBrand(Long id) {
         Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 브랜드입니다."));
-        return toDTO(brand);
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+        return BrandResponse.from(brand);
     }
 
-    public BrandDto createBrand(BrandDto dto) {
-        Brand brand = Brand.builder()
-                .name(dto.getName())
-                .note(dto.getNote())
-                .build();
-        brandRepository.save(brand);
-        return toDTO(brand);
+    //수정
+    @Transactional
+    public BrandResponse updateBrand(Long brandId, BrandRequest request) {
+        Brand brand = brandRepository.findById(brandId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+        if (request.name() != null) {
+            brand.updateName(request.name());
+        }
+        if (request.note() != null) {
+            brand.updateNote(request.note());
+        }
+        return BrandResponse.from(brand);
     }
 
-    public BrandDto updateBrand(Long id, BrandDto dto) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 브랜드입니다."));
-        brand.update(dto.getName(), dto.getNote());
-        return toDTO(brand);
-    }
-
+    //삭제
     public void deleteBrand(Long id) {
         Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 브랜드입니다."));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         brand.softDelete();
-    }
-
-    private BrandDto toDTO(Brand brand) {
-        return BrandDto.builder()
-                .id(brand.getId())
-                .name(brand.getName())
-                .note(brand.getNote())
-                .deletedAt(brand.getDeletedAt())
-                .build();
     }
 }

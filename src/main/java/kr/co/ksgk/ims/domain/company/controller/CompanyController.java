@@ -1,12 +1,12 @@
 package kr.co.ksgk.ims.domain.company.controller;
 
-import kr.co.ksgk.ims.domain.company.dto.CompanyDto;
+import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
+import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.company.service.CompanyService;
+import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,27 +14,27 @@ import java.util.List;
 public class CompanyController {
     private final CompanyService companyService;
 
-    @GetMapping
-    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto) {
-        CompanyDto created = companyService.createCompany(companyDto);
-        return ResponseEntity.ok(created);
+    @PostMapping
+    public ResponseEntity<SuccessResponse<?>> createCompany(@RequestBody CompanyRequest request) {
+        CompanyResponse companyResponse = companyService.createCompany(request);
+        return SuccessResponse.created(companyResponse);
     }
 
     @GetMapping("/{companyId}")
-    public ResponseEntity<CompanyDto> getCompany(@PathVariable Long companyId) {
-        CompanyDto company = companyService.getCompanyById(companyId);
-        return ResponseEntity.ok(company);
+    public ResponseEntity<SuccessResponse<?>> getCompany(@PathVariable Long companyId) {
+        CompanyResponse companyResponse = companyService.getCompany(companyId);
+        return SuccessResponse.ok(companyResponse);
     }
 
     @PatchMapping("/{companyId}")
-    public ResponseEntity<CompanyDto> updateCompany(@PathVariable Long companyId, @RequestBody CompanyDto companyDto) {
-        CompanyDto updated = companyService.updateCompany(companyId, companyDto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<SuccessResponse<?>> updateCompany(@PathVariable Long companyId, @RequestBody CompanyRequest request) {
+        CompanyResponse updated = companyService.updateCompany(companyId, request);
+        return SuccessResponse.ok(updated);
     }
 
     @DeleteMapping("/{companyId}")
-    public ResponseEntity<Void> deleteCompany(@PathVariable Long companyId) {
+    public ResponseEntity<SuccessResponse<?>> deleteCompany(@PathVariable Long companyId) {
         companyService.deleteCompany(companyId);
-        return ResponseEntity.noContent().build();
+        return SuccessResponse.noContent();
     }
 }

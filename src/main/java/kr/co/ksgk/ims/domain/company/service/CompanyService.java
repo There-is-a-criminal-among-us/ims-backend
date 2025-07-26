@@ -1,69 +1,65 @@
 package kr.co.ksgk.ims.domain.company.service;
 
-import kr.co.ksgk.ims.domain.company.dto.CompanyDto;
+import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
+import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
+import org.springframework.transaction.annotation.Transactional;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
+import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly=true)
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
     // 등록
-    public CompanyDto createCompany(CompanyDto dto) {
-        Company company = Company.builder()
-                .name(dto.getName())
-                .businessNumber(dto.getBusinessNumber())
-                .representativeName(dto.getRepresentativeName())
-                .address(dto.getAddress())
-                .note(dto.getNote())
-                .build();
-
+    @Transactional
+    public CompanyResponse createCompany(CompanyRequest request) {
+        Company company = request.toEntity();
         Company saved = companyRepository.save(company);
-        return CompanyDto.fromEntity(saved);
+        return CompanyResponse.from(saved);
     }
 
     // 조회
-    public List<CompanyDto> getAllCompanies() {
-        return companyRepository.findAll().stream()
-                .map(CompanyDto::fromEntity)
-                .collect(Collectors.toList());
+    public CompanyResponse getCompany(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
+        return CompanyResponse.from(company);
     }
 
     // 수정
-    public CompanyDto updateCompany(Long id, CompanyDto dto) {
+    @Transactional
+    public CompanyResponse updateCompany(Long id, CompanyRequest request) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("회사 정보가 없습니다. ID: " + id));
-
-        Company updated = Company.builder()
-                .id(company.getId()) // ⚠ 수정 시 ID 포함
-                .name(dto.getName())
-                .businessNumber(dto.getBusinessNumber())
-                .representativeName(dto.getRepresentativeName())
-                .address(dto.getAddress())
-                .note(dto.getNote())
-                .build();
-
-        return CompanyDto.fromEntity(companyRepository.save(updated));
-    }
-
-
-
-    public CompanyDto getCompanyById(Long id) {
-        Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("회사 정보가 없습니다. ID: " + id));
-        return CompanyDto.fromEntity(company);
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
+        if (request.name() != null) {
+            company.updateName(request.name());
+        }
+        if (request.businessNumber() != null) {
+            company.updateBusinessNumber(request.businessNumber());
+        }
+        if (request.representativeName() != null) {
+            company.updateRepresentativeName(request.representativeName());
+        }
+        if (request.address() != null) {
+            company.updateAddress(request.address());
+        }
+        if (request.note() != null) {
+            company.updateNote(request.note());
+        }
+        return CompanyResponse.from(company);
     }
 
     public void deleteCompany(Long companyId) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new IllegalArgumentException("회사 정보가 없습니다. ID: " + companyId));
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
         company.markAsDeleted();
     }
 }

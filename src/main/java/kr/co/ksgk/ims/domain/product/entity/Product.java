@@ -31,10 +31,8 @@ public class Product extends BaseEntity {
     @Lob
     private String note;
 
-    // 논리적 삭제를 위한 setter 추가 (BaseEntity에 없으면 Product에 추가)
-    // 만약 BaseEntity에 setDeletedAt이 있다면 제거
-    @Setter
     private LocalDateTime deletedAt;
+
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
@@ -49,16 +47,17 @@ public class Product extends BaseEntity {
         this.note = note;
     }
 
-    // 이름만 업데이트하는 메소드
     public void updateName(String name) {
         this.name = name;
     }
 
-    // 비고만 업데이트하는 메소드
     public void updateNote(String note) {
         this.note = note;
     }
 
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 
 
 }

@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.brand.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import lombok.*;
@@ -22,6 +23,10 @@ public class Brand extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
     @Column(nullable = false)
     private String name;
 
@@ -36,12 +41,15 @@ public class Brand extends BaseEntity {
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products = new ArrayList<>();
 
-    public void update(String name, String note) {
+    public void updateName(String name) {
         this.name = name;
+    }
+    public void updateNote(String note) {
         this.note = note;
     }
 
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }
+
 }
