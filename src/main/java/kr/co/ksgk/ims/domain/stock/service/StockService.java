@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.stock.service;
 
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -30,7 +32,12 @@ public class StockService {
         int year = yearParam != null ? yearParam : today.getYear();
         int month = monthParam != null ? monthParam : today.getMonthValue();
         LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = today.minusDays(1);
+        LocalDate endDate;
+        if (year == today.getYear() && month == today.getMonthValue()) {
+            endDate = today.minusDays(1);
+        } else {
+            endDate = YearMonth.of(year, month).atEndOfMonth();
+        }
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         List<Long> companyIds = member.getMemberCompanies().stream()
@@ -39,7 +46,9 @@ public class StockService {
         List<Long> brandIds = member.getMemberBrands().stream()
                 .map(mb -> mb.getBrand().getId())
                 .toList();
-        List<Product> products = productRepository.findByCompanyIdInOrBrandIdIn(companyIds, brandIds);
+        List<Product> products = member.getRole() == Role.ADMIN ?
+                productRepository.findAll() :
+                productRepository.findByCompanyIdInOrBrandIdIn(companyIds, brandIds);
         List<DailyStock> dailyStocks = stockRepository.findAllByProductsAndDateBetween(products, startDate, endDate);
         return DailyStockResponse.of(startDate, dailyStocks);
     }
