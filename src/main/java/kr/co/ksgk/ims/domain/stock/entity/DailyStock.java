@@ -26,17 +26,53 @@ public class DailyStock {
     private Integer currentStock;
 
     @Column(nullable = false)
-    private Integer inboundTotal;
+    private Integer incoming;
 
     @Column(nullable = false)
-    private Integer outboundTotal;
+    private Integer returnIncoming;
 
     @Column(nullable = false)
-    private Integer adjustmentTotal;
+    private Integer outgoing;
 
     @Column(nullable = false)
-    LocalDate stockDate;
+    private Integer coupangFulfillment;
+
+    @Column(nullable = false)
+    private Integer naverFulfillment;
+
+    @Column(nullable = false)
+    private Integer deliveryOutgoing;
+
+    @Column(nullable = false)
+    private Integer redelivery;
+
+    @Column(nullable = false)
+    private Integer damaged;
+
+    @Column(nullable = false)
+    private Integer disposal;
+
+    @Column(nullable = false)
+    private Integer lost;
+
+    @Column(nullable = false)
+    private Integer adjustment;
+
+    @Column(nullable = false)
+    private LocalDate stockDate;
 
     @OneToMany(mappedBy = "dailyStock", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions = new ArrayList<>();
+
+    public int getInboundTotal() {
+        return incoming + returnIncoming;
+    }
+
+    public int getOutboundTotal() {
+        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing + redelivery;
+    }
+
+    public int getAdjustmentTotal() {
+        return damaged + disposal + lost + adjustment;
+    }
 }

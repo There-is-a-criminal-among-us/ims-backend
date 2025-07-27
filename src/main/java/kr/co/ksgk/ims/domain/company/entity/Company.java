@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.company.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
@@ -11,7 +12,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -39,6 +42,9 @@ public class Company extends BaseEntity {
     private String note;
 
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Brand> brands = new HashSet<>();
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberCompany> memberCompanies = new ArrayList<>();

@@ -12,12 +12,17 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/companies")
 public class CompanyController {
+
     private final CompanyService companyService;
 
     @PostMapping
     public ResponseEntity<SuccessResponse<?>> createCompany(@RequestBody CompanyRequest request) {
         CompanyResponse companyResponse = companyService.createCompany(request);
         return SuccessResponse.created(companyResponse);
+    @GetMapping("/tree")
+    public ResponseEntity<SuccessResponse<?>> getCompanyTree() {
+        TreeResponse treeResponse = companyService.getCompanyTree();
+        return SuccessResponse.ok(treeResponse);
     }
 
     @GetMapping("/{companyId}")
@@ -25,6 +30,7 @@ public class CompanyController {
         CompanyResponse companyResponse = companyService.getCompany(companyId);
         return SuccessResponse.ok(companyResponse);
     }
+}
 
     @PatchMapping("/{companyId}")
     public ResponseEntity<SuccessResponse<?>> updateCompany(@PathVariable Long companyId, @RequestBody CompanyRequest request) {

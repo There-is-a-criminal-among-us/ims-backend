@@ -1,5 +1,7 @@
 package kr.co.ksgk.ims.domain.company.service;
 
+import kr.co.ksgk.ims.domain.company.dto.CompanyTreeResponse;
+import kr.co.ksgk.ims.domain.company.dto.TreeResponse;
 import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
 import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,16 +11,25 @@ import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly=true)
+@Transactional(readOnly = true)
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
+    public TreeResponse getCompanyTree() {
+        List<Company> companies = companyRepository.findAllWithBrandsAndProducts();
+        List<CompanyTreeResponse> companyTreeResponseList = companies.stream()
+                .map(CompanyTreeResponse::from)
+                .collect(Collectors.toList());
+        return TreeResponse.from(companyTreeResponseList);
     // 등록
     @Transactional
     public CompanyResponse createCompany(CompanyRequest request) {
