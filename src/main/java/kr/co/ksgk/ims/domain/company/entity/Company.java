@@ -5,10 +5,11 @@ import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,9 +19,9 @@ import java.util.Set;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-@AllArgsConstructor
+@SQLDelete(sql = "UPDATE company SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at is NULL")
 public class Company extends BaseEntity {
 
     @Id
@@ -43,7 +44,16 @@ public class Company extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder
+    public Company(String name, String businessNumber, String representativeName, String address, String note) {
+        this.name = name;
+        this.businessNumber = businessNumber;
+        this.representativeName = representativeName;
+        this.address = address;
+        this.note = note;
+    }
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private Set<Brand> brands = new HashSet<>();
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,9 +62,6 @@ public class Company extends BaseEntity {
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Invoice> invoices = new ArrayList<>();
 
-    public void markAsDeleted() {
-        this.deletedAt = LocalDateTime.now();
-    }
     public void updateName(String name) {
         this.name = name;
     }

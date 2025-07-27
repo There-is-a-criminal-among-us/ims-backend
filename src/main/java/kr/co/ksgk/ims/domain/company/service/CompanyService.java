@@ -11,11 +11,9 @@ import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +28,8 @@ public class CompanyService {
                 .map(CompanyTreeResponse::from)
                 .collect(Collectors.toList());
         return TreeResponse.from(companyTreeResponseList);
+    }
+
     // 등록
     @Transactional
     public CompanyResponse createCompany(CompanyRequest request) {
@@ -50,27 +50,18 @@ public class CompanyService {
     public CompanyResponse updateCompany(Long id, CompanyRequest request) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        if (request.name() != null) {
-            company.updateName(request.name());
-        }
-        if (request.businessNumber() != null) {
-            company.updateBusinessNumber(request.businessNumber());
-        }
-        if (request.representativeName() != null) {
-            company.updateRepresentativeName(request.representativeName());
-        }
-        if (request.address() != null) {
-            company.updateAddress(request.address());
-        }
-        if (request.note() != null) {
-            company.updateNote(request.note());
-        }
+        if (request.name() != null) company.updateName(request.name());
+        if (request.businessNumber() != null) company.updateBusinessNumber(request.businessNumber());
+        if (request.representativeName() != null) company.updateRepresentativeName(request.representativeName());
+        if (request.address() != null) company.updateAddress(request.address());
+        if (request.note() != null) company.updateNote(request.note());
         return CompanyResponse.from(company);
     }
 
+    @Transactional
     public void deleteCompany(Long companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        company.markAsDeleted();
+        companyRepository.delete(company);
     }
 }

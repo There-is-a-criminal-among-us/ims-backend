@@ -6,8 +6,8 @@ import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +17,7 @@ public class ProductController {
     private final ProductService productService;
 
     //등록
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<SuccessResponse<?>> createProduct(@RequestBody ProductRequest request) {
         ProductResponse response = productService.createProduct(request);
@@ -31,6 +32,7 @@ public class ProductController {
     }
 
     //수정
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> updateProduct(@PathVariable Long productId, @RequestBody ProductRequest request) { // ProductRequest를 직접 사용
         ProductResponse response = productService.updateProduct(productId, request);
@@ -38,6 +40,7 @@ public class ProductController {
     }
 
     //삭제
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> deleteProduct(@PathVariable Long productId) {
         productService.deleteProduct(productId);

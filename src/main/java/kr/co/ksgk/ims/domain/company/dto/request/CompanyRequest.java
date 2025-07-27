@@ -1,11 +1,8 @@
 package kr.co.ksgk.ims.domain.company.dto.request;
 
 import kr.co.ksgk.ims.domain.company.entity.Company;
-import lombok.Builder;
 
-@Builder
 public record CompanyRequest(
-        Long id,
         String name,
         String businessNumber,
         String representativeName,
@@ -14,13 +11,11 @@ public record CompanyRequest(
 ) {
     public Company toEntity() {
         return Company.builder()
-                .name(this.name)
-                .businessNumber(this.businessNumber)
-                .representativeName(this.representativeName)
-                .address(this.address)
-                .note(this.note)
+                .name(name)
+                .businessNumber(businessNumber)
+                .representativeName(representativeName)
+                .address(address)
+                .note(note)
                 .build();
-
-
     }
 }

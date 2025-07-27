@@ -12,9 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,8 +31,8 @@ public class BrandService {
     }
 
     //조회
-    public BrandResponse getBrand(Long id) {
-        Brand brand = brandRepository.findById(id)
+    public BrandResponse getBrand(Long brandId) {
+        Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         return BrandResponse.from(brand);
     }
@@ -45,19 +42,16 @@ public class BrandService {
     public BrandResponse updateBrand(Long brandId, BrandRequest request) {
         Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
-        if (request.name() != null) {
-            brand.updateName(request.name());
-        }
-        if (request.note() != null) {
-            brand.updateNote(request.note());
-        }
+        if (request.name() != null) brand.updateName(request.name());
+        if (request.note() != null) brand.updateNote(request.note());
         return BrandResponse.from(brand);
     }
 
     //삭제
-    public void deleteBrand(Long id) {
-        Brand brand = brandRepository.findById(id)
+    @Transactional
+    public void deleteBrand(Long brandId) {
+        Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
-        brand.softDelete();
+        brandRepository.delete(brand);
     }
 }

@@ -12,9 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,7 +25,6 @@ public class ProductService {
     public ProductResponse createProduct(ProductRequest request) {
         Brand brand = brandRepository.findById(request.brandId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
-
         Product product = request.toEntity(brand);
         Product saved = productRepository.save(product);
         return ProductResponse.from(saved);
@@ -46,19 +42,15 @@ public class ProductService {
     public ProductResponse updateProduct(Long productId, ProductRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        if (request.name() != null) {
-            product.updateName(request.name());
-        }
-        if (request.note() != null) {
-            product.updateNote(request.note());
-        }
+        if (request.name() != null) product.updateName(request.name());
+        if (request.note() != null) product.updateNote(request.note());
         return ProductResponse.from(product);
     }
+
     @Transactional
     public void deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        product.softDelete();
+        productRepository.delete(product);
     }
 }
