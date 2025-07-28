@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE product SET deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted_at is NULL")
 public class Product extends BaseEntity {
 
     @Id
@@ -32,9 +35,24 @@ public class Product extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    @Builder
+    public Product(Brand brand, String name, String note) {
+        this.brand = brand;
+        this.name = name;
+        this.note = note;
+    }
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DeliveryItemMapping> deliveryItemMappings = new ArrayList<>();
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateNote(String note) {
+        this.note = note;
+    }
 }
