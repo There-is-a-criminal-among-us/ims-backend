@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,8 +36,6 @@ public class Invoice extends BaseEntity {
 
     @Column(length = 512, nullable = false)
     private String productUrl;
-
-    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();

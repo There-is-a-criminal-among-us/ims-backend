@@ -1,22 +1,25 @@
 package kr.co.ksgk.ims.domain.invoice.dto.response;
 
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
+@Builder
 public record SimpleInvoiceInfoResponse(
-        Long invoiceId,
+        long id,
         String number,
         String name,
         String phone,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt
+) {
     public static SimpleInvoiceInfoResponse from(Invoice invoice) {
-        return new SimpleInvoiceInfoResponse(
-                invoice.getId(),
-                invoice.getNumber(),
-                invoice.getName(),
-                invoice.getPhone(),
-                invoice.getCreatedAt()
-        );
+        return SimpleInvoiceInfoResponse.builder()
+                .id(invoice.getId())
+                .number(invoice.getNumber())
+                .name(invoice.getName())
+                .phone(invoice.getPhone())
+                .createdAt(invoice.getCreatedAt())
+                .build();
     }
 }

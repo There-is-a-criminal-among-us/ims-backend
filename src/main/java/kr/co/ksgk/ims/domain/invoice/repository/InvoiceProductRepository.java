@@ -3,14 +3,17 @@ package kr.co.ksgk.ims.domain.invoice.repository;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, Long> {
 
+    @EntityGraph(attributePaths = {"invoice", "product"})
     Page<InvoiceProduct> findAll(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"invoice", "product"})
     @Query("""
                 SELECT ip
                 FROM InvoiceProduct ip

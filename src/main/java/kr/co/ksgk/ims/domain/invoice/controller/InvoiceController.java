@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/invoices")
 public class InvoiceController {
+
     private final InvoiceService invoiceService;
 
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @PostMapping
     ResponseEntity<SuccessResponse<?>> uploadInvoice(@RequestBody UploadInvoiceInfoRequest request) {
         SimpleInvoiceInfoResponse response = invoiceService.uploadInvoice(request);
@@ -27,7 +29,7 @@ public class InvoiceController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    ResponseEntity<SuccessResponse<?>> getInvoice(@RequestParam(required = false) String search, Pageable pageable) {
+    ResponseEntity<SuccessResponse<?>> getInvoiceList(@RequestParam(required = false) String search, Pageable pageable) {
         PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, pageable);
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
@@ -40,7 +42,7 @@ public class InvoiceController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{invoiceId}")
+    @PutMapping("/{invoiceId}")
     ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
         InvoiceInfoResponse invoiceInfoResponse = invoiceService.updateInvoiceInfo(invoiceId, request);
         return SuccessResponse.ok(invoiceInfoResponse);
