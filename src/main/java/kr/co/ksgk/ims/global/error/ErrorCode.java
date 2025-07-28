@@ -52,8 +52,10 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "제품을 찾을 수 없습니다."),
 
     // Inventory
-    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "재고 정보를 찾을 수 없습니다."),
-    ;
+    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "IV001", "재고 정보를 찾을 수 없습니다."),
+
+    // Invoice
+    INVOICE_NOT_FOUND(HttpStatus.NOT_FOUND, "IN001", "송장 정보를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
