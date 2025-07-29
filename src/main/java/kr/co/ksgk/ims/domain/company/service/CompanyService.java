@@ -38,6 +38,14 @@ public class CompanyService {
         return CompanyResponse.from(saved);
     }
 
+    // 전체 조회
+    public List<CompanyResponse> getAllCompanies() {
+        List<Company> companies = companyRepository.findAll();
+        return companies.stream()
+                .map(CompanyResponse::from)
+                .collect(Collectors.toList());
+    }
+
     // 조회
     public CompanyResponse getCompany(Long companyId) {
         Company company = companyRepository.findById(companyId)

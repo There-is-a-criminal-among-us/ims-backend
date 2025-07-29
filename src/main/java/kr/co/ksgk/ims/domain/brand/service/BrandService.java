@@ -4,6 +4,7 @@ import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
+import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -11,6 +12,9 @@ import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,14 @@ public class BrandService {
         Brand brand = request.toEntity(company);
         Brand saved = brandRepository.save(brand);
         return BrandResponse.from(saved);
+    }
+
+    // 전체 조회
+    public List<BrandResponse> getAllBrands() {
+        List<Brand> companies = brandRepository.findAll();
+        return companies.stream()
+                .map(BrandResponse::from)
+                .collect(Collectors.toList());
     }
 
     //조회

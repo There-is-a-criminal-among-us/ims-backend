@@ -3,11 +3,14 @@ package kr.co.ksgk.ims.domain.brand.controller;
 import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.service.BrandService;
+import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/brands")
@@ -22,6 +25,13 @@ public class BrandController {
     public ResponseEntity<SuccessResponse<?>> createBrand(@RequestBody BrandRequest request) {
         BrandResponse brandResponse = brandService.createBrand(request);
         return SuccessResponse.created(brandResponse);
+    }
+
+    //모든 브랜드 조회
+    @GetMapping
+    public ResponseEntity<SuccessResponse<?>> getAllBrands() {
+        List<BrandResponse> response = brandService.getAllBrands();
+        return SuccessResponse.ok(response);
     }
 
     //조회

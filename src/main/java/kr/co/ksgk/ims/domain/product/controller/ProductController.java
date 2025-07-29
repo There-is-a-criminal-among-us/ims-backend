@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/products")
@@ -24,6 +26,12 @@ public class ProductController {
         return SuccessResponse.created(response);
     }
 
+    //모든 품목 조회
+    @GetMapping
+    public ResponseEntity<SuccessResponse<?>> getAllProducts() {
+        List<ProductResponse> response = productService.getAllProducts();
+        return SuccessResponse.ok(response);
+    }
     //조회
     @GetMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> getProduct(@PathVariable Long productId) {
