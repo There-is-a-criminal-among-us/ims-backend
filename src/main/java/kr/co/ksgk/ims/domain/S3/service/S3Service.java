@@ -19,6 +19,9 @@ public class S3Service {
 
     private final AmazonS3 amazonS3;
 
+    @Value("${cloud.aws.region.static}")
+    private String region;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
@@ -38,5 +41,9 @@ public class S3Service {
         String key = generatePresignedUrlRequest.getKey();
 
         return PresignedUrlUploadResponse.of(url, key);
+    }
+
+    public String generateStaticUrl(String keyName) {
+        return "https://" + region + ".vultrobjects.com/" + bucket + "/" + keyName;
     }
 }

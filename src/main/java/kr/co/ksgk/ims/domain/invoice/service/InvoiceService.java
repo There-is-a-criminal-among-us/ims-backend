@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.service;
 
+import kr.co.ksgk.ims.domain.S3.service.S3Service;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +35,19 @@ public class InvoiceService {
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
     private final InvoiceProductRepository invoiceProductRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public SimpleInvoiceInfoResponse uploadInvoice(UploadInvoiceInfoRequest request) {
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        Invoice invoice = request.toEntity(company);
+        String invoiceImageUrl = Optional.ofNullable(request.invoiceKeyName())
+                .map(s3Service::generateStaticUrl)
+                .orElse(null);
+        String productImageUrl = Optional.ofNullable(request.productKeyName())
+                .map(s3Service::generateStaticUrl)
+                .orElse(null);
+        Invoice invoice = request.toEntity(company, invoiceImageUrl, productImageUrl);
         List<InvoiceProduct> productEntities = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())
