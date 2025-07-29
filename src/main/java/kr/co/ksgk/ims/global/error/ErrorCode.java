@@ -55,7 +55,15 @@ public enum ErrorCode {
     INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "IV001", "재고 정보를 찾을 수 없습니다."),
 
     // Invoice
-    INVOICE_NOT_FOUND(HttpStatus.NOT_FOUND, "IN001", "송장 정보를 찾을 수 없습니다.");
+    INVOICE_NOT_FOUND(HttpStatus.NOT_FOUND, "IN001", "송장 정보를 찾을 수 없습니다."),
+
+    // Transaction
+    TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "입출고 정보를 찾을 수 없습니다."),
+    TRANSACTION_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "입출고 유형을 찾을 수 없습니다."),
+    TRANSACTION_NOT_PENDING(HttpStatus.BAD_REQUEST, "T003", "입출고 상태가 대기 중이 아닙니다."),
+    SCHEDULED_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "T004", "입출고 유형이 기타수량이 아닌 경우 예정일이 필요합니다."),
+    SCHEDULED_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "T005", "입출고 유형이 기탁수량인 경우 예정일은 허용되지 않습니다."),
+    ;
 
     private final HttpStatus httpStatus;
     private final String code;

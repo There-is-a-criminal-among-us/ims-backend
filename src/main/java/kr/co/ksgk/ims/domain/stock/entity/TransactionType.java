@@ -17,10 +17,7 @@ public class TransactionType {
     private Long id;
 
     @Column(length = 50, nullable = false)
-    private String code;
-
-    @Column(nullable = false)
-    private String label;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

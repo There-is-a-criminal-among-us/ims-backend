@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -60,9 +58,6 @@ public class DailyStock {
 
     @Column(nullable = false)
     private LocalDate stockDate;
-
-    @OneToMany(mappedBy = "dailyStock", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions = new ArrayList<>();
 
     public int getInboundTotal() {
         return incoming + returnIncoming;
