@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
@@ -8,7 +9,7 @@ import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,41 +17,49 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/invoices")
-public class InvoiceController {
+public class InvoiceController implements InvoiceApi {
 
     private final InvoiceService invoiceService;
 
     @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @PostMapping
-    ResponseEntity<SuccessResponse<?>> uploadInvoice(@RequestBody UploadInvoiceInfoRequest request) {
-        SimpleInvoiceInfoResponse response = invoiceService.uploadInvoice(request);
-        return SuccessResponse.ok(response);
+    public ResponseEntity<SuccessResponse<?>> createInvoice(@RequestBody UploadInvoiceInfoRequest request) {
+        SimpleInvoiceInfoResponse response = invoiceService.createInvoice(request);
+        return SuccessResponse.created(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @GetMapping
-    ResponseEntity<SuccessResponse<?>> getInvoiceList(@RequestParam(required = false) String search, Pageable pageable) {
-        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, pageable);
+    public ResponseEntity<SuccessResponse<?>> getInvoiceList(
+            @Parameter(description = "고객명, 전화번호 검색어")
+            @RequestParam(defaultValue = "") String search,
+
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, PageRequest.of(page, size));
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @GetMapping("/{invoiceId}")
-    ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
+    public ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
         InvoiceInfoResponse invoiceInfoResponse = invoiceService.getInvoiceInfo(invoiceId);
         return SuccessResponse.ok(invoiceInfoResponse);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @PutMapping("/{invoiceId}")
-    ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
+    public ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
         InvoiceInfoResponse invoiceInfoResponse = invoiceService.updateInvoiceInfo(invoiceId, request);
         return SuccessResponse.ok(invoiceInfoResponse);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
     @DeleteMapping("/{invoiceId}")
-    ResponseEntity<SuccessResponse<?>> deleteInvoice(@PathVariable Long invoiceId) {
+    public ResponseEntity<SuccessResponse<?>> deleteInvoice(@PathVariable Long invoiceId) {
         invoiceService.deleteInvoice(invoiceId);
         return SuccessResponse.noContent();
     }

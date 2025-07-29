@@ -38,7 +38,7 @@ public class InvoiceService {
     private final S3Service s3Service;
 
     @Transactional
-    public SimpleInvoiceInfoResponse uploadInvoice(UploadInvoiceInfoRequest request) {
+    public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
         String invoiceImageUrl = Optional.ofNullable(request.invoiceKeyName())

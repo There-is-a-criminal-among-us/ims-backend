@@ -55,9 +55,7 @@ public interface TransactionApi {
             summary = "입출고 내역 상세 조회",
             description = "입출고 내역의 상세 정보를 조회합니다. 입출고 ID를 사용하여 특정 거래를 조회합니다."
     )
-    @ApiResponse(responseCode = "204", description = "입출고 내역 상세 조회 성공",
-            content = @Content(mediaType = "application/json")
-    )
+    @ApiResponse(responseCode = "204", description = "입출고 내역 상세 조회 성공")
     ResponseEntity<SuccessResponse<?>> confirmTransaction(@PathVariable Long transactionId);
 
     @Operation(
