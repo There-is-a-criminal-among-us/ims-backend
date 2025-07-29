@@ -41,13 +41,10 @@ public class InvoiceService {
     public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        String invoiceImageUrl = Optional.ofNullable(request.invoiceKeyName())
-                .map(s3Service::generateStaticUrl)
-                .orElse(null);
         String productImageUrl = Optional.ofNullable(request.productKeyName())
                 .map(s3Service::generateStaticUrl)
                 .orElse(null);
-        Invoice invoice = request.toEntity(company, invoiceImageUrl, productImageUrl);
+        Invoice invoice = request.toEntity(company, productImageUrl);
         List<InvoiceProduct> productEntities = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())

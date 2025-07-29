@@ -10,11 +10,11 @@ public record UploadInvoiceInfoRequest(
         String name,
         String phone,
         String number,
-        String invoiceKeyName,
+        String invoiceImageUrl,
         String productKeyName,
         List<SimpleProductInfo> products
 ) {
-    public Invoice toEntity(Company company, String invoiceImageUrl, String productImageUrl) {
+    public Invoice toEntity(Company company, String productImageUrl) {
         return Invoice.builder()
                 .company(company)
                 .name(name)
