@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.auth.dto.request.LoginRequest;
+import kr.co.ksgk.ims.domain.auth.dto.request.ReissueRequest;
 import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
 import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.auth.dto.response.TokenResponse;
@@ -36,4 +37,15 @@ public interface AuthApi {
                     schema = @Schema(implementation = TokenResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginRequest request);
+
+    @PostMapping("/token")
+    @Operation(
+            summary = "토큰 재발급",
+            description = "리프레쉬 토큰을 사용하여 새로운 토큰을 재발급합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "토큰 재발급",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = TokenResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> reissueToken(@RequestBody ReissueRequest request);
 }

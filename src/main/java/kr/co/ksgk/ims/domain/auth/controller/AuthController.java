@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.auth.controller;
 
 import kr.co.ksgk.ims.domain.auth.dto.request.LoginRequest;
+import kr.co.ksgk.ims.domain.auth.dto.request.ReissueRequest;
 import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
 import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.auth.dto.response.TokenResponse;
@@ -26,6 +27,12 @@ public class AuthController implements  AuthApi {
     @PostMapping("/login")
     public ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginRequest request) {
         TokenResponse tokenResponse = authService.login(request);
+        return SuccessResponse.ok(tokenResponse);
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<SuccessResponse<?>> reissueToken(@RequestBody ReissueRequest request) {
+        TokenResponse tokenResponse = authService.reissueToken(request);
         return SuccessResponse.ok(tokenResponse);
     }
 }
