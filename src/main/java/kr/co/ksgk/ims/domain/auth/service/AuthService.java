@@ -3,6 +3,7 @@ package kr.co.ksgk.ims.domain.auth.service;
 import kr.co.ksgk.ims.domain.auth.dto.AuthDto;
 import kr.co.ksgk.ims.domain.auth.dto.CustomUserDetails;
 import kr.co.ksgk.ims.domain.auth.dto.request.LoginRequest;
+import kr.co.ksgk.ims.domain.auth.dto.request.ReissueRequest;
 import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
 import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.auth.dto.response.TokenResponse;
@@ -17,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -46,5 +48,18 @@ public class AuthService {
         String accessToken = jwtProvider.generateAccessToken(authentication);
         String refreshToken = jwtProvider.generateRefreshToken(authentication);
         return TokenResponse.of(accessToken, refreshToken);
+    }
+
+    public TokenResponse reissueToken(ReissueRequest request) {
+        if (!StringUtils.hasText(request.refreshToken())) {
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
+        }
+        jwtProvider.validateRefreshToken(request.refreshToken());
+        Authentication authentication = jwtProvider.getAuthentication(request.refreshToken());
+        // TODO: Redis에 저장된 refreshToken과 비교하여 일치하는지 확인
+        String newAccessToken = jwtProvider.generateAccessToken(authentication);
+        String newRefreshToken = jwtProvider.generateRefreshToken(authentication);
+        // TODO: Redis에 새로 발급한 refreshToken 저장
+        return TokenResponse.of(newAccessToken, newRefreshToken);
     }
 }
