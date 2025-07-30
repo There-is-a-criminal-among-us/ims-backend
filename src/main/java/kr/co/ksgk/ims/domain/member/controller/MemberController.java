@@ -1,5 +1,8 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
+import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
+import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
+import kr.co.ksgk.ims.domain.auth.service.AuthService;
 import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
 import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
@@ -19,6 +22,14 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController implements MemberApi {
 
     private final MemberService memberService;
+    private final AuthService authService;
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request) {
+        MemberResponse memberResponse = authService.signup(request);
+        return SuccessResponse.created(memberResponse);
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{memberId}")

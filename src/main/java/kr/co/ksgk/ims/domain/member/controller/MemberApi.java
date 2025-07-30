@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
+import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
 import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
@@ -17,6 +19,15 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Member", description = "회원 API")
 public interface MemberApi {
+
+    @Operation(
+            summary = "회원 생성"
+    )
+    @ApiResponse(responseCode = "201", description = "회원 생성 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = MemberResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request);
 
     @Operation(
             summary = "회원 정보 수정",

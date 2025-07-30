@@ -2,8 +2,6 @@ package kr.co.ksgk.ims.domain.auth.controller;
 
 import kr.co.ksgk.ims.domain.auth.dto.request.LoginRequest;
 import kr.co.ksgk.ims.domain.auth.dto.request.ReissueRequest;
-import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
-import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.auth.dto.response.TokenResponse;
 import kr.co.ksgk.ims.domain.auth.service.AuthService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -17,12 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController implements  AuthApi {
 
     private final AuthService authService;
-
-    @PostMapping("/signup")
-    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request) {
-        MemberResponse memberResponse = authService.signup(request);
-        return SuccessResponse.created(memberResponse);
-    }
 
     @PostMapping("/login")
     public ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginRequest request) {
