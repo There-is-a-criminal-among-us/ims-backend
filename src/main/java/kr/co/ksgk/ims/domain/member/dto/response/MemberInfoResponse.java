@@ -32,7 +32,7 @@ public record MemberInfoResponse(
                         .map(ManagingDto::from)
                         .collect(Collectors.toList())
                 )
-                .managingCompanies(member.getMemberBrands().stream()
+                .managingBrands(member.getMemberBrands().stream()
                         .map(ManagingDto::from)
                         .collect(Collectors.toList())
                 )
