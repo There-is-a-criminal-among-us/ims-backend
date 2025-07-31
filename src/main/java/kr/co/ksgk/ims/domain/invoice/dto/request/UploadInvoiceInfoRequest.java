@@ -10,18 +10,18 @@ public record UploadInvoiceInfoRequest(
         String name,
         String phone,
         String number,
-        String invoiceImageUrl,
+        String invoiceKeyName,
         String productKeyName,
         List<SimpleProductInfo> products
 ) {
-    public Invoice toEntity(Company company, String productImageUrl) {
+    public Invoice toEntity(Company company) {
         return Invoice.builder()
                 .company(company)
                 .name(name)
                 .phone(phone)
                 .number(number)
-                .invoiceUrl(invoiceImageUrl)
-                .productUrl(productImageUrl)
+                .invoiceKeyName(invoiceKeyName)
+                .productKeyName(productKeyName)
                 .build();
     }
 }

@@ -11,16 +11,14 @@ public record OcrExtractResponse(
         String senderName,
         String senderPhone,
         String invoiceNumber,
-        ProductMappingResponse products,
-        String invoiceImageUrl
+        ProductMappingResponse products
 ) {
-    public static OcrExtractResponse of(ExtractedInvoice extractedInvoice, List<ProductMapping> productMappings, String invoiceImageUrl) {
+    public static OcrExtractResponse of(ExtractedInvoice extractedInvoice, List<ProductMapping> productMappings) {
         return OcrExtractResponse.builder()
                 .senderName(extractedInvoice.sender_name())
                 .senderPhone(extractedInvoice.sender_phone())
                 .invoiceNumber(extractedInvoice.invoice_number())
                 .products(ProductMappingResponse.from(productMappings))
-                .invoiceImageUrl(invoiceImageUrl)
                 .build();
     }
 }

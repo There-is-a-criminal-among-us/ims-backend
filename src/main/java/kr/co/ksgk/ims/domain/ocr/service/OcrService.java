@@ -59,7 +59,7 @@ public class OcrService {
         List<ProductMapping> productMappings = rawProductRepository.findByName(extractedInvoice.item_name())
                 .map(productMappingRepository::findByRawProduct)
                 .orElse(List.of());
-        return OcrExtractResponse.of(extractedInvoice, productMappings, invoiceImageUrl);
+        return OcrExtractResponse.of(extractedInvoice, productMappings);
     }
 
     private String extractTextWithNaverOcr(String imageUrl) {

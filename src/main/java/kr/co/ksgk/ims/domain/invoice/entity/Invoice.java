@@ -32,22 +32,22 @@ public class Invoice extends BaseEntity {
     private String number;
 
     @Column(length = 512, nullable = false)
-    private String invoiceUrl;
+    private String invoiceKeyName;
 
     @Column(length = 512, nullable = false)
-    private String productUrl;
+    private String productKeyName;
 
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
 
     @Builder
-    public Invoice(Company company, String name, String phone, String number, String invoiceUrl, String productUrl) {
+    public Invoice(Company company, String name, String phone, String number, String invoiceKeyName, String productKeyName) {
         this.company = company;
         this.name = name;
         this.phone = phone;
         this.number = number;
-        this.invoiceUrl = invoiceUrl;
-        this.productUrl = productUrl;
+        this.invoiceKeyName = invoiceKeyName;
+        this.productKeyName = productKeyName;
     }
 
     public void updateName(String name) {
@@ -58,8 +58,12 @@ public class Invoice extends BaseEntity {
         this.phone = phone;
     }
 
-    public void updateInvoiceUrl(String invoiceUrl) {
-        this.invoiceUrl = invoiceUrl;
+    public void updateInvoiceKeyName(String invoiceKeyName) {
+        this.invoiceKeyName = invoiceKeyName;
+    }
+
+    public void updateProductKeyName(String productKeyName) {
+        this.productKeyName = productKeyName;
     }
 
     public void updateInvoiceProduct(List<InvoiceProduct> invoiceProducts) {

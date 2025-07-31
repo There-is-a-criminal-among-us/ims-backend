@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,10 +40,7 @@ public class InvoiceService {
     public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        String productImageUrl = Optional.ofNullable(request.productKeyName())
-                .map(s3Service::generateStaticUrl)
-                .orElse(null);
-        Invoice invoice = request.toEntity(company, productImageUrl);
+        Invoice invoice = request.toEntity(company);
         List<InvoiceProduct> productEntities = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())
@@ -79,7 +75,7 @@ public class InvoiceService {
     public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
-        return InvoiceInfoResponse.from(invoice);
+        return InvoiceInfoResponse.from(invoice, s3Service);
     }
 
     @Transactional
@@ -88,7 +84,8 @@ public class InvoiceService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
         if (request.name() != null) invoice.updateName(request.name());
         if (request.phone() != null) invoice.updatePhone(request.phone());
-        if (request.invoiceUrl() != null) invoice.updateInvoiceUrl(request.invoiceUrl());
+        if (request.invoiceKeyName() != null) invoice.updateInvoiceKeyName(request.invoiceKeyName());
+        if (request.productKeyName() != null) invoice.updateProductKeyName(request.productKeyName());
         List<InvoiceProduct> invoiceProducts = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())
@@ -97,7 +94,7 @@ public class InvoiceService {
                 })
                 .toList();
         invoice.updateInvoiceProduct(invoiceProducts);
-        return InvoiceInfoResponse.from(invoice);
+        return InvoiceInfoResponse.from(invoice, s3Service);
     }
 
     @Transactional

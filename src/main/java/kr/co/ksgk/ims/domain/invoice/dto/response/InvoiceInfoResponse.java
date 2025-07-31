@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.dto.response;
 
+import kr.co.ksgk.ims.domain.S3.service.S3Service;
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import lombok.Builder;
 
@@ -15,17 +16,19 @@ public record InvoiceInfoResponse(
         String phone,
         String number,
         String invoiceUrl,
+        String productUrl,
         LocalDateTime createdAt,
         List<InvoiceProductInfoResponse> products
 ) {
-    public static InvoiceInfoResponse from(Invoice invoice) {
+    public static InvoiceInfoResponse from(Invoice invoice, S3Service s3Service) {
         return InvoiceInfoResponse.builder()
                 .invoiceId(invoice.getId())
                 .companyId(invoice.getCompany().getId())
                 .name(invoice.getName())
                 .phone(invoice.getPhone())
                 .number(invoice.getNumber())
-                .invoiceUrl(invoice.getInvoiceUrl())
+                .invoiceUrl(s3Service.generateStaticUrl(invoice.getInvoiceKeyName()))
+                .productUrl(s3Service.generateStaticUrl(invoice.getProductKeyName()))
                 .createdAt(invoice.getCreatedAt())
                 .products(invoice.getInvoiceProducts().stream()
                         .map(InvoiceProductInfoResponse::from)
