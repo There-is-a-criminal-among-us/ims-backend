@@ -64,7 +64,7 @@ public class MemberService {
         } else {
             throw new BusinessException(ErrorCode.BAD_REQUEST);
         }
-        return  MemberInfoResponse.from(member);
+        return MemberInfoResponse.from(member);
     }
 
     public PagingMemberInfoResponse getMemberList(String search, Pageable pageable) {
