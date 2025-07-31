@@ -11,13 +11,11 @@ import kr.co.ksgk.ims.domain.ocr.dto.response.ExtractedInvoice;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OcrExtractResponse;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OpenAiResponse;
 import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
-import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.ErrorCode;
-import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -58,9 +56,9 @@ public class OcrService {
         String invoiceImageUrl = s3Service.generateStaticUrl(request.invoiceKeyName());
         String ocrText = extractTextWithNaverOcr(invoiceImageUrl);
         ExtractedInvoice extractedInvoice = extractFromOcr(ocrText);
-        RawProduct rawProduct = rawProductRepository.findByName(extractedInvoice.item_name())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.RAW_PRODUCT_NOT_FOUND));
-        List<ProductMapping> productMappings = productMappingRepository.findByRawProduct(rawProduct);
+        List<ProductMapping> productMappings = rawProductRepository.findByName(extractedInvoice.item_name())
+                .map(productMappingRepository::findByRawProduct)
+                .orElse(List.of());
         return OcrExtractResponse.of(extractedInvoice, productMappings, invoiceImageUrl);
     }
 
