@@ -12,6 +12,12 @@ public record ProductMappingResponse(
         List<ProductMappingDetailsResponse> mappings
 ) {
     public static ProductMappingResponse from(List<ProductMapping> productMappings) {
+        if (productMappings == null || productMappings.isEmpty()) {
+            return ProductMappingResponse.builder()
+                    .rawName("")
+                    .mappings(List.of())
+                    .build();
+        }
         return ProductMappingResponse.builder()
                 .rawName(productMappings.get(0).getRawProduct().getName())
                 .mappings(productMappings.stream()
