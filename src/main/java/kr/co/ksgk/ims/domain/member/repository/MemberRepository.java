@@ -19,8 +19,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByUsername(String username);
 
+    @EntityGraph(attributePaths = {"memberCompanies", "memberCompanies.company", "memberBrands", "memberBrands.brand"})
     Page<Member> findAll(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"memberCompanies", "memberCompanies.company", "memberBrands", "memberBrands.brand"})
     @Query("""
                 SELECT DISTINCT m
                 FROM Member m

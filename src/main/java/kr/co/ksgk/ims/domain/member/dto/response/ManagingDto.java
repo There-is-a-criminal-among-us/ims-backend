@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.member.dto.response;
 
+import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.member.entity.MemberCompany;
 import lombok.Builder;
@@ -7,7 +8,8 @@ import lombok.Builder;
 @Builder
 public record ManagingDto(
         long id,
-        String name
+        String name,
+        CompanyResponse company
 ) {
     public static ManagingDto from(MemberCompany memberCompany) {
         return ManagingDto
@@ -22,6 +24,7 @@ public record ManagingDto(
                 .builder()
                 .id(memberBrand.getBrand().getId())
                 .name(memberBrand.getBrand().getName())
+                .company(CompanyResponse.from(memberBrand.getBrand().getCompany()))
                 .build();
     }
 }

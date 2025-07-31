@@ -9,8 +9,9 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -55,10 +56,10 @@ public class Member extends BaseEntity {
     }
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MemberCompany> memberCompanies = new ArrayList<>();
+    private Set<MemberCompany> memberCompanies = new HashSet<>();
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MemberBrand> memberBrands = new ArrayList<>();
+    private Set<MemberBrand> memberBrands = new HashSet<>();
 
     public void updateName(String name) {
         this.name = name;
