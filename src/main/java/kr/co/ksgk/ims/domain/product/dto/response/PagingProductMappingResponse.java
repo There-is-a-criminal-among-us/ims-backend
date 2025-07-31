@@ -10,12 +10,12 @@ import java.util.List;
 @Builder
 public record PagingProductMappingResponse(
         PageResponse page,
-        List<ProductMappingResponse> productMappings
+        List<ProductMappingResponse> products
 ) {
     public static PagingProductMappingResponse of(Page<RawProduct> pageRawProduct, List<ProductMappingResponse> productMappings) {
         return PagingProductMappingResponse.builder()
                 .page(PageResponse.from(pageRawProduct))
-                .productMappings(productMappings)
+                .products(productMappings)
                 .build();
     }
 }

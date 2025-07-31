@@ -5,9 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface RawProductRepository extends JpaRepository<RawProduct, Long> {
 
     Page<RawProduct> findAll(Pageable pageable);
 
     Page<RawProduct> findByNameContaining(String name, Pageable pageable);
+
+    Optional<RawProduct> findByName(String name);
 }

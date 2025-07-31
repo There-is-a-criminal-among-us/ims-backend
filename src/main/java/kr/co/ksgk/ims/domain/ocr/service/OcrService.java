@@ -11,11 +11,13 @@ import kr.co.ksgk.ims.domain.ocr.dto.response.ExtractedInvoice;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OcrExtractResponse;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OpenAiResponse;
 import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
-import kr.co.ksgk.ims.domain.product.entity.Product;
+import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -27,7 +29,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +39,7 @@ public class OcrService {
     private final WebClient webClient;
     private final ProductRepository productRepository;
     private final ProductMappingRepository productMappingRepository;
+    private final RawProductRepository rawProductRepository;
 
     @Value("${naver.api.url}")
     private String naverOcrApiUrl;
@@ -56,11 +58,10 @@ public class OcrService {
         String invoiceImageUrl = s3Service.generateStaticUrl(request.invoiceKeyName());
         String ocrText = extractTextWithNaverOcr(invoiceImageUrl);
         ExtractedInvoice extractedInvoice = extractFromOcr(ocrText);
-        List<ProductMapping> productMappings = productMappingRepository.findProductsByRawName(extractedInvoice.item_name());
-        List<Product> products = productMappings.stream()
-                .map(ProductMapping::getProduct)
-                .collect(Collectors.toList());
-        return OcrExtractResponse.of(extractedInvoice, products, invoiceImageUrl);
+        RawProduct rawProduct = rawProductRepository.findByName(extractedInvoice.item_name())
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.RAW_PRODUCT_NOT_FOUND));
+        List<ProductMapping> productMappings = productMappingRepository.findByRawProduct(rawProduct);
+        return OcrExtractResponse.of(extractedInvoice, productMappings, invoiceImageUrl);
     }
 
     private String extractTextWithNaverOcr(String imageUrl) {
