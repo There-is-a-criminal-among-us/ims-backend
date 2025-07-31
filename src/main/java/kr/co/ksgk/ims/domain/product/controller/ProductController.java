@@ -1,8 +1,12 @@
 package kr.co.ksgk.ims.domain.product.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
+import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
 import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -62,6 +66,35 @@ public class ProductController implements ProductApi {
     @DeleteMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> deleteProduct(@PathVariable Long productId) {
         productService.deleteProduct(productId);
+        return SuccessResponse.noContent();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/mapping")
+    public ResponseEntity<SuccessResponse<?>> createProductMapping(@RequestBody @Valid ProductMappingRequest request) {
+        ProductMappingResponse response = productService.createProductMapping(request);
+        return SuccessResponse.created(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/mapping")
+    public ResponseEntity<SuccessResponse<?>> getProductMapping(
+            @Parameter(description = "품목명 검색")
+            @RequestParam(defaultValue = "") String search,
+
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+         PagingProductMappingResponse response = productService.getProductMapping(search, PageRequest.of(page, size));
+        return SuccessResponse.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/mapping/{rawProductId}")
+    public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@RequestParam Long rawProductId) {
+        productService.deleteProductMapping(rawProductId);
         return SuccessResponse.noContent();
     }
 }

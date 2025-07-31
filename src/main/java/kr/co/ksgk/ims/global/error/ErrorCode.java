@@ -49,7 +49,8 @@ public enum ErrorCode {
     COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "CP001", "업체를 찾을 수 없습니다."),
 
     // Product
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "제품을 찾을 수 없습니다."),
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "품목을 찾을 수 없습니다."),
+    RAW_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "인식된 품목을 찾을 수 없습니다."),
 
     // Inventory
     INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "IV001", "재고 정보를 찾을 수 없습니다."),

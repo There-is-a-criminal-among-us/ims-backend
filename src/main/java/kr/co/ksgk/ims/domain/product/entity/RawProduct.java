@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.product.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +19,11 @@ public class RawProduct {
 
     @Column(nullable = false)
     private String name;
+
+    @Builder
+    public RawProduct(String name) {
+        this.name = name;
+    }
 
     @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductMapping> productMappings = new ArrayList<>();

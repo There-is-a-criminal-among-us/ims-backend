@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.product.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -18,8 +19,16 @@ public class ProductMapping {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_mapping_id", nullable = false)
+    @JoinColumn(name = "raw_product_id", nullable = false)
     private RawProduct rawProduct;
 
+    @Column(nullable = false)
     private Integer quantity;
+
+    @Builder
+    public ProductMapping(Product product, RawProduct rawProduct, int quantity) {
+        this.product = product;
+        this.rawProduct = rawProduct;
+        this.quantity = quantity;
+    }
 }
