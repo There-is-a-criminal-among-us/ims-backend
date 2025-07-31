@@ -20,5 +20,5 @@ public class RawDeliveryItem {
     private String rawName;
 
     @OneToMany(mappedBy = "rawDeliveryItem", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DeliveryItemMapping> deliveryItemMappings = new ArrayList<>();
+    private List<ProductMapping> productMappings = new ArrayList<>();
 }

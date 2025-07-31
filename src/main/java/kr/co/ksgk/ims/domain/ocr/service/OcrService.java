@@ -10,9 +10,9 @@ import kr.co.ksgk.ims.domain.ocr.dto.request.OcrExtractRequest;
 import kr.co.ksgk.ims.domain.ocr.dto.response.ExtractedInvoice;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OcrExtractResponse;
 import kr.co.ksgk.ims.domain.ocr.dto.response.OpenAiResponse;
-import kr.co.ksgk.ims.domain.product.entity.DeliveryItemMapping;
+import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
 import kr.co.ksgk.ims.domain.product.entity.Product;
-import kr.co.ksgk.ims.domain.product.repository.DeliveryItemMappingRepository;
+import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -37,7 +37,7 @@ public class OcrService {
     private final S3Service s3Service;
     private final WebClient webClient;
     private final ProductRepository productRepository;
-    private final DeliveryItemMappingRepository deliveryItemMappingRepository;
+    private final ProductMappingRepository productMappingRepository;
 
     @Value("${naver.api.url}")
     private String naverOcrApiUrl;
@@ -56,9 +56,9 @@ public class OcrService {
         String invoiceImageUrl = s3Service.generateStaticUrl(request.invoiceKeyName());
         String ocrText = extractTextWithNaverOcr(invoiceImageUrl);
         ExtractedInvoice extractedInvoice = extractFromOcr(ocrText);
-        List<DeliveryItemMapping> deliveryItemMappings = deliveryItemMappingRepository.findProductsByRawName(extractedInvoice.item_name());
-        List<Product> products = deliveryItemMappings.stream()
-                .map(DeliveryItemMapping::getProduct)
+        List<ProductMapping> productMappings = productMappingRepository.findProductsByRawName(extractedInvoice.item_name());
+        List<Product> products = productMappings.stream()
+                .map(ProductMapping::getProduct)
                 .collect(Collectors.toList());
         return OcrExtractResponse.of(extractedInvoice, products, invoiceImageUrl);
     }
