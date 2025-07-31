@@ -17,7 +17,7 @@ public class RawProduct {
     private Long id;
 
     @Column(nullable = false)
-    private String rawName;
+    private String name;
 
     @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductMapping> productMappings = new ArrayList<>();

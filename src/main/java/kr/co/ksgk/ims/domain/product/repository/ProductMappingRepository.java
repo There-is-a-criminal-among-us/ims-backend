@@ -10,11 +10,11 @@ import java.util.List;
 
 public interface ProductMappingRepository extends JpaRepository<ProductMapping, Long> {
 
-    @EntityGraph(attributePaths = {"product", "rawDeliveryItem"})
+    @EntityGraph(attributePaths = {"product", "rawProduct"})
     @Query("""
             SELECT dim
             FROM ProductMapping dim
-            WHERE dim.rawDeliveryItem.rawName = :rawName
+            WHERE dim.rawProduct.name = :rawName
             """)
     List<ProductMapping> findProductsByRawName(@Param("rawName") String rawName);
 }
