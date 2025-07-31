@@ -3,12 +3,15 @@ package kr.co.ksgk.ims.domain.product.service;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +36,17 @@ public class ProductService {
         return ProductResponse.from(saved);
     }
 
-    public List<ProductResponse> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return products.stream()
+    public PagingProductResponse getAllProducts(String search, Pageable pageable) {
+        Page<Product> pageProduct;
+        if (search == null || search.isBlank()) {
+            pageProduct = productRepository.findAll(pageable);
+        } else {
+            pageProduct = productRepository.findByNameContaining(search, pageable);
+        }
+        List<ProductResponse> products = pageProduct.getContent().stream()
                 .map(ProductResponse::from)
                 .collect(Collectors.toList());
+        return PagingProductResponse.of(pageProduct, products);
     }
 
     //조회

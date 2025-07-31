@@ -1,15 +1,16 @@
 package kr.co.ksgk.ims.domain.product.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
 import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,8 +29,17 @@ public class ProductController {
 
     //모든 품목 조회
     @GetMapping
-    public ResponseEntity<SuccessResponse<?>> getAllProducts() {
-        List<ProductResponse> response = productService.getAllProducts();
+    public ResponseEntity<SuccessResponse<?>> getAllProducts(
+            @Parameter(description = "품목 검색")
+            @RequestParam(defaultValue = "") String search,
+
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PagingProductResponse response = productService.getAllProducts(search, PageRequest.of(page, size));
         return SuccessResponse.ok(response);
     }
     //조회

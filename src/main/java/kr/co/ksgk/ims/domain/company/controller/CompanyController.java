@@ -1,16 +1,17 @@
 package kr.co.ksgk.ims.domain.company.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.company.dto.TreeResponse;
 import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
 import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
+import kr.co.ksgk.ims.domain.company.dto.response.PagingCompanyResponse;
 import kr.co.ksgk.ims.domain.company.service.CompanyService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,8 +36,16 @@ public class CompanyController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<SuccessResponse<?>> getAllCompanies() {
-        List<CompanyResponse> response = companyService.getAllCompanies();
+    public ResponseEntity<SuccessResponse<?>> getAllCompanies(
+            @Parameter(description = "사업자 검색")
+            @RequestParam(defaultValue = "") String search,
+
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingCompanyResponse response = companyService.getAllCompanies(search, PageRequest.of(page, size));
         return SuccessResponse.ok(response);
     }
 

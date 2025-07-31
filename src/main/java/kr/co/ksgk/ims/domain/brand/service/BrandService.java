@@ -2,14 +2,16 @@ package kr.co.ksgk.ims.domain.brand.service;
 
 import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
+import kr.co.ksgk.ims.domain.brand.dto.response.PagingBrandResponse;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
-import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +37,17 @@ public class BrandService {
     }
 
     // 전체 조회
-    public List<BrandResponse> getAllBrands() {
-        List<Brand> companies = brandRepository.findAll();
-        return companies.stream()
+    public PagingBrandResponse getAllBrands(String search, Pageable pageable) {
+        Page<Brand> pageBrand;
+        if (search == null || search.isBlank()) {
+            pageBrand = brandRepository.findAll(pageable);
+        } else {
+            pageBrand = brandRepository.findByNameContaining(search, pageable);
+        }
+        List<BrandResponse> brands = pageBrand.getContent().stream()
                 .map(BrandResponse::from)
                 .collect(Collectors.toList());
+        return PagingBrandResponse.of(pageBrand, brands);
     }
 
     //조회

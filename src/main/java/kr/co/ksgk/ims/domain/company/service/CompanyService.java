@@ -4,6 +4,9 @@ import kr.co.ksgk.ims.domain.company.dto.CompanyTreeResponse;
 import kr.co.ksgk.ims.domain.company.dto.TreeResponse;
 import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
 import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
+import kr.co.ksgk.ims.domain.company.dto.response.PagingCompanyResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
@@ -39,11 +42,17 @@ public class CompanyService {
     }
 
     // 전체 조회
-    public List<CompanyResponse> getAllCompanies() {
-        List<Company> companies = companyRepository.findAll();
-        return companies.stream()
+    public PagingCompanyResponse getAllCompanies(String search, Pageable pageable) {
+        Page<Company> pageCompany;
+        if (search == null || search.isBlank()) {
+            pageCompany = companyRepository.findAll(pageable);
+        } else {
+            pageCompany = companyRepository.findByNameContaining(search, pageable);
+        }
+        List<CompanyResponse> companies = pageCompany.getContent().stream()
                 .map(CompanyResponse::from)
                 .collect(Collectors.toList());
+        return PagingCompanyResponse.of(pageCompany, companies);
     }
 
     // 조회
