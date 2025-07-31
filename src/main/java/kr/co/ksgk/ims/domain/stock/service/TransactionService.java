@@ -33,8 +33,8 @@ public class TransactionService {
     private final ProductRepository productRepository;
 
     public PagingTransactionResponse getAllTransactions(
-            String search, TransactionGroup type, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<Transaction> pageTransaction = transactionRepository.searchTransactions(search, type, startDate, endDate, pageable);
+            String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Page<Transaction> pageTransaction = transactionRepository.searchTransactions(search, types, startDate, endDate, pageable);
         List<TransactionResponse> transactions = pageTransaction.getContent().stream()
                 .map(TransactionResponse::from)
                 .collect(Collectors.toList());

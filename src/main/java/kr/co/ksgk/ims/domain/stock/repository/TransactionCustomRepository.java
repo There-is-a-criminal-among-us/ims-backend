@@ -1,13 +1,13 @@
 package kr.co.ksgk.ims.domain.stock.repository;
 
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface TransactionCustomRepository {
 
-    Page<Transaction> searchTransactions(String search, TransactionGroup type, LocalDate startDate, LocalDate endDate, Pageable pageable);
+    Page<Transaction> searchTransactions(String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable);
 }

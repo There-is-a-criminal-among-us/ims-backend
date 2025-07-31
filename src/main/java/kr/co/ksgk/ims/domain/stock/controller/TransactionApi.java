@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Transaction", description = "입출고 관련 API")
 public interface TransactionApi {
@@ -35,8 +35,8 @@ public interface TransactionApi {
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 
-            @Parameter(description = "검색 유형")
-            @RequestParam(required = false) TransactionGroup type,
+            @Parameter(description = "검색 유형 (OUTGOING | INCOMING | NAVER | COUPANG | ADJUSTMENT)")
+            @RequestParam(required = false) List<String> types,
 
             @Parameter(description = "검색 시작 날짜", example = "2025-01-01")
             @RequestParam(required = false) LocalDate startDate,

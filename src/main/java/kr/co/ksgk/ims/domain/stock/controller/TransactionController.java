@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
 import kr.co.ksgk.ims.domain.stock.service.TransactionService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,8 +27,8 @@ public class TransactionController implements TransactionApi {
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 
-            @Parameter(description = "검색 유형")
-            @RequestParam(required = false) TransactionGroup type,
+            @Parameter(description = "검색 유형 (OUTGOING | INCOMING | NAVER_FULFILLMENT | COUPANG_FULFILLMENT | ADJUSTMENT)")
+            @RequestParam(required = false) List<String> types,
 
             @Parameter(description = "검색 시작 날짜", example = "2025-01-01")
             @RequestParam(required = false) LocalDate startDate,
@@ -42,7 +42,7 @@ public class TransactionController implements TransactionApi {
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size
     ) {
-        PagingTransactionResponse pagingTransactionResponse = transactionService.getAllTransactions(search, type, startDate, endDate, PageRequest.of(page, size));
+        PagingTransactionResponse pagingTransactionResponse = transactionService.getAllTransactions(search, types, startDate, endDate, PageRequest.of(page, size));
         return SuccessResponse.ok(pagingTransactionResponse);
     }
 

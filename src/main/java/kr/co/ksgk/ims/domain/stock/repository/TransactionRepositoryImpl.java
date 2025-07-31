@@ -23,7 +23,7 @@ public class TransactionRepositoryImpl implements TransactionCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Transaction> searchTransactions(String search, TransactionGroup type, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<Transaction> searchTransactions(String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         QTransaction transaction = QTransaction.transaction;
         QTransactionType transactionType = QTransactionType.transactionType;
         QProduct product = QProduct.product;
@@ -32,7 +32,11 @@ public class TransactionRepositoryImpl implements TransactionCustomRepository {
 
         BooleanBuilder builder = new BooleanBuilder();
 
-        if (type != null) builder.and(transaction.transactionType.groupType.eq(type));
+        if (types == null || types.isEmpty()) {
+            builder.and(transaction.transactionType.name.ne("ADJUSTMENT"));
+        } else {
+            builder.and(transaction.transactionType.name.in(types));
+        }
         if (startDate != null) builder.and(transaction.createdAt.goe(startDate.atStartOfDay()));
         if (endDate != null) builder.and(transaction.createdAt.loe(endDate.atTime(23, 59, 59)));
         if (search != null && !search.isBlank()) {
