@@ -1,7 +1,6 @@
 package kr.co.ksgk.ims.domain.invoice.service;
 
 import kr.co.ksgk.ims.domain.S3.service.S3Service;
-import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
@@ -38,9 +37,7 @@ public class InvoiceService {
 
     @Transactional
     public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
-        Company company = companyRepository.findById(request.companyId())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
-        Invoice invoice = request.toEntity(company);
+        Invoice invoice = request.toEntity();
         List<InvoiceProduct> productEntities = request.products().stream()
                 .map(p -> {
                     Product product = productRepository.findById(p.productId())

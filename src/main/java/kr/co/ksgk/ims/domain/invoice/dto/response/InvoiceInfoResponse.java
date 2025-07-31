@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 @Builder
 public record InvoiceInfoResponse(
         Long invoiceId,
-        Long companyId,
         String name,
         String phone,
         String number,
@@ -23,7 +22,6 @@ public record InvoiceInfoResponse(
     public static InvoiceInfoResponse from(Invoice invoice, S3Service s3Service) {
         return InvoiceInfoResponse.builder()
                 .invoiceId(invoice.getId())
-                .companyId(invoice.getCompany().getId())
                 .name(invoice.getName())
                 .phone(invoice.getPhone())
                 .number(invoice.getNumber())

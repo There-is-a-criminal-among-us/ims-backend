@@ -2,7 +2,6 @@ package kr.co.ksgk.ims.domain.invoice.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
-import kr.co.ksgk.ims.domain.company.entity.Company;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,10 +16,6 @@ public class Invoice extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
 
     @Column(length = 10, nullable = false)
     private String name;
@@ -41,8 +36,7 @@ public class Invoice extends BaseEntity {
     private List<InvoiceProduct> invoiceProducts = new ArrayList<>();
 
     @Builder
-    public Invoice(Company company, String name, String phone, String number, String invoiceKeyName, String productKeyName) {
-        this.company = company;
+    public Invoice(String name, String phone, String number, String invoiceKeyName, String productKeyName) {
         this.name = name;
         this.phone = phone;
         this.number = number;
