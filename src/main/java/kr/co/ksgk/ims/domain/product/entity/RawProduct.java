@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class RawDeliveryItem {
+public class RawProduct {
 
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -19,6 +19,6 @@ public class RawDeliveryItem {
     @Column(nullable = false)
     private String rawName;
 
-    @OneToMany(mappedBy = "rawDeliveryItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductMapping> productMappings = new ArrayList<>();
 }

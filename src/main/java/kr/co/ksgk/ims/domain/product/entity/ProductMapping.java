@@ -18,8 +18,8 @@ public class ProductMapping {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "raw_delivery_item_id", nullable = false)
-    private RawDeliveryItem rawDeliveryItem;
+    @JoinColumn(name = "product_mapping_id", nullable = false)
+    private RawProduct rawProduct;
 
     private Integer quantity;
 }
