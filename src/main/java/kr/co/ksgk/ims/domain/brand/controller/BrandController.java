@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/brands")
 @RequiredArgsConstructor
-public class BrandController {
+public class BrandController implements BrandApi {
 
     private final BrandService brandService;
 
