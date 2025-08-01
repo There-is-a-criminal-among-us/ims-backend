@@ -2,6 +2,8 @@ package kr.co.ksgk.ims.domain.stock.service;
 
 import kr.co.ksgk.ims.domain.delivery.entity.Delivery;
 import kr.co.ksgk.ims.domain.delivery.repository.DeliveryRepository;
+import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
+import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
@@ -29,6 +31,7 @@ public class DailyStockScheduler {
     private final ProductRepository productRepository;
     private final TransactionRepository transactionRepository;
     private final DeliveryRepository deliveryRepository;
+    private final InvoiceProductRepository invoiceProductRepository;
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
@@ -75,11 +78,15 @@ public class DailyStockScheduler {
         List<Delivery> deliveries = deliveryRepository.findByRawProductProductMappingsProductAndCreatedAtBetween(
                 product, startOfDay, endOfDay);
 
+        // 해당 날짜의 InvoiceProduct 데이터 집계
+        List<InvoiceProduct> invoiceProducts = invoiceProductRepository.findByProductAndInvoiceCreatedAtBetween(
+                product, startOfDay, endOfDay);
+
         return DailyStock.builder()
                 .product(product)
                 .currentStock(currentStock)
                 .incoming(calculateIncoming(transactions))
-                .returnIncoming(calculateReturnIncoming(transactions))
+                .returnIncoming(calculateReturnIncoming(transactions, invoiceProducts))
                 .outgoing(calculateOutgoing(transactions))
                 .coupangFulfillment(calculateCoupangFulfillment(transactions))
                 .naverFulfillment(calculateNaverFulfillment(transactions))
@@ -99,10 +106,10 @@ public class DailyStockScheduler {
         return stockRepository.findByProductAndStockDate(product, previousDate)
                 .map(dailyStock -> {
                     // 현재 재고 = 전날 재고 + 입고 - 출고 - 조정
-                    return dailyStock.getCurrentStock() + 
-                           dailyStock.getInboundTotal() - 
-                           dailyStock.getOutboundTotal() - 
-                           dailyStock.getAdjustmentTotal();
+                    return dailyStock.getCurrentStock() +
+                            dailyStock.getInboundTotal() -
+                            dailyStock.getOutboundTotal() -
+                            dailyStock.getAdjustmentTotal();
                 })
                 .orElse(0); // 전날 데이터가 없으면 0으로 시작
     }
@@ -114,11 +121,17 @@ public class DailyStockScheduler {
                 .sum();
     }
 
-    private Integer calculateReturnIncoming(List<Transaction> transactions) {
-        return transactions.stream()
+    private Integer calculateReturnIncoming(List<Transaction> transactions, List<InvoiceProduct> invoiceProducts) {
+        int transactionReturn = transactions.stream()
                 .filter(t -> "RETURN_INCOMING".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
+
+        int invoiceReturn = invoiceProducts.stream()
+                .mapToInt(InvoiceProduct::getResalableQuantity)
+                .sum();
+
+        return transactionReturn + invoiceReturn;
     }
 
     private Integer calculateOutgoing(List<Transaction> transactions) {
@@ -179,9 +192,9 @@ public class DailyStockScheduler {
     private Integer calculateAdjustment(List<Transaction> transactions) {
         return transactions.stream()
                 .filter(t -> TransactionGroup.ADJUSTMENT.equals(t.getTransactionType().getGroupType()) &&
-                           !"DAMAGED".equals(t.getTransactionType().getName()) &&
-                           !"DISPOSAL".equals(t.getTransactionType().getName()) &&
-                           !"LOST".equals(t.getTransactionType().getName()))
+                        !"DAMAGED".equals(t.getTransactionType().getName()) &&
+                        !"DISPOSAL".equals(t.getTransactionType().getName()) &&
+                        !"LOST".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
     }
