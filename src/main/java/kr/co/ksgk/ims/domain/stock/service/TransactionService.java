@@ -32,6 +32,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;
     private final ProductRepository productRepository;
+    private final StockCacheInvalidator cacheInvalidator;
 
     public PagingTransactionResponse getAllTransactions(
             String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
@@ -47,6 +48,9 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_NOT_FOUND));
         transaction.confirm();
+        
+        // 캐시 무효화: Transaction 상태 변경 시
+        cacheInvalidator.invalidateCacheForProductIfToday(transaction.getProduct().getId());
     }
 
     @Transactional
@@ -66,6 +70,10 @@ public class TransactionService {
                 : TransactionStatus.PENDING;
         Transaction transaction = request.toEntity(product, transactionType, transactionStatus);
         Transaction savedTransaction = transactionRepository.save(transaction);
+        
+        // 캐시 무효화: 새로운 Transaction 생성 시
+        cacheInvalidator.invalidateCacheForProductIfToday(product.getId());
+        
         return TransactionResponse.from(savedTransaction);
     }
 }
