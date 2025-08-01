@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.product.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.delivery.entity.Delivery;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,7 @@ public class RawProduct {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Builder
@@ -27,4 +28,7 @@ public class RawProduct {
 
     @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductMapping> productMappings = new ArrayList<>();
+
+    @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Delivery> deliveries = new ArrayList<>();
 }
