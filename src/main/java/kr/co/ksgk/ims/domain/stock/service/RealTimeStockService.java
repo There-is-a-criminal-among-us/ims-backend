@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,22 +68,23 @@ public class RealTimeStockService {
 
     public List<DailyStockCache> getTodayStockForProducts(List<Product> products) {
         LocalDate today = LocalDate.now();
-        List<Long> productIds = products.stream().map(Product::getId).toList();
-        List<DailyStockCache> cachedStocks = cacheRepository.findByProductIdInAndStockDate(productIds, today);
+        List<DailyStockCache> allStocks = new ArrayList<>();
         
-        // 캐시에서 찾지 못한 제품들은 실시간 계산
-        List<Long> cachedProductIds = cachedStocks.stream().map(DailyStockCache::getProductId).toList();
-        List<Product> uncachedProducts = products.stream()
-                .filter(product -> !cachedProductIds.contains(product.getId()))
-                .toList();
-        
-        for (Product product : uncachedProducts) {
-            DailyStockCache calculatedStock = calculateRealTimeStock(product, today);
-            cacheRepository.save(calculatedStock);
-            cachedStocks.add(calculatedStock);
+        for (Product product : products) {
+            Optional<DailyStockCache> cached = cacheRepository.findByProductIdAndStockDate(product.getId(), today);
+            if (cached.isPresent()) {
+                log.debug("캐시에서 재고 데이터 반환 - Product: {}, Date: {}", product.getId(), today);
+                allStocks.add(cached.get());
+            } else {
+                // 캐시에 없으면 실시간 계산
+                log.debug("실시간 재고 계산 - Product: {}, Date: {}", product.getId(), today);
+                DailyStockCache calculatedStock = calculateRealTimeStock(product, today);
+                cacheRepository.save(calculatedStock);
+                allStocks.add(calculatedStock);
+            }
         }
         
-        return cachedStocks;
+        return allStocks;
     }
 
     private DailyStockCache calculateRealTimeStock(Product product, LocalDate targetDate) {
