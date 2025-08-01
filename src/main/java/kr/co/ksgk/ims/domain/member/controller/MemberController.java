@@ -77,4 +77,11 @@ public class MemberController implements MemberApi {
         memberService.deleteMember(memberId);
         return SuccessResponse.noContent();
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{memberId}/reset-password")
+    public ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long memberId) {
+        memberService.resetPassword(memberId);
+        return SuccessResponse.noContent();
+    }
 }

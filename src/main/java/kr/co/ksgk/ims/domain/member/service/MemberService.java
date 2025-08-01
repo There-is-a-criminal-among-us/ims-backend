@@ -96,4 +96,11 @@ public class MemberService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         memberRepository.delete(member);
     }
+
+    @Transactional
+    public void resetPassword(Long memberId) {
+        Member member=memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        member.changePassword(passwordEncoder.encode("1234"));
+    }
 }

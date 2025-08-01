@@ -104,4 +104,11 @@ public interface MemberApi {
                     schema = @Schema(implementation = SuccessResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long memberId);
+
+    @Operation(
+            summary = "비밀번호 초기화",
+            description = "회원의 비밀번호를 초기화합니다. 관리자 권한이 필요합니다."
+    )
+    @ApiResponse(responseCode = "204", description = "비밀번호 초기화 성공")
+    ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long memberId);
 }
