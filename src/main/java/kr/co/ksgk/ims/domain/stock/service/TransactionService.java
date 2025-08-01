@@ -7,6 +7,7 @@ import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
+import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionType;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionTypeRepository;
@@ -60,7 +61,10 @@ public class TransactionService {
         if (transactionType.getGroupType().equals(TransactionGroup.ADJUSTMENT) && request.scheduledDate() != null) {
             throw new BusinessException(ErrorCode.SCHEDULED_DATE_NOT_ALLOWED);
         }
-        Transaction transaction = request.toEntity(product, transactionType);
+        TransactionStatus transactionStatus = transactionType.getGroupType().equals(TransactionGroup.ADJUSTMENT)
+                ? TransactionStatus.CONFIRMED
+                : TransactionStatus.PENDING;
+        Transaction transaction = request.toEntity(product, transactionType, transactionStatus);
         Transaction savedTransaction = transactionRepository.save(transaction);
         return TransactionResponse.from(savedTransaction);
     }
