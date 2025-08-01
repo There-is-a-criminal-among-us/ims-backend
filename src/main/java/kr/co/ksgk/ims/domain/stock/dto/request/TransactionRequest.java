@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 public record TransactionRequest(
         Long productId,
-        String enumName,
+        String type,
         @NotNull  @NotZero
         Integer quantity,
         String note,

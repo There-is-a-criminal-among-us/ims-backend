@@ -53,7 +53,7 @@ public class TransactionService {
     public TransactionResponse createTransaction(TransactionRequest request) {
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        TransactionType transactionType = transactionTypeRepository.findByName(request.enumName())
+        TransactionType transactionType = transactionTypeRepository.findByName(request.type())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_TYPE_NOT_FOUND));
         if (!transactionType.getGroupType().equals(TransactionGroup.ADJUSTMENT) && request.scheduledDate() == null) {
             throw new BusinessException(ErrorCode.SCHEDULED_DATE_REQUIRED);
