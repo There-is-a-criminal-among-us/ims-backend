@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface StockRepository extends JpaRepository<DailyStock, Long> {
 
@@ -21,4 +22,8 @@ public interface StockRepository extends JpaRepository<DailyStock, Long> {
     List<DailyStock> findAllByProductsAndDateBetween(@Param("products") List<Product> products,
                                                      @Param("startDate") LocalDate startDate,
                                                      @Param("endDate") LocalDate endDate);
+
+    boolean existsByProductAndStockDate(Product product, LocalDate stockDate);
+
+    Optional<DailyStock> findByProductAndStockDate(Product product, LocalDate stockDate);
 }

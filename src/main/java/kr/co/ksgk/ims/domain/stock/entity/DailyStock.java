@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.stock.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -59,15 +60,36 @@ public class DailyStock {
     @Column(nullable = false)
     private LocalDate stockDate;
 
+    @Builder
+    public DailyStock(Product product, Integer currentStock, Integer incoming, Integer returnIncoming,
+                     Integer outgoing, Integer coupangFulfillment, Integer naverFulfillment,
+                     Integer deliveryOutgoing, Integer redelivery, Integer damaged, Integer disposal,
+                     Integer lost, Integer adjustment, LocalDate stockDate) {
+        this.product = product;
+        this.currentStock = currentStock;
+        this.incoming = incoming;
+        this.returnIncoming = returnIncoming;
+        this.outgoing = outgoing;
+        this.coupangFulfillment = coupangFulfillment;
+        this.naverFulfillment = naverFulfillment;
+        this.deliveryOutgoing = deliveryOutgoing;
+        this.redelivery = redelivery;
+        this.damaged = damaged;
+        this.disposal = disposal;
+        this.lost = lost;
+        this.adjustment = adjustment;
+        this.stockDate = stockDate;
+    }
+
     public int getInboundTotal() {
         return incoming + returnIncoming;
     }
 
     public int getOutboundTotal() {
-        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing + redelivery;
+        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
     }
 
     public int getAdjustmentTotal() {
-        return damaged + disposal + lost + adjustment;
+        return damaged + disposal + lost + adjustment + redelivery;
     }
 }
