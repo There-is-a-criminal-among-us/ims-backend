@@ -1,7 +1,5 @@
 package kr.co.ksgk.ims.domain.invoice.service;
 
-import kr.co.ksgk.ims.domain.S3.service.S3Service;
-import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
@@ -31,10 +29,8 @@ import java.util.List;
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
-    private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
     private final InvoiceProductRepository invoiceProductRepository;
-    private final S3Service s3Service;
     private final StockCacheInvalidator cacheInvalidator;
 
     @Transactional
@@ -78,7 +74,7 @@ public class InvoiceService {
     public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
-        return InvoiceInfoResponse.from(invoice, s3Service);
+        return InvoiceInfoResponse.from(invoice);
     }
 
     @Transactional
@@ -101,7 +97,7 @@ public class InvoiceService {
         // 캐시 무효화: Invoice 업데이트 시 - 관련된 모든 Product 캐시 무효화
         invalidateInvoiceCaches(invoiceProducts);
         
-        return InvoiceInfoResponse.from(invoice, s3Service);
+        return InvoiceInfoResponse.from(invoice);
     }
 
     @Transactional
