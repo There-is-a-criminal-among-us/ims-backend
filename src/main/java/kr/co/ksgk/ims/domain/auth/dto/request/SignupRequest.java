@@ -8,7 +8,6 @@ public record SignupRequest(
         String username,
         String password,
         String name,
-        String companyName,
         String phone,
         String note,
         Role role
