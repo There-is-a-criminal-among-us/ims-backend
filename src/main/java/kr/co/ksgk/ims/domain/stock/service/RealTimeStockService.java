@@ -7,7 +7,6 @@ import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStockCache;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
 import kr.co.ksgk.ims.domain.stock.repository.DailyStockCacheRepository;
 import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
@@ -214,10 +213,7 @@ public class RealTimeStockService {
 
     private Integer calculateAdjustment(List<Transaction> transactions) {
         return transactions.stream()
-                .filter(t -> TransactionGroup.ADJUSTMENT.equals(t.getTransactionType().getGroupType()) &&
-                        !"DAMAGED".equals(t.getTransactionType().getName()) &&
-                        !"DISPOSAL".equals(t.getTransactionType().getName()) &&
-                        !"LOST".equals(t.getTransactionType().getName()))
+                .filter(t -> "ADJUSTMENT".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
     }
