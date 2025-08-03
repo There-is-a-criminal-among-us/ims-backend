@@ -4,6 +4,6 @@ import lombok.Builder;
 
 @Builder
 public record ProductDetailResponse(
-        ProductResponse productResponse,
-        ProductStatusResponse productStatusResponse
+        ProductResponse product,
+        ProductStatusResponse productStatus
 ) {}

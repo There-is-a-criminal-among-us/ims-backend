@@ -11,5 +11,6 @@ public record ProductStatusResponse(
         int totalOutgoing,
         int returnedQuantity,
         int resalableQuantity,
-        int adjustmentTotal
-) {}
+        int totalAdjustment
+) {
+}
