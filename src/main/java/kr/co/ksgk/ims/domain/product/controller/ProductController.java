@@ -94,7 +94,7 @@ public class ProductController implements ProductApi {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/mapping/{rawProductId}")
-    public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@RequestParam Long rawProductId) {
+    public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@PathVariable Long rawProductId) {
         productService.deleteProductMapping(rawProductId);
         return SuccessResponse.noContent();
     }

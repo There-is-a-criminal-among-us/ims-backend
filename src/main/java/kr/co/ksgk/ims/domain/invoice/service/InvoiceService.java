@@ -14,6 +14,7 @@ import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class InvoiceService {
     private final ProductRepository productRepository;
     private final InvoiceProductRepository invoiceProductRepository;
     private final S3Service s3Service;
+    private final StockCacheInvalidator cacheInvalidator;
 
     @Transactional
     public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
@@ -53,6 +55,10 @@ public class InvoiceService {
                 .toList();
         invoice.getInvoiceProducts().addAll(productEntities);
         Invoice saved = invoiceRepository.save(invoice);
+        
+        // 캐시 무효화: 새로운 Invoice 생성 시 - 관련된 모든 Product 캐시 무효화
+        invalidateInvoiceCaches(productEntities);
+        
         return SimpleInvoiceInfoResponse.from(saved);
     }
 
@@ -91,6 +97,10 @@ public class InvoiceService {
                 })
                 .toList();
         invoice.updateInvoiceProduct(invoiceProducts);
+        
+        // 캐시 무효화: Invoice 업데이트 시 - 관련된 모든 Product 캐시 무효화
+        invalidateInvoiceCaches(invoiceProducts);
+        
         return InvoiceInfoResponse.from(invoice, s3Service);
     }
 
@@ -98,6 +108,17 @@ public class InvoiceService {
     public void deleteInvoice(Long invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
+        
+        // 캐시 무효화: Invoice 삭제 시 - 관련된 모든 Product 캐시 무효화
+        invalidateInvoiceCaches(invoice.getInvoiceProducts());
+        
         invoiceRepository.delete(invoice);
+    }
+    
+    private void invalidateInvoiceCaches(List<InvoiceProduct> invoiceProducts) {
+        invoiceProducts.forEach(invoiceProduct -> {
+            Long productId = invoiceProduct.getProduct().getId();
+            cacheInvalidator.invalidateCacheForProductIfToday(productId);
+        });
     }
 }

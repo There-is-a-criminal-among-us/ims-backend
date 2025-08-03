@@ -7,6 +7,7 @@ import lombok.Builder;
 public record InvoiceProductInfoResponse(
         Long invoiceProductId,
         Long productId,
+        String productName,
         Integer returnedQuantity,
         Integer resalableQuantity,
         String note
@@ -15,6 +16,7 @@ public record InvoiceProductInfoResponse(
         return InvoiceProductInfoResponse.builder()
                 .invoiceProductId(invoiceProduct.getId())
                 .productId(invoiceProduct.getProduct().getId())
+                .productName(invoiceProduct.getProduct().getName())
                 .returnedQuantity(invoiceProduct.getReturnedQuantity())
                 .resalableQuantity(invoiceProduct.getResalableQuantity())
                 .note(invoiceProduct.getNote())
