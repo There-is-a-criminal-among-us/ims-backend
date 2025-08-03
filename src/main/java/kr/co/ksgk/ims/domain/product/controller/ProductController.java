@@ -5,10 +5,7 @@ import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
+import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.YearMonth;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,7 +50,7 @@ public class ProductController implements ProductApi {
     //조회
     @GetMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> getProduct(@PathVariable Long productId) {
-        ProductResponse response = productService.getProduct(productId);
+        ProductDetailResponse response = productService.getProduct(productId);
         return SuccessResponse.ok(response);
     }
 
