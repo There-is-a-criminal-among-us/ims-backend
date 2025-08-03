@@ -36,24 +36,25 @@ public class CompanyService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
 
-        List<Company> companies;
-        Set<Long> memberBrandIds;
+        List<CompanyTreeResponse> companyTreeResponseList;
         if (!member.getRole().equals(Role.ADMIN)) {
             // Get companies that the member manages
-            companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
+            List<Company> companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
 
             // Get brand IDs that the member manages
-            memberBrandIds = member.getMemberBrands().stream()
+            Set<Long> memberBrandIds = member.getMemberBrands().stream()
                     .map(mb -> mb.getBrand().getId())
                     .collect(Collectors.toSet());
+            // Create filtered company tree responses
+            companyTreeResponseList = companies.stream()
+                    .map(company -> createFilteredCompanyTreeResponse(company, memberBrandIds))
+                    .collect(Collectors.toList());
         } else {
-            companies = companyRepository.findAllWithBrandsAndProducts();
-            memberBrandIds = Set.of();
+            List<Company> companies = companyRepository.findAllWithBrandsAndProducts();
+            companyTreeResponseList = companies.stream()
+                    .map(CompanyTreeResponse::from)
+                    .collect(Collectors.toList());
         }
-        // Create filtered company tree responses
-        List<CompanyTreeResponse> companyTreeResponseList = companies.stream()
-                .map(company -> createFilteredCompanyTreeResponse(company, memberBrandIds))
-                .collect(Collectors.toList());
         return TreeResponse.from(companyTreeResponseList);
     }
 
