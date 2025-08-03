@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.delivery.repository.DeliveryRepository;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStockCache;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
@@ -125,15 +126,17 @@ public class RealTimeStockService {
     private Integer getCurrentStock(Product product, LocalDate targetDate) {
         // 전날의 DailyStock에서 현재 재고를 가져오기
         LocalDate previousDate = targetDate.minusDays(1);
-        return stockRepository.findByProductAndStockDate(product, previousDate)
-                .map(dailyStock -> {
-                    // 현재 재고 = 전날 재고 + 입고 - 출고 - 조정
-                    return dailyStock.getCurrentStock() +
-                            dailyStock.getInboundTotal() -
-                            dailyStock.getOutboundTotal() -
-                            dailyStock.getAdjustmentTotal();
-                })
-                .orElse(0); // 전날 데이터가 없으면 0으로 시작
+        // 전날 재고 조회 (없으면 0)
+        int previousStock = stockRepository.findByProductAndStockDate(product, previousDate)
+                .map(DailyStock::getCurrentStock)
+                .orElse(0);
+
+        // 당일 입출고 및 조정 조회 (없으면 0)
+        int inbound = stockRepository.findInboundTotalByProductAndStockDate(product, targetDate).orElse(0);
+        int outbound = stockRepository.findOutboundTotalByProductAndStockDate(product, targetDate).orElse(0);
+        int adjustment = stockRepository.findAdjustmentTotalByProductAndStockDate(product, targetDate).orElse(0);
+
+        return previousStock + inbound - outbound - adjustment;
     }
 
     private Integer calculateIncoming(List<Transaction> transactions) {
