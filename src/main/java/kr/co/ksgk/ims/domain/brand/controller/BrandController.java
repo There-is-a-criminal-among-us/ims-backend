@@ -1,7 +1,8 @@
 package kr.co.ksgk.ims.domain.brand.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandCreateRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandUpdateRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.dto.response.PagingBrandResponse;
 import kr.co.ksgk.ims.domain.brand.service.BrandService;
@@ -22,7 +23,7 @@ public class BrandController implements BrandApi {
     //등록
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<SuccessResponse<?>> createBrand(@RequestBody BrandRequest request) {
+    public ResponseEntity<SuccessResponse<?>> createBrand(@RequestBody BrandCreateRequest request) {
         BrandResponse brandResponse = brandService.createBrand(request);
         return SuccessResponse.created(brandResponse);
     }
@@ -52,7 +53,7 @@ public class BrandController implements BrandApi {
     //수정
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{brandId}")
-    public ResponseEntity<SuccessResponse<?>> updateBrand(@PathVariable Long brandId, @RequestBody BrandRequest request) {
+    public ResponseEntity<SuccessResponse<?>> updateBrand(@PathVariable Long brandId, @RequestBody BrandUpdateRequest request) {
         BrandResponse brandResponse = brandService.updateBrand(brandId, request);
         return SuccessResponse.ok(brandResponse);
     }

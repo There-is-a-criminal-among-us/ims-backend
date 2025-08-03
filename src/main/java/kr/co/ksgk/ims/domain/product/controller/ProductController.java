@@ -3,7 +3,8 @@ package kr.co.ksgk.ims.domain.product.controller;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
-import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
@@ -26,7 +27,7 @@ public class ProductController implements ProductApi {
     //등록
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<SuccessResponse<?>> createProduct(@RequestBody ProductRequest request) {
+    public ResponseEntity<SuccessResponse<?>> createProduct(@RequestBody ProductCreateRequest request) {
         ProductResponse response = productService.createProduct(request);
         return SuccessResponse.created(response);
     }
@@ -56,7 +57,7 @@ public class ProductController implements ProductApi {
     //수정
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{productId}")
-    public ResponseEntity<SuccessResponse<?>> updateProduct(@PathVariable Long productId, @RequestBody ProductRequest request) { // ProductRequest를 직접 사용
+    public ResponseEntity<SuccessResponse<?>> updateProduct(@PathVariable Long productId, @RequestBody ProductUpdateRequest request) { // ProductRequest를 직접 사용
         ProductResponse response = productService.updateProduct(productId, request);
         return SuccessResponse.ok(response);
     }
@@ -93,7 +94,7 @@ public class ProductController implements ProductApi {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/mapping/{rawProductId}")
-    public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@RequestParam Long rawProductId) {
+    public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@PathVariable Long rawProductId) {
         productService.deleteProductMapping(rawProductId);
         return SuccessResponse.noContent();
     }

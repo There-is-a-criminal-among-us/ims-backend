@@ -9,6 +9,7 @@ import kr.co.ksgk.ims.domain.delivery.exception.ExcelValidationException;
 import kr.co.ksgk.ims.domain.delivery.repository.DeliveryRepository;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class DeliveryService {
 
     private final DeliveryRepository deliveryRepository;
     private final RawProductRepository rawProductRepository;
+    private final StockCacheInvalidator cacheInvalidator;
 
     public PagingDeliveryResponse getAllDeliveries(String search, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         Page<Delivery> pageDelivery = deliveryRepository.searchDeliveries(search, startDate, endDate, pageable);
@@ -71,6 +73,9 @@ public class DeliveryService {
 
         List<Delivery> deliveries = createDeliveries(productQuantityMap);
         deliveryRepository.saveAll(deliveries);
+
+        // 캐시 무효화: 새로운 Delivery 생성 시 - 매핑된 모든 Product 캐시 무효화
+        invalidateDeliveryCaches(deliveries);
 
         return ExcelUploadSuccessResponse.of(files.size(), deliveries.size());
     }
@@ -194,5 +199,16 @@ public class DeliveryService {
         }
         
         return deliveries;
+    }
+    
+    private void invalidateDeliveryCaches(List<Delivery> deliveries) {
+        deliveries.forEach(delivery -> {
+            // Delivery는 RawProduct를 통해 Product와 연결되므로 모든 매핑된 Product의 캐시를 무효화
+            delivery.getRawProduct().getProductMappings()
+                    .forEach(mapping -> {
+                        Long productId = mapping.getProduct().getId();
+                        cacheInvalidator.invalidateCacheForProductIfToday(productId);
+                    });
+        });
     }
 }
