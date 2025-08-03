@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
+import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -91,4 +88,14 @@ public interface ProductApi {
     )
     @ApiResponse(responseCode = "204", description = "품목 매핑 삭제 성공")
     ResponseEntity<SuccessResponse<?>> deleteProductMapping(Long rawProductId);
+
+    @Operation(
+            summary = "월별 품목 현황",
+            description = "이번달 품목 현황을 상세 조회합니다"
+    )
+    @ApiResponse(responseCode = "200", description = "품목 현황 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema =@Schema(implementation = ProductStatusResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> getProductStatus(Long ProductId);
 }

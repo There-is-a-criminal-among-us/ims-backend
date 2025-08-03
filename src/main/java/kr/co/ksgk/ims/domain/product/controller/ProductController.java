@@ -5,10 +5,7 @@ import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
-import kr.co.ksgk.ims.domain.product.dto.response.ProductResponse;
+import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.YearMonth;
 
 @RestController
 @RequiredArgsConstructor
@@ -97,5 +96,13 @@ public class ProductController implements ProductApi {
     public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@PathVariable Long rawProductId) {
         productService.deleteProductMapping(rawProductId);
         return SuccessResponse.noContent();
+    }
+
+    @GetMapping("/{productId}/status")
+    public ResponseEntity<SuccessResponse<?>> getProductStatus(
+            @PathVariable Long productId) {
+        YearMonth currentYearMonth = YearMonth.now();
+        ProductStatusResponse response = productService.getProductStatus(productId, currentYearMonth);
+        return SuccessResponse.ok(response);
     }
 }
