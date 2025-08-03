@@ -37,7 +37,7 @@ public class StockController implements StockApi {
             LocalDate targetDate = date != null ? LocalDate.parse(date) : LocalDate.now().minusDays(1);
 
             // 스케줄러 로직을 직접 호출 (테스트용)
-            dailyStockScheduler.createDailyStockData();
+            dailyStockScheduler.createDailyStockData(targetDate);
 
             return SuccessResponse.ok("DailyStock 데이터 생성 완료: " + targetDate);
         } catch (Exception e) {
