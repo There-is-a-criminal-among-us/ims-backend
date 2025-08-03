@@ -72,8 +72,8 @@ public class ProductService {
         ProductResponse productResponse =ProductResponse.from(product);
         ProductStatusResponse productStatusResponse = getProductStatus(product,YearMonth.now());
         return ProductDetailResponse.builder()
-                .productResponse(productResponse)
-                .productStatusResponse(productStatusResponse)
+                .product(productResponse)
+                .productStatus(productStatusResponse)
                 .build();
     }
 
@@ -172,7 +172,7 @@ public class ProductService {
             .totalOutgoing(totalOutgoing)
             .returnedQuantity(returnedQuantity)
             .resalableQuantity(resalableQuantity)
-            .adjustmentTotal(adjustmentTotal)
+            .totalAdjustment(adjustmentTotal)
             .build();
 }
 }
