@@ -6,6 +6,7 @@ import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
 import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.company.dto.response.PagingCompanyResponse;
 import kr.co.ksgk.ims.domain.company.service.CompanyService;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -20,10 +21,9 @@ public class CompanyController implements CompanyApi {
 
     private final CompanyService companyService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/tree")
-    public ResponseEntity<SuccessResponse<?>> getCompanyTree() {
-        TreeResponse treeResponse = companyService.getCompanyTree();
+    public ResponseEntity<SuccessResponse<?>> getCompanyTree(@Auth Long memberId) {
+        TreeResponse treeResponse = companyService.getCompanyTree(memberId);
         return SuccessResponse.ok(treeResponse);
     }
 

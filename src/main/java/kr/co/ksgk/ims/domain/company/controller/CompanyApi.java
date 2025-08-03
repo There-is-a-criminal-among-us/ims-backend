@@ -23,7 +23,7 @@ public interface CompanyApi {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = TreeResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> getCompanyTree();
+    ResponseEntity<SuccessResponse<?>> getCompanyTree(Long memberId);
 
     @Operation(
             summary = "사업자 등록",
