@@ -49,7 +49,7 @@ public class ProductController implements ProductApi {
     //조회
     @GetMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> getProduct(@PathVariable Long productId) {
-        ProductResponse response = productService.getProduct(productId);
+        ProductDetailResponse response = productService.getProduct(productId);
         return SuccessResponse.ok(response);
     }
 
@@ -96,13 +96,5 @@ public class ProductController implements ProductApi {
     public ResponseEntity<SuccessResponse<?>> deleteProductMapping(@PathVariable Long rawProductId) {
         productService.deleteProductMapping(rawProductId);
         return SuccessResponse.noContent();
-    }
-
-    @GetMapping("/{productId}/status")
-    public ResponseEntity<SuccessResponse<?>> getProductStatus(
-            @PathVariable Long productId) {
-        YearMonth currentYearMonth = YearMonth.now();
-        ProductStatusResponse response = productService.getProductStatus(productId, currentYearMonth);
-        return SuccessResponse.ok(response);
     }
 }

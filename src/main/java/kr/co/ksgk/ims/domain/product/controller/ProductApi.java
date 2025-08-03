@@ -89,13 +89,4 @@ public interface ProductApi {
     @ApiResponse(responseCode = "204", description = "품목 매핑 삭제 성공")
     ResponseEntity<SuccessResponse<?>> deleteProductMapping(Long rawProductId);
 
-    @Operation(
-            summary = "월별 품목 현황",
-            description = "이번달 품목 현황을 상세 조회합니다"
-    )
-    @ApiResponse(responseCode = "200", description = "품목 현황 조회 성공",
-            content = @Content(mediaType = "application/json",
-                    schema =@Schema(implementation = ProductStatusResponse.class))
-    )
-    ResponseEntity<SuccessResponse<?>> getProductStatus(Long ProductId);
 }

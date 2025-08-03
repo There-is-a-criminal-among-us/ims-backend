@@ -66,10 +66,15 @@ public class ProductService {
     }
 
     //조회
-    public ProductResponse getProduct(Long productId) {
+    public ProductDetailResponse getProduct(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        return ProductResponse.from(product);
+        ProductResponse productResponse =ProductResponse.from(product);
+        ProductStatusResponse productStatusResponse = getProductStatus(product,YearMonth.now());
+        return ProductDetailResponse.builder()
+                .productResponse(productResponse)
+                .productStatusResponse(productStatusResponse)
+                .build();
     }
 
     //수정
@@ -127,50 +132,41 @@ public class ProductService {
         rawProductRepository.delete(rawProduct);
     }
 
-public ProductStatusResponse getProductStatus(Long productId, YearMonth yearMonth) {
-    LocalDate startDate = yearMonth.atDay(1);
-    LocalDate endDate = yearMonth.atEndOfMonth();
+    private ProductStatusResponse getProductStatus(Product product, YearMonth yearMonth) {
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
 
-    // 1. productId로 Product 엔티티를 조회
-    Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        List<Product> products = List.of(product);
+        List<DailyStock> monthlyDailyStocks = stockRepository.findAllByProductsAndDateBetween(
+                products, startDate, endDate);
 
-    // 2. Product 엔티티를 리스트로 만들어 stockRepository 메서드에 전달
-    List<Product> products = List.of(product);
-    List<DailyStock> monthlyDailyStocks = stockRepository.findAllByProductsAndDateBetween(
-            products, startDate, endDate);
-
-    // 3. 해당 월의 InvoiceProduct 엔티티 목록 조회 (LocalDateTime으로 변환)
-    List<InvoiceProduct> monthlyInvoiceProducts = invoiceProductRepository.findByProductAndInvoiceCreatedAtBetween(
+        List<InvoiceProduct> monthlyInvoiceProducts = invoiceProductRepository.findByProductAndInvoiceCreatedAtBetween(
             product, startDate.atStartOfDay(), endDate.atStartOfDay().plusDays(1).minusNanos(1));
 
-    // 4. 합산 로직
-    int totalIncoming = monthlyDailyStocks.stream()
+        int totalIncoming = monthlyDailyStocks.stream()
             .mapToInt(DailyStock::getInboundTotal)
             .sum();
 
-    int totalOutgoing = monthlyDailyStocks.stream()
+        int totalOutgoing = monthlyDailyStocks.stream()
             .mapToInt(DailyStock::getOutboundTotal)
             .sum();
 
-    int adjustmentTotal = monthlyDailyStocks.stream()
+        int adjustmentTotal = monthlyDailyStocks.stream()
             .mapToInt(DailyStock::getAdjustmentTotal)
             .sum();
 
-    int returnedQuantity = monthlyInvoiceProducts.stream()
+        int returnedQuantity = monthlyInvoiceProducts.stream()
             .mapToInt(InvoiceProduct::getReturnedQuantity)
             .sum();
 
-    int resalableQuantity = monthlyInvoiceProducts.stream()
+        int resalableQuantity = monthlyInvoiceProducts.stream()
             .mapToInt(InvoiceProduct::getResalableQuantity)
             .sum();
 
-    // 5. 현재고 수량은 해당 월의 마지막 날짜 기준으로 가져옵니다.
-    int currentStock = monthlyDailyStocks.isEmpty() ? 0 : monthlyDailyStocks.get(monthlyDailyStocks.size() - 1).getCurrentStock();
+        int currentStock = monthlyDailyStocks.isEmpty() ? 0 : monthlyDailyStocks.get(monthlyDailyStocks.size() - 1).getCurrentStock();
 
-    // 6. 최종 DTO 빌드 및 반환
-    return ProductStatusResponse.builder()
-            .productId(productId)
+        return ProductStatusResponse.builder()
+            .productId(product.getId())
             .currentStock(currentStock)
             .totalIncoming(totalIncoming)
             .totalOutgoing(totalOutgoing)
@@ -178,5 +174,5 @@ public ProductStatusResponse getProductStatus(Long productId, YearMonth yearMont
             .resalableQuantity(resalableQuantity)
             .adjustmentTotal(adjustmentTotal)
             .build();
-    }
+}
 }
