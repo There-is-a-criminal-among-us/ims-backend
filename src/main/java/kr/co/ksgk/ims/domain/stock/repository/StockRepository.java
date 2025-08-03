@@ -26,10 +26,4 @@ public interface StockRepository extends JpaRepository<DailyStock, Long> {
     boolean existsByProductAndStockDate(Product product, LocalDate stockDate);
 
     Optional<DailyStock> findByProductAndStockDate(Product product, LocalDate stockDate);
-
-    Optional<Integer> findInboundTotalByProductAndStockDate(Product product, LocalDate date);
-
-    Optional<Integer> findOutboundTotalByProductAndStockDate(Product product, LocalDate date);
-
-    Optional<Integer> findAdjustmentTotalByProductAndStockDate(Product product, LocalDate date);
 }

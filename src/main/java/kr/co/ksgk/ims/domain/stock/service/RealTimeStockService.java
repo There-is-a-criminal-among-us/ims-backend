@@ -130,12 +130,12 @@ public class RealTimeStockService {
         int previousStock = stockRepository.findByProductAndStockDate(product, previousDate)
                 .map(DailyStock::getCurrentStock)
                 .orElse(0);
-
         // 당일 입출고 및 조정 조회 (없으면 0)
-        int inbound = stockRepository.findInboundTotalByProductAndStockDate(product, targetDate).orElse(0);
-        int outbound = stockRepository.findOutboundTotalByProductAndStockDate(product, targetDate).orElse(0);
-        int adjustment = stockRepository.findAdjustmentTotalByProductAndStockDate(product, targetDate).orElse(0);
-
+        DailyStock dailyStock = stockRepository.findByProductAndStockDate(product, targetDate)
+                .orElse(new DailyStock(product, previousStock, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, targetDate));
+        int inbound = dailyStock.getInboundTotal();
+        int outbound = dailyStock.getOutboundTotal();
+        int adjustment = dailyStock.getAdjustmentTotal();
         return previousStock + inbound - outbound - adjustment;
     }
 
