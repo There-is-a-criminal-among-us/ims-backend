@@ -33,13 +33,13 @@ public record DailyStockDetailsDto(
                         .coupangFulfillment(dailyStock.getCoupangFulfillment())
                         .naverFulfillment(dailyStock.getNaverFulfillment())
                         .deliveryOutgoing(dailyStock.getDeliveryOutgoing())
-                        .redelivery(dailyStock.getRedelivery())
                         .build())
                 .adjustmentTotal(dailyStock.getAdjustmentTotal())
                 .adjustmentDetails(AdjustmentDetails.builder()
                         .damaged(dailyStock.getDamaged())
                         .disposal(dailyStock.getDisposal())
                         .lost(dailyStock.getLost())
+                        .redelivery(dailyStock.getRedelivery())
                         .adjustment(dailyStock.getAdjustment())
                         .build())
                 .build();
@@ -57,8 +57,7 @@ public record DailyStockDetailsDto(
             int outgoing,
             int coupangFulfillment,
             int naverFulfillment,
-            int deliveryOutgoing,
-            int redelivery
+            int deliveryOutgoing
     ) {
     }
 
@@ -67,6 +66,7 @@ public record DailyStockDetailsDto(
             int damaged,
             int disposal,
             int lost,
+            int redelivery,
             int adjustment
     ) {
     }

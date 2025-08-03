@@ -88,6 +88,6 @@ public class DailyStockCache {
     }
 
     public int getAdjustmentTotal() {
-        return damaged + disposal + lost + adjustment + redelivery;
+        return damaged + disposal + lost + redelivery - adjustment;
     }
 }
