@@ -34,13 +34,8 @@ public class DailyStockScheduler {
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
-    public void createDailyStockData(LocalDate targetDate) {
-        LocalDate yesterday;
-        if (targetDate != null) {
-            yesterday = targetDate;
-        } else {
-            yesterday = LocalDate.now().minusDays(1);
-        }
+    public void createDailyStockData() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
         log.info("DailyStock 데이터 생성 시작: {}", yesterday);
 
         try {
