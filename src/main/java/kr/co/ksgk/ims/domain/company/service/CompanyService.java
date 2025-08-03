@@ -6,6 +6,7 @@ import kr.co.ksgk.ims.domain.company.dto.TreeResponse;
 import kr.co.ksgk.ims.domain.company.dto.request.CompanyRequest;
 import kr.co.ksgk.ims.domain.company.dto.response.CompanyResponse;
 import kr.co.ksgk.ims.domain.company.dto.response.PagingCompanyResponse;
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,23 +35,28 @@ public class CompanyService {
         // Get member with their brand relationships
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        
-        // Get companies that the member manages
-        List<Company> companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
-        
-        // Get brand IDs that the member manages
-        Set<Long> memberBrandIds = member.getMemberBrands().stream()
-                .map(mb -> mb.getBrand().getId())
-                .collect(Collectors.toSet());
-        
+
+        List<Company> companies;
+        Set<Long> memberBrandIds;
+        if (!member.getRole().equals(Role.ADMIN)) {
+            // Get companies that the member manages
+            companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
+
+            // Get brand IDs that the member manages
+            memberBrandIds = member.getMemberBrands().stream()
+                    .map(mb -> mb.getBrand().getId())
+                    .collect(Collectors.toSet());
+        } else {
+            companies = companyRepository.findAllWithBrandsAndProducts();
+            memberBrandIds = Set.of();
+        }
         // Create filtered company tree responses
         List<CompanyTreeResponse> companyTreeResponseList = companies.stream()
                 .map(company -> createFilteredCompanyTreeResponse(company, memberBrandIds))
                 .collect(Collectors.toList());
-        
         return TreeResponse.from(companyTreeResponseList);
     }
-    
+
     private CompanyTreeResponse createFilteredCompanyTreeResponse(Company company, Set<Long> memberBrandIds) {
         return CompanyTreeResponse.builder()
                 .id(company.getId())
