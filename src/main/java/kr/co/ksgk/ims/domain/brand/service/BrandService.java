@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.brand.service;
 
-import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandCreateRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandUpdateRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.dto.response.PagingBrandResponse;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
@@ -28,7 +29,7 @@ public class BrandService {
 
     //등록
     @Transactional
-    public BrandResponse createBrand(BrandRequest request) {
+    public BrandResponse createBrand(BrandCreateRequest request) {
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
         Brand brand = request.toEntity(company);
@@ -59,7 +60,7 @@ public class BrandService {
 
     //수정
     @Transactional
-    public BrandResponse updateBrand(Long brandId, BrandRequest request) {
+    public BrandResponse updateBrand(Long brandId, BrandUpdateRequest request) {
         Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         if (request.name() != null) brand.updateName(request.name());
