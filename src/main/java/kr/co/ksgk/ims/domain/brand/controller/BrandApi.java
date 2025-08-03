@@ -5,7 +5,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.ksgk.ims.domain.brand.dto.request.BrandRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandCreateRequest;
+import kr.co.ksgk.ims.domain.brand.dto.request.BrandUpdateRequest;
 import kr.co.ksgk.ims.domain.brand.dto.response.BrandResponse;
 import kr.co.ksgk.ims.domain.brand.dto.response.PagingBrandResponse;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -22,7 +23,7 @@ public interface BrandApi {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = BrandResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> createBrand(BrandRequest request);
+    ResponseEntity<SuccessResponse<?>> createBrand(BrandCreateRequest request);
 
     @Operation(
             summary = "브랜드 목록 조회",
@@ -52,7 +53,7 @@ public interface BrandApi {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = BrandResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> updateBrand(Long brandId, BrandRequest request);
+    ResponseEntity<SuccessResponse<?>> updateBrand(Long brandId, BrandUpdateRequest request);
 
     @Operation(
             summary = "브랜드 삭제",

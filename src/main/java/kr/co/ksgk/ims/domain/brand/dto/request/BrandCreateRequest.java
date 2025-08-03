@@ -3,7 +3,7 @@ package kr.co.ksgk.ims.domain.brand.dto.request;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 
-public record BrandRequest(
+public record BrandCreateRequest(
         Long companyId,
         String name,
         String note
