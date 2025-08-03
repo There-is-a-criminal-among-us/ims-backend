@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
-import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
@@ -19,13 +20,13 @@ public interface ProductApi {
 
     @Operation(
             summary = "품목 등록",
-            description = "새로운 품목을 등록합니다"
+            description = "지정한 브랜드에 새로운 품목을 등록합니다"
     )
     @ApiResponse(responseCode = "201", description = "품목 등록 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ProductResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> createProduct(ProductRequest request);
+    ResponseEntity<SuccessResponse<?>> createProduct(ProductCreateRequest request);
 
     @Operation(
             summary = "품목 목록 조회",
@@ -49,13 +50,13 @@ public interface ProductApi {
 
     @Operation(
             summary = "품목 수정",
-            description = "특정 품목의 정보를 수정합니다"
+            description = "특정 품목의 정보를 수정합니다(이름이랑 비고만 반영됩니다)"
     )
     @ApiResponse(responseCode = "200", description = "품목 수정 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ProductResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> updateProduct(Long productId, ProductRequest request);
+    ResponseEntity<SuccessResponse<?>> updateProduct(Long productId, ProductUpdateRequest request);
 
     @Operation(
             summary = "품목 삭제",

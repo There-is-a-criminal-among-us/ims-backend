@@ -3,7 +3,8 @@ package kr.co.ksgk.ims.domain.product.service;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
-import kr.co.ksgk.ims.domain.product.dto.request.ProductRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductMappingResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.PagingProductResponse;
 import kr.co.ksgk.ims.domain.product.dto.response.ProductMappingResponse;
@@ -38,7 +39,7 @@ public class ProductService {
 
     //등록
     @Transactional
-    public ProductResponse createProduct(ProductRequest request) {
+    public ProductResponse createProduct(ProductCreateRequest request) {
         Brand brand = brandRepository.findById(request.brandId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         Product product = request.toEntity(brand);
@@ -68,7 +69,7 @@ public class ProductService {
 
     //수정
     @Transactional
-    public ProductResponse updateProduct(Long productId, ProductRequest request) {
+    public ProductResponse updateProduct(Long productId, ProductUpdateRequest request) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         if (request.name() != null) product.updateName(request.name());
