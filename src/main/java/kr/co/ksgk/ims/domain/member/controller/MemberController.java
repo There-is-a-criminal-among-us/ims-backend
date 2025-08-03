@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
 import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
 import kr.co.ksgk.ims.domain.auth.service.AuthService;
@@ -11,7 +12,8 @@ import kr.co.ksgk.ims.domain.member.service.MemberService;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -47,8 +49,14 @@ public class MemberController implements MemberApi {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable) {
-        PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, pageable);
+    public ResponseEntity<SuccessResponse<?>> getMemberList(
+            @RequestParam(required = false) String search,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(pagingMemberInfoResponse);
     }
 

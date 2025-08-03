@@ -10,6 +10,7 @@ import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +40,7 @@ public class InvoiceController implements InvoiceApi {
 
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, PageRequest.of(page, size));
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 

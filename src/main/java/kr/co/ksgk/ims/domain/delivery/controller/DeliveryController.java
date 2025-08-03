@@ -14,6 +14,7 @@ import kr.co.ksgk.ims.domain.delivery.service.DeliveryService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +48,7 @@ public class DeliveryController {
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size
     ) {
-        PagingDeliveryResponse response = deliveryService.getAllDeliveries(search, startDate, endDate, PageRequest.of(page, size));
+        PagingDeliveryResponse response = deliveryService.getAllDeliveries(search, startDate, endDate, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 

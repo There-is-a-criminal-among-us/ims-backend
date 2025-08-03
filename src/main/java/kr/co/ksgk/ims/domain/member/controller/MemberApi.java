@@ -13,7 +13,6 @@ import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,7 +60,7 @@ public interface MemberApi {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagingMemberInfoResponse.class))
     )
-    ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, Pageable pageable);
+    ResponseEntity<SuccessResponse<?>> getMemberList(@RequestParam(required = false) String search, int page, int size);
 
     @Operation(
             summary = "내 정보 조회",

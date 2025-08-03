@@ -13,6 +13,7 @@ import kr.co.ksgk.ims.domain.product.service.ProductService;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -88,7 +89,7 @@ public class ProductController implements ProductApi {
 
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-         PagingProductMappingResponse response = productService.getProductMapping(search, PageRequest.of(page, size));
+         PagingProductMappingResponse response = productService.getProductMapping(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 

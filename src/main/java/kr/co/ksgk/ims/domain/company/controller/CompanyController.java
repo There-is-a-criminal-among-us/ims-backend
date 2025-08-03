@@ -10,6 +10,7 @@ import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +46,7 @@ public class CompanyController implements CompanyApi {
 
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        PagingCompanyResponse response = companyService.getAllCompanies(search, PageRequest.of(page, size));
+        PagingCompanyResponse response = companyService.getAllCompanies(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 
