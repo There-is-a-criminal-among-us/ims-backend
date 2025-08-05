@@ -1,9 +1,11 @@
 package kr.co.ksgk.ims.domain.company.dto;
 
 import kr.co.ksgk.ims.domain.brand.dto.BrandTreeResponse;
+import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import lombok.Builder;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Builder
@@ -19,6 +21,7 @@ public record CompanyTreeResponse(
                 .name(company.getName())
                 .note(company.getNote())
                 .brands(company.getBrands().stream()
+                        .sorted(Comparator.comparing(Brand::getCreatedAt, Comparator.reverseOrder()))
                         .map(BrandTreeResponse::from)
                         .toList())
                 .build();
