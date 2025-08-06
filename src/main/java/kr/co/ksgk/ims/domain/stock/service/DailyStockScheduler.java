@@ -64,7 +64,7 @@ public class DailyStockScheduler {
 
     private DailyStock createDailyStockForProduct(Product product, LocalDate targetDate) {
         // 전날 DailyStock에서 현재 재고 가져오기
-        Integer currentStock = getCurrentStock(product, targetDate);
+        Integer previousStock = getPreviousStock(product, targetDate);
 
         // 해당 날짜의 Transaction 데이터 집계
         LocalDateTime startOfDay = targetDate.atStartOfDay();
@@ -81,38 +81,47 @@ public class DailyStockScheduler {
         List<InvoiceProduct> invoiceProducts = invoiceProductRepository.findByProductAndInvoiceCreatedAtBetween(
                 product, startOfDay, endOfDay);
 
+        int incoming = calculateIncoming(transactions);
+        int returnIncoming = calculateReturnIncoming(transactions, invoiceProducts);
+        int outgoing = calculateOutgoing(transactions);
+        int coupangFulfillment = calculateCoupangFulfillment(transactions);
+        int naverFulfillment = calculateNaverFulfillment(transactions);
+        int deliveryOutgoing = calculateDeliveryOutgoing(deliveries);
+        int redelivery = calculateRedelivery(transactions);
+        int damaged = calculateDamaged(transactions);
+        int disposal = calculateDisposal(transactions);
+        int lost = calculateLost(transactions);
+        int adjustment = calculateAdjustment(transactions);
+
+        Integer currentStock = previousStock + incoming + returnIncoming
+                - outgoing - coupangFulfillment - naverFulfillment - deliveryOutgoing - redelivery
+                - damaged - disposal - lost + adjustment;
+
         return DailyStock.builder()
                 .product(product)
                 .currentStock(currentStock)
-                .incoming(calculateIncoming(transactions))
-                .returnIncoming(calculateReturnIncoming(transactions, invoiceProducts))
-                .outgoing(calculateOutgoing(transactions))
-                .coupangFulfillment(calculateCoupangFulfillment(transactions))
-                .naverFulfillment(calculateNaverFulfillment(transactions))
-                .deliveryOutgoing(calculateDeliveryOutgoing(deliveries))
-                .redelivery(calculateRedelivery(transactions))
-                .damaged(calculateDamaged(transactions))
-                .disposal(calculateDisposal(transactions))
-                .lost(calculateLost(transactions))
-                .adjustment(calculateAdjustment(transactions))
+                .incoming(incoming)
+                .returnIncoming(returnIncoming)
+                .outgoing(outgoing)
+                .coupangFulfillment(coupangFulfillment)
+                .naverFulfillment(naverFulfillment)
+                .deliveryOutgoing(deliveryOutgoing)
+                .redelivery(redelivery)
+                .damaged(damaged)
+                .disposal(disposal)
+                .lost(lost)
+                .adjustment(adjustment)
                 .stockDate(targetDate)
                 .build();
     }
 
-    private Integer getCurrentStock(Product product, LocalDate targetDate) {
+    private Integer getPreviousStock(Product product, LocalDate targetDate) {
         // 전날의 DailyStock에서 현재 재고를 가져오기
         LocalDate previousDate = targetDate.minusDays(1);
         // 전날 재고 조회 (없으면 0)
-        int previousStock = stockRepository.findByProductAndStockDate(product, previousDate)
+        return stockRepository.findByProductAndStockDate(product, previousDate)
                 .map(DailyStock::getCurrentStock)
                 .orElse(0);
-        // 당일 입출고 및 조정 조회 (없으면 0)
-        DailyStock dailyStock = stockRepository.findByProductAndStockDate(product, targetDate)
-                .orElse(new DailyStock(product, previousStock, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, targetDate));
-        int inbound = dailyStock.getInboundTotal();
-        int outbound = dailyStock.getOutboundTotal();
-        int adjustment = dailyStock.getAdjustmentTotal();
-        return previousStock + inbound - outbound - adjustment;
     }
 
     private Integer calculateIncoming(List<Transaction> transactions) {
