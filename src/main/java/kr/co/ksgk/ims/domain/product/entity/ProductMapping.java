@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.product.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ProductMapping {
+public class ProductMapping extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
