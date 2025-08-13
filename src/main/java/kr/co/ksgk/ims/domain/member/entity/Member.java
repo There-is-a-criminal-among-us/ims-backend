@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.member.entity;
 
 import jakarta.persistence.*;
+import kr.co.ksgk.ims.domain.attendance.entity.Attendance;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.company.entity.Company;
@@ -9,6 +10,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,6 +62,9 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MemberBrand> memberBrands = new HashSet<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attendance> attendances = new ArrayList<>();
 
     public void updateName(String name) {
         this.name = name;

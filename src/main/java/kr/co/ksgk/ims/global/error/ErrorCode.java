@@ -64,6 +64,11 @@ public enum ErrorCode {
     TRANSACTION_NOT_PENDING(HttpStatus.BAD_REQUEST, "T003", "입출고 상태가 대기 중이 아닙니다."),
     SCHEDULED_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "T004", "입출고 유형이 기타수량이 아닌 경우 예정일이 필요합니다."),
     SCHEDULED_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "T005", "입출고 유형이 기탁수량인 경우 예정일은 허용되지 않습니다."),
+
+    // Attendance
+    ATTENDANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "AT001", "출석 기록을 찾을 수 없습니다."),
+    EXPIRED_ATTENDANCE_TOKEN(HttpStatus.UNAUTHORIZED, "AT002", "출석 토큰이 만료되었습니다."),
+    INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다.")
     ;
 
     private final HttpStatus httpStatus;

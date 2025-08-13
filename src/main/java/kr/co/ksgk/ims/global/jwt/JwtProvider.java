@@ -35,6 +35,15 @@ public class JwtProvider {
         return generateToken(authentication, jwtProperties.getRefreshExpirationTime());
     }
 
+    public String generateAttendanceToken(Long memberId) {
+        return Jwts.builder()
+                .claim("memberId", memberId)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getAttendanceExpirationTime()))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
     public String generateToken(Authentication authentication, long expirationTime) {
         String memberId = authentication.getName();
         String roleStr = authentication.getAuthorities().stream()
@@ -67,6 +76,16 @@ public class JwtProvider {
             throw new UnauthorizedException(ErrorCode.EXPIRED_REFRESH_TOKEN);
         } catch (JwtException e) {
             throw new UnauthorizedException(ErrorCode.INVALID_REFRESH_TOKEN_VALUE);
+        }
+    }
+
+    public Long validateAttendanceToken(String token) {
+        try {
+            return getJwtParser().parseSignedClaims(token).getPayload().get("memberId", Long.class);
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException(ErrorCode.EXPIRED_ATTENDANCE_TOKEN);
+        } catch (JwtException e) {
+            throw new UnauthorizedException(ErrorCode.INVALID_ATTENDANCE_TOKEN_VALUE);
         }
     }
 
