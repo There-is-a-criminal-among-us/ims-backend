@@ -109,7 +109,7 @@ public class RealTimeStockService {
                 int outgoing = calculateOutgoing(transactions);
                 int coupangFulfillment = calculateCoupangFulfillment(transactions);
                 int naverFulfillment = calculateNaverFulfillment(transactions);
-                int deliveryOutgoing = calculateDeliveryOutgoing(deliveries);
+                int deliveryOutgoing = calculateDeliveryOutgoing(deliveries, product);
                 int redelivery = calculateRedelivery(transactions);
                 int damaged = calculateDamaged(transactions);
                 int disposal = calculateDisposal(transactions);
@@ -189,9 +189,12 @@ public class RealTimeStockService {
                 .sum();
     }
 
-    private Integer calculateDeliveryOutgoing(List<Delivery> deliveries) {
+    private Integer calculateDeliveryOutgoing(List<Delivery> deliveries, Product targetProduct) {
         return deliveries.stream()
-                .mapToInt(Delivery::getQuantity)
+                .flatMap(delivery -> delivery.getRawProduct().getProductMappings().stream()
+                        .filter(mapping -> mapping.getProduct().equals(targetProduct))
+                        .map(mapping -> delivery.getQuantity() * mapping.getQuantity()))
+                .mapToInt(Integer::intValue)
                 .sum();
     }
 
