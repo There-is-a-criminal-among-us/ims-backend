@@ -17,6 +17,7 @@ import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -66,7 +68,7 @@ public class OcrService {
         NaverOcrRequest body = NaverOcrRequest.builder()
                 .version("V2")
                 .requestId(UUID.randomUUID().toString())
-                .timestamp(Long.valueOf(System.currentTimeMillis()).intValue())
+                .timestamp(System.currentTimeMillis())
                 .images(
                         List.of(NaverOcrRequest.ImageInfo.builder()
                                 .format("png")
@@ -86,6 +88,7 @@ public class OcrService {
                     .bodyToMono(String.class)
                     .block();
         } catch (WebClientResponseException e) {
+            log.error("NAVER OCR 400 body: {}", e.getResponseBodyAsString());
             throw new BusinessException("Naver OCR API 호출 실패: " + e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             throw new BusinessException("OCR 텍스트 추출 중 오류 발생", ErrorCode.INTERNAL_SERVER_ERROR);
@@ -120,7 +123,7 @@ public class OcrService {
                 .build();
 
         OpenAiFunctionCallRequest requestBody = OpenAiFunctionCallRequest.builder()
-                .model("gpt-5")
+                .model("gpt-4")
                 .temperature(0)
                 .messages(List.of(system, user))
                 .functions(List.of(function))
@@ -138,6 +141,7 @@ public class OcrService {
                     .bodyToMono(OpenAiResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
+            log.error("OpenAI OCR 400 body: {}", e.getResponseBodyAsString());
             throw new BusinessException("OpenAI API 호출 실패: " + e.getMessage(), ErrorCode.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             throw new BusinessException("AI 데이터 추출 중 오류 발생", ErrorCode.INTERNAL_SERVER_ERROR);

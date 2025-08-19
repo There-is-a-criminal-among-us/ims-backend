@@ -8,7 +8,7 @@ import java.util.List;
 public record NaverOcrRequest(
         String version,
         String requestId,
-        Integer timestamp,
+        long timestamp,
         List<ImageInfo> images
 ) {
     @Builder
