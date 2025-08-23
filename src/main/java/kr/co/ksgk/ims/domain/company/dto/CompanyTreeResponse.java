@@ -21,7 +21,7 @@ public record CompanyTreeResponse(
                 .name(company.getName())
                 .note(company.getNote())
                 .brands(company.getBrands().stream()
-                        .sorted(Comparator.comparing(Brand::getCreatedAt, Comparator.reverseOrder()))
+                        .sorted(Comparator.comparing(Brand::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                         .map(BrandTreeResponse::from)
                         .toList())
                 .build();
