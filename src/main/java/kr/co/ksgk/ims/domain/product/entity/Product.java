@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.product.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
@@ -26,6 +27,7 @@ public class Product extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)
+    @JsonBackReference
     private Brand brand;
 
     @Column(nullable = false)

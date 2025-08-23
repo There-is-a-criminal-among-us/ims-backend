@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.company.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
@@ -53,6 +54,7 @@ public class Company extends BaseEntity {
     }
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Set<Brand> brands = new HashSet<>();
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
