@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -31,6 +32,61 @@ public class TransactionRepositoryImpl implements TransactionCustomRepository {
         QCompany company = QCompany.company;
 
         BooleanBuilder builder = new BooleanBuilder();
+
+        if (types == null || types.isEmpty()) {
+            builder.and(transaction.transactionType.name.ne("ADJUSTMENT"));
+        } else {
+            builder.and(transaction.transactionType.name.in(types));
+        }
+        if (startDate != null) builder.and(transaction.createdAt.goe(startDate.atStartOfDay()));
+        if (endDate != null) builder.and(transaction.createdAt.loe(endDate.atTime(23, 59, 59)));
+        if (search != null && !search.isBlank()) {
+            builder.and(
+                    product.name.containsIgnoreCase(search)
+                            .or(brand.name.containsIgnoreCase(search))
+                            .or(company.name.containsIgnoreCase(search))
+            );
+        }
+
+        List<Transaction> result = queryFactory
+                .selectFrom(transaction)
+                .leftJoin(transaction.transactionType, transactionType).fetchJoin()
+                .leftJoin(transaction.product, product).fetchJoin()
+                .leftJoin(product.brand, brand).fetchJoin()
+                .leftJoin(brand.company, company).fetchJoin()
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(transaction.createdAt.desc())
+                .fetch();
+
+        long count = Optional.ofNullable(
+                queryFactory
+                        .select(transaction.count())
+                        .from(transaction)
+                        .leftJoin(transaction.transactionType, transactionType)
+                        .leftJoin(transaction.product, product)
+                        .leftJoin(product.brand, brand)
+                        .leftJoin(brand.company, company)
+                        .where(builder)
+                        .fetchOne()
+        ).orElse(0L);
+
+        return new PageImpl<>(result, pageable, count);
+    }
+
+    @Override
+    public Page<Transaction> searchTransactionsByProductIds(String search, List<String> types, LocalDate startDate, LocalDate endDate, Set<Long> productIds, Pageable pageable) {
+        QTransaction transaction = QTransaction.transaction;
+        QTransactionType transactionType = QTransactionType.transactionType;
+        QProduct product = QProduct.product;
+        QBrand brand = QBrand.brand;
+        QCompany company = QCompany.company;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        
+        // Add product ID filter for member permissions
+        builder.and(transaction.product.id.in(productIds));
 
         if (types == null || types.isEmpty()) {
             builder.and(transaction.transactionType.name.ne("ADJUSTMENT"));

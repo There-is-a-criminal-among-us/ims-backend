@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +33,7 @@ public interface TransactionApi {
                     schema = @Schema(implementation = PagingTransactionResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> getAllTransactions(
+            @Auth Long memberId,
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 

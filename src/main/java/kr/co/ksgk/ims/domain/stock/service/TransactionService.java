@@ -1,5 +1,8 @@
 package kr.co.ksgk.ims.domain.stock.service;
 
+import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
+import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,15 +36,45 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;
     private final ProductRepository productRepository;
+    private final MemberRepository memberRepository;
     private final StockCacheInvalidator cacheInvalidator;
 
     public PagingTransactionResponse getAllTransactions(
-            String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<Transaction> pageTransaction = transactionRepository.searchTransactions(search, types, startDate, endDate, pageable);
+            Long memberId, String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Page<Transaction> pageTransaction;
+        if (member.getRole().equals(Role.ADMIN) || member.getRole().equals(Role.OCR)) {
+            // ADMIN and OCR can see all transactions
+            pageTransaction = transactionRepository.searchTransactions(search, types, startDate, endDate, pageable);
+        } else {
+            // MEMBER can only see transactions from their managed brands/companies
+            Set<Long> allowedProductIds = getAllowedProductIds(member);
+            pageTransaction = transactionRepository.searchTransactionsByProductIds(search, types, startDate, endDate, allowedProductIds, pageable);
+        }
+        
         List<TransactionResponse> transactions = pageTransaction.getContent().stream()
                 .map(TransactionResponse::from)
                 .collect(Collectors.toList());
         return PagingTransactionResponse.of(pageTransaction, transactions);
+    }
+    
+    private Set<Long> getAllowedProductIds(Member member) {
+        Set<Long> memberBrandIds = member.getMemberBrands().stream()
+                .map(mb -> mb.getBrand().getId())
+                .collect(Collectors.toSet());
+        
+        if (!memberBrandIds.isEmpty()) {
+            // If member has brand permissions, get products from those brands
+            return productRepository.findIdsByBrandIdIn(memberBrandIds);
+        } else {
+            // If member has company permissions, get products from those companies
+            Set<Long> memberCompanyIds = member.getMemberCompanies().stream()
+                    .map(mc -> mc.getCompany().getId())
+                    .collect(Collectors.toSet());
+            return productRepository.findIdsByCompanyIdIn(memberCompanyIds);
+        }
     }
 
     @Transactional
