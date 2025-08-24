@@ -21,7 +21,7 @@ public record BrandTreeResponse(
                 .name(brand.getName())
                 .note(brand.getNote())
                 .products(brand.getProducts().stream()
-                        .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.reverseOrder()))
+                        .sorted(Comparator.comparing(Product::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                         .map(ProductTreeResponse::from)
                         .toList())
                 .build();

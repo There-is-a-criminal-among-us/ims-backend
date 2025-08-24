@@ -1,5 +1,7 @@
 package kr.co.ksgk.ims.domain.brand.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.company.entity.Company;
@@ -43,12 +45,14 @@ public class Brand extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @JsonBackReference
     private Company company;
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberBrand> memberBrands = new ArrayList<>();
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Set<Product> products = new HashSet<>();
 
     public void updateName(String name) {
