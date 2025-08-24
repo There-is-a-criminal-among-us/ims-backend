@@ -37,18 +37,28 @@ public class CompanyService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
 
         List<CompanyTreeResponse> companyTreeResponseList;
-        if (!member.getRole().equals(Role.ADMIN)) {
-            // Get companies that the member manages
-            List<Company> companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
-
-            // Get brand IDs that the member manages
+        if (!member.getRole().equals(Role.ADMIN) && !member.getRole().equals(Role.OCR)) {
+            // Check if member has brand permissions
             Set<Long> memberBrandIds = member.getMemberBrands().stream()
                     .map(mb -> mb.getBrand().getId())
                     .collect(Collectors.toSet());
-            // Create filtered company tree responses
-            companyTreeResponseList = companies.stream()
-                    .map(company -> createFilteredCompanyTreeResponse(company, memberBrandIds))
-                    .collect(Collectors.toList());
+
+            if (!memberBrandIds.isEmpty()) {
+                // If a member has brand permissions, get companies through brands
+                List<Company> companies = member.getMemberBrands().stream()
+                        .map(mb -> mb.getBrand().getCompany())
+                        .distinct()
+                        .collect(Collectors.toList());
+                companyTreeResponseList = companies.stream()
+                        .map(company -> createFilteredCompanyTreeResponse(company, memberBrandIds))
+                        .collect(Collectors.toList());
+            } else {
+                // If a member has company permissions, get all brands from those companies
+                List<Company> companies = companyRepository.findCompaniesByMemberWithBrandsAndProducts(memberId);
+                companyTreeResponseList = companies.stream()
+                        .map(CompanyTreeResponse::from)
+                        .collect(Collectors.toList());
+            }
         } else {
             List<Company> companies = companyRepository.findAllWithBrandsAndProducts();
             companyTreeResponseList = companies.stream()
