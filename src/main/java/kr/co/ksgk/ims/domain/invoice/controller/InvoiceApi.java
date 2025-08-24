@@ -11,6 +11,7 @@ import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfoResponse;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,7 @@ public interface InvoiceApi {
             )
     )
     ResponseEntity<SuccessResponse<?>> getInvoiceList(
+            @Auth Long memberId,
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 

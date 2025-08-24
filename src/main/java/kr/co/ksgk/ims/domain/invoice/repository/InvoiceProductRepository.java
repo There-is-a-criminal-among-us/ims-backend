@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, Long> {
 
@@ -36,5 +37,26 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             @Param("product") Product product,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE ip.product.id IN :productIds
+            """)
+    Page<InvoiceProduct> findByProductIdIn(@Param("productIds") Set<Long> productIds, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword%)
+            AND ip.product.id IN :productIds
+            """)
+    Page<InvoiceProduct> findInvoiceProductByNameOrNumberAndProductIdIn(
+            @Param("keyword") String keyword,
+            @Param("productIds") Set<Long> productIds,
+            Pageable pageable
     );
 }

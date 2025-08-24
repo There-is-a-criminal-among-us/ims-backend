@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -32,4 +33,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"brand", "brand.company"})
     Page<Product> findByNameContaining(String name, Pageable pageable);
+
+    @Query("""
+            SELECT p.id FROM Product p
+            WHERE p.brand.id IN :brandIds
+            """)
+    Set<Long> findIdsByBrandIdIn(@Param("brandIds") Set<Long> brandIds);
+
+    @Query("""
+            SELECT p.id FROM Product p
+            WHERE p.brand.company.id IN :companyIds
+            """)
+    Set<Long> findIdsByCompanyIdIn(@Param("companyIds") Set<Long> companyIds);
 }

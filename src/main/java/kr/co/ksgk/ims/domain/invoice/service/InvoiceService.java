@@ -12,6 +12,9 @@ import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceRepository;
+import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
+import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
@@ -24,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,7 @@ public class InvoiceService {
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
     private final InvoiceProductRepository invoiceProductRepository;
+    private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final StockCacheInvalidator cacheInvalidator;
 
@@ -62,17 +68,50 @@ public class InvoiceService {
         return SimpleInvoiceInfoResponse.from(saved);
     }
 
-    public PagingInvoiceInfoResponse getInvoiceList(String search, Pageable pageable) {
+    public PagingInvoiceInfoResponse getInvoiceList(Long memberId, String search, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+
         Page<InvoiceProduct> invoiceProductPage;
-        if (search == null || search.isBlank()) {
-            invoiceProductPage = invoiceProductRepository.findAll(pageable);
+        if (member.getRole().equals(Role.ADMIN) || member.getRole().equals(Role.OCR)) {
+            // ADMIN and OCR can see all invoice products
+            if (search == null || search.isBlank()) {
+                invoiceProductPage = invoiceProductRepository.findAll(pageable);
+            } else {
+                invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumber(search, pageable);
+            }
         } else {
-            invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumber(search, pageable);
+            // MEMBER can only see invoice products from their managed brands/companies
+            Set<Long> allowedProductIds = getAllowedProductIds(member);
+            
+            if (search == null || search.isBlank()) {
+                invoiceProductPage = invoiceProductRepository.findByProductIdIn(allowedProductIds, pageable);
+            } else {
+                invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberAndProductIdIn(search, allowedProductIds, pageable);
+            }
         }
+        
         List<SimpleInvoiceProductInfoResponse> simpleInvoiceProductInfoResponses = invoiceProductPage.getContent().stream()
                 .map(SimpleInvoiceProductInfoResponse::from)
                 .toList();
         return PagingInvoiceInfoResponse.of(invoiceProductPage, simpleInvoiceProductInfoResponses);
+    }
+    
+    private Set<Long> getAllowedProductIds(Member member) {
+        Set<Long> memberBrandIds = member.getMemberBrands().stream()
+                .map(mb -> mb.getBrand().getId())
+                .collect(Collectors.toSet());
+        
+        if (!memberBrandIds.isEmpty()) {
+            // If member has brand permissions, get products from those brands
+            return productRepository.findIdsByBrandIdIn(memberBrandIds);
+        } else {
+            // If member has company permissions, get products from those companies
+            Set<Long> memberCompanyIds = member.getMemberCompanies().stream()
+                    .map(mc -> mc.getCompany().getId())
+                    .collect(Collectors.toSet());
+            return productRepository.findIdsByCompanyIdIn(memberCompanyIds);
+        }
     }
 
     public InvoiceInfoResponse getInvoiceInfo(Long invoiceId) {

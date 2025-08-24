@@ -7,6 +7,7 @@ import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -29,9 +30,10 @@ public class InvoiceController implements InvoiceApi {
         return SuccessResponse.created(response);
     }
 
-    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
     @GetMapping
     public ResponseEntity<SuccessResponse<?>> getInvoiceList(
+            @Auth Long memberId,
             @Parameter(description = "고객명, 전화번호 검색어")
             @RequestParam(defaultValue = "") String search,
 
@@ -40,7 +42,7 @@ public class InvoiceController implements InvoiceApi {
 
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(memberId, search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 
