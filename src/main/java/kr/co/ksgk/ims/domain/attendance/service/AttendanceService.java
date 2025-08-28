@@ -95,10 +95,23 @@ public class AttendanceService {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ATTENDANCE_NOT_FOUND));
         if (attendance.getMember().getRole() != Role.PART_TIME) {
-            throw new BusinessException(ErrorCode.INVALID_ATTENDANCE_UPDATE);
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
         }
         attendance.updateAttendanceTimes(request.startTime(), request.endTime());
         Attendance updatedAttendance = attendanceRepository.save(attendance);
         return AttendanceResponse.from(updatedAttendance);
+    }
+
+    public PagingAttendanceResponse getPartTimeAttendanceList(Long memberId, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (member.getRole() != Role.PART_TIME) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
+        }
+        Page<Attendance> attendancePage = attendanceRepository.findAllByMember(member, pageable);
+        List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
+                .map(AttendanceResponse::from)
+                .collect(Collectors.toList());
+        return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
     }
 }

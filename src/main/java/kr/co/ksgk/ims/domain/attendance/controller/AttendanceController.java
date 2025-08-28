@@ -104,4 +104,19 @@ public class AttendanceController {
         AttendanceResponse response = attendanceService.updatePartTimeAttendance(attendanceId, request);
         return SuccessResponse.ok(response);
     }
+
+    @Operation(summary = "사용자 출석 기록 조회", description = "특정 사용자의 출석 기록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "출석 기록 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PagingAttendanceResponse.class)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{memberId}")
+    public ResponseEntity<SuccessResponse<?>> getPartTimeAttendanceList(
+            @PathVariable Long memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PagingAttendanceResponse response = attendanceService.getPartTimeAttendanceList(memberId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
+        return SuccessResponse.ok(response);
+    }
 }

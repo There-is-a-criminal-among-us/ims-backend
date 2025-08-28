@@ -70,7 +70,7 @@ public enum ErrorCode {
     EXPIRED_ATTENDANCE_TOKEN(HttpStatus.UNAUTHORIZED, "AT002", "출석 토큰이 만료되었습니다."),
     INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다."),
     ATTENDANCE_ALREADY_EXISTS(HttpStatus.CONFLICT, "AT004", "이미 출근한 기록이 존재합니다."),
-    INVALID_ATTENDANCE_UPDATE(HttpStatus.BAD_REQUEST, "AT005", "아르바이트 사용자의 출석 기록만 수정할 수 있습니다."),
+    INVALID_MEMBER_ROLE(HttpStatus.BAD_REQUEST, "AT005", "아르바이트 사용자가 아닙니다."),
     ;
 
     private final HttpStatus httpStatus;
