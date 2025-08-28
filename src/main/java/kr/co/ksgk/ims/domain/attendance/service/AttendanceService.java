@@ -1,14 +1,17 @@
 package kr.co.ksgk.ims.domain.attendance.service;
 
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceRequest;
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceUpdateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceResponse;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceTokenResponse;
 import kr.co.ksgk.ims.domain.attendance.dto.response.PagingAttendanceResponse;
 import kr.co.ksgk.ims.domain.attendance.entity.Attendance;
 import kr.co.ksgk.ims.domain.attendance.repository.AttendanceRepository;
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import kr.co.ksgk.ims.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -85,5 +88,17 @@ public class AttendanceService {
                 .map(AttendanceResponse::from)
                 .collect(Collectors.toList());
         return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
+    }
+
+    @Transactional
+    public AttendanceResponse updatePartTimeAttendance(Long attendanceId, AttendanceUpdateRequest request) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ATTENDANCE_NOT_FOUND));
+        if (attendance.getMember().getRole() != Role.PART_TIME) {
+            throw new BusinessException(ErrorCode.INVALID_ATTENDANCE_UPDATE);
+        }
+        attendance.updateAttendanceTimes(request.startTime(), request.endTime());
+        Attendance updatedAttendance = attendanceRepository.save(attendance);
+        return AttendanceResponse.from(updatedAttendance);
     }
 }

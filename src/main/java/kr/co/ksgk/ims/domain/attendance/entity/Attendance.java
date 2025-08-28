@@ -42,4 +42,13 @@ public class Attendance extends BaseEntity {
     public void updateEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
+
+    public void updateAttendanceTimes(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime != null) {
+            this.startTime = startTime;
+        }
+        if (endTime != null) {
+            this.endTime = endTime;
+        }
+    }
 }

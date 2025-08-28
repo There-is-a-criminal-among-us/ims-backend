@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceRequest;
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceUpdateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceResponse;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceTokenResponse;
 import kr.co.ksgk.ims.domain.attendance.dto.response.PagingAttendanceResponse;
@@ -87,6 +88,20 @@ public class AttendanceController {
             @RequestParam(defaultValue = "20") int size
     ) {
         PagingAttendanceResponse response = attendanceService.getMyAttendanceList(memberId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
+        return SuccessResponse.ok(response);
+    }
+
+    @Operation(summary = "출퇴근 시간 수정", description = "PART_TIME 사용자의 출퇴근 시간을 수정합니다.")
+    @ApiResponse(responseCode = "200", description = "출퇴근 시간 수정 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AttendanceResponse.class)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{attendanceId}")
+    public ResponseEntity<SuccessResponse<?>> updatePartTimeAttendance(
+            @PathVariable Long attendanceId,
+            @RequestBody @Valid AttendanceUpdateRequest request
+    ) {
+        AttendanceResponse response = attendanceService.updatePartTimeAttendance(attendanceId, request);
         return SuccessResponse.ok(response);
     }
 }
