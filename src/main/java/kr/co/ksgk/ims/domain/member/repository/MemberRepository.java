@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.member.repository;
 
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -35,4 +36,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                    OR b.name LIKE %:keyword%
             """)
     Page<Member> findMemberByUsernameAndCompanyAndBrand(@Param("keyword") String keyword, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"memberCompanies", "memberCompanies.company", "memberBrands", "memberBrands.brand"})
+    Page<Member> findAllByRole(Role role, Pageable pageable);
 }

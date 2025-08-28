@@ -9,6 +9,7 @@ import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
@@ -102,5 +103,13 @@ public class MemberService {
         Member member=memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         member.changePassword(passwordEncoder.encode("1234"));
+    }
+
+    public PagingMemberInfoResponse getPartTimeMembers(Pageable pageable) {
+        Page<Member> memberPage = memberRepository.findAllByRole(Role.PART_TIME, pageable);
+        List<MemberInfoResponse> memberInfoResponses = memberPage.getContent().stream()
+                .map(MemberInfoResponse::from)
+                .toList();
+        return PagingMemberInfoResponse.of(memberPage, memberInfoResponses);
     }
 }
