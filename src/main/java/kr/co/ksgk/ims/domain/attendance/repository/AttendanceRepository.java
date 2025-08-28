@@ -14,4 +14,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Optional<Attendance> findByMemberAndDate(Member member, LocalDate date);
 
     Page<Attendance> findAllByMember(Member member, Pageable pageable);
+
+    boolean existsByMemberAndDate(Member member, LocalDate date);
 }

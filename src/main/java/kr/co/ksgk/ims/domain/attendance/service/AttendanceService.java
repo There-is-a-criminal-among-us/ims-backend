@@ -43,6 +43,9 @@ public class AttendanceService {
         Long memberId = jwtProvider.validateAttendanceToken(request.token());
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (attendanceRepository.existsByMemberAndDate(member, LocalDate.now())) {
+            throw new EntityNotFoundException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
+        }
         Attendance attendance = Attendance.builder()
                 .member(member)
                 .date(LocalDate.now())

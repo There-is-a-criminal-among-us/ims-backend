@@ -68,7 +68,8 @@ public enum ErrorCode {
     // Attendance
     ATTENDANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "AT001", "출석 기록을 찾을 수 없습니다."),
     EXPIRED_ATTENDANCE_TOKEN(HttpStatus.UNAUTHORIZED, "AT002", "출석 토큰이 만료되었습니다."),
-    INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다.")
+    INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다."),
+    ATTENDANCE_ALREADY_EXISTS(HttpStatus.CONFLICT, "AT004", "이미 출근한 기록이 존재합니다.")
     ;
 
     private final HttpStatus httpStatus;
