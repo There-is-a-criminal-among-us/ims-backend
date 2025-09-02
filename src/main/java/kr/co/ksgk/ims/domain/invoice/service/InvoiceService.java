@@ -87,7 +87,7 @@ public class InvoiceService {
             if (search == null || search.isBlank()) {
                 invoiceProductPage = invoiceProductRepository.findByProductIdIn(allowedProductIds, pageable);
             } else {
-                invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberAndProductIdIn(search, allowedProductIds, pageable);
+                invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(search, allowedProductIds, pageable);
             }
         }
         

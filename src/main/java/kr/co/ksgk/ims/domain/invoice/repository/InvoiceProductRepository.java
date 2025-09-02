@@ -51,10 +51,10 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             SELECT ip
             FROM InvoiceProduct ip
             JOIN ip.invoice i
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR i.number LIKE %:keyword%)
             AND ip.product.id IN :productIds
             """)
-    Page<InvoiceProduct> findInvoiceProductByNameOrNumberAndProductIdIn(
+    Page<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(
             @Param("keyword") String keyword,
             @Param("productIds") Set<Long> productIds,
             Pageable pageable
