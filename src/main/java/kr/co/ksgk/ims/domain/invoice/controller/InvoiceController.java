@@ -46,7 +46,7 @@ public class InvoiceController implements InvoiceApi {
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 
-    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
     @GetMapping("/{invoiceId}")
     public ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
         InvoiceInfoResponse invoiceInfoResponse = invoiceService.getInvoiceInfo(invoiceId);
