@@ -34,7 +34,7 @@ public class InvoiceController implements InvoiceApi {
     @GetMapping
     public ResponseEntity<SuccessResponse<?>> getInvoiceList(
             @Auth Long memberId,
-            @Parameter(description = "고객명, 전화번호, 송장번호 검색어")
+            @Parameter(description = "고객명, 전화번호, 품목명, 송장번호 검색어")
             @RequestParam(defaultValue = "") String search,
 
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")

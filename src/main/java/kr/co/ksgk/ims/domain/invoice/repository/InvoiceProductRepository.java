@@ -23,8 +23,10 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
                 SELECT ip
                 FROM InvoiceProduct ip
                 JOIN ip.invoice i
+                JOIN ip.product p
                 WHERE i.name LIKE %:keyword%
                    OR i.number LIKE %:keyword%
+                   OR p.name LIKE %:keyword%
             """)
     Page<InvoiceProduct> findInvoiceProductByNameOrNumber(@Param("keyword") String keyword, Pageable pageable);
 
@@ -51,7 +53,8 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             SELECT ip
             FROM InvoiceProduct ip
             JOIN ip.invoice i
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR i.number LIKE %:keyword%)
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND ip.product.id IN :productIds
             """)
     Page<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(
