@@ -102,13 +102,20 @@ public class AttendanceService {
         return AttendanceResponse.from(updatedAttendance);
     }
 
-    public PagingAttendanceResponse getPartTimeAttendanceList(Long memberId, Pageable pageable) {
+    public PagingAttendanceResponse getPartTimeAttendanceList(Long memberId, Integer year, Integer month, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         if (member.getRole() != Role.PART_TIME) {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
         }
-        Page<Attendance> attendancePage = attendanceRepository.findAllByMember(member, pageable);
+        Page<Attendance> attendancePage;
+        if (year != null && month != null) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+            attendancePage = attendanceRepository.findAllByMemberAndDateBetween(member, startDate, endDate, pageable);
+        } else {
+            attendancePage = attendanceRepository.findAllByMember(member, pageable);
+        }
         List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
                 .map(AttendanceResponse::from)
                 .collect(Collectors.toList());

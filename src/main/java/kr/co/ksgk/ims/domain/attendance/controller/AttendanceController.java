@@ -105,7 +105,7 @@ public class AttendanceController {
         return SuccessResponse.ok(response);
     }
 
-    @Operation(summary = "사용자 출석 기록 조회", description = "특정 사용자의 출석 기록을 조회합니다.")
+    @Operation(summary = "사용자 출석 기록 조회", description = "특정 사용자의 출석 기록을 조회합니다. year, month 파라미터로 월별 조회가 가능합니다.")
     @ApiResponse(responseCode = "200", description = "출석 기록 조회 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagingAttendanceResponse.class)))
@@ -114,9 +114,11 @@ public class AttendanceController {
     public ResponseEntity<SuccessResponse<?>> getPartTimeAttendanceList(
             @PathVariable Long memberId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
     ) {
-        PagingAttendanceResponse response = attendanceService.getPartTimeAttendanceList(memberId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
+        PagingAttendanceResponse response = attendanceService.getPartTimeAttendanceList(memberId, year, month, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
         return SuccessResponse.ok(response);
     }
 }
