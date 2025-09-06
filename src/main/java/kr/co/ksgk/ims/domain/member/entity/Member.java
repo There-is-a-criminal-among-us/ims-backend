@@ -10,6 +10,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,14 +48,17 @@ public class Member extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    private LocalTime workStartTime;
+
     @Builder
-    public Member(String username, String password, String name, String phone, String note, Role role) {
+    public Member(String username, String password, String name, String phone, String note, Role role, LocalTime workStartTime) {
         this.username = username;
         this.password = password;
         this.name = name;
         this.phone = phone;
         this.note = note;
         this.role = role;
+        this.workStartTime = workStartTime;
     }
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -76,6 +80,10 @@ public class Member extends BaseEntity {
 
     public void updateNote(String note) {
         this.note = note;
+    }
+
+    public void updateWorkStartTime(LocalTime workStartTime) {
+        this.workStartTime = workStartTime;
     }
 
     public void changePassword(String newPassword) {

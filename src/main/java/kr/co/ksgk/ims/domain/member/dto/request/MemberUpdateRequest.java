@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.member.dto.request;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public record MemberUpdateRequest(
@@ -7,6 +8,7 @@ public record MemberUpdateRequest(
         String phone,
         String note,
         List<Long> managingCompanies,
-        List<Long> managingBrands
+        List<Long> managingBrands,
+        LocalTime workStartTime
 ) {
 }

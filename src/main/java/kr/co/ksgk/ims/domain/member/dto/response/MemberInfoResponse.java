@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.member.entity.Role;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ public record MemberInfoResponse(
         List<ManagingDto> managingCompanies,
         List<ManagingDto> managingBrands,
         String note,
+        LocalTime workStartTime,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -37,6 +39,7 @@ public record MemberInfoResponse(
                         .collect(Collectors.toList())
                 )
                 .note(member.getNote())
+                .workStartTime(member.getWorkStartTime())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .build();

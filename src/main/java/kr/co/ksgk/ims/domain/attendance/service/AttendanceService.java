@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,10 +50,14 @@ public class AttendanceService {
         if (attendanceRepository.existsByMemberAndDate(member, LocalDate.now())) {
             throw new EntityNotFoundException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
         }
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime workStartLocalTime = member.getWorkStartTime();
+        LocalDateTime workStartTime = (workStartLocalTime != null) ? LocalDateTime.of(LocalDate.now(), workStartLocalTime) : now;
+        LocalDateTime savedWorkStartTime = now.isBefore(workStartTime) ? workStartTime : now;
         Attendance attendance = Attendance.builder()
                 .member(member)
                 .date(LocalDate.now())
-                .startTime(LocalDateTime.now())
+                .startTime(savedWorkStartTime)
                 .build();
         Attendance savedAttendance = attendanceRepository.save(attendance);
         return AttendanceResponse.from(savedAttendance);
