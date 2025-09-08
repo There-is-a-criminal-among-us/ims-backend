@@ -51,6 +51,17 @@ public class AttendanceController {
         return SuccessResponse.ok(response);
     }
 
+    @Operation(summary = "QR 인식", description = "QR을 인식합니다.")
+    @ApiResponse(responseCode = "200", description = "QR 인식 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AttendanceResponse.class)))
+    @PreAuthorize("hasRole('ATTENDANCE')")
+    @PostMapping("/qr")
+    public ResponseEntity<SuccessResponse<?>> readQr(@RequestBody @Valid AttendanceRequest request) {
+        AttendanceResponse response = attendanceService.readQr(request);
+        return SuccessResponse.ok(response);
+    }
+
     @Operation(summary = "근무 종료", description = "근무를 종료합니다.")
     @ApiResponse(responseCode = "200", description = "근무 종료 성공",
             content = @Content(mediaType = "application/json",
@@ -85,9 +96,11 @@ public class AttendanceController {
     public ResponseEntity<SuccessResponse<?>> getMyAttendanceList(
             @Auth Long memberId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
     ) {
-        PagingAttendanceResponse response = attendanceService.getMyAttendanceList(memberId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
+        PagingAttendanceResponse response = attendanceService.getPartTimeAttendanceList(memberId, year, month, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date")));
         return SuccessResponse.ok(response);
     }
 

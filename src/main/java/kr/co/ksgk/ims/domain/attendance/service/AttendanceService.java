@@ -63,6 +63,49 @@ public class AttendanceService {
         return AttendanceResponse.from(savedAttendance);
     }
 
+    // QR 인식
+    @Transactional
+    public AttendanceResponse readQr(AttendanceRequest request) {
+        Long memberId = jwtProvider.validateAttendanceToken(request.token());
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        
+        LocalDate today = LocalDate.now();
+        Attendance existingAttendance = attendanceRepository.findByMemberAndDate(member, today).orElse(null);
+        
+        if (existingAttendance == null) {
+            // 첫 번째 스캔 - 출근 처리
+            LocalDateTime now = LocalDateTime.now();
+            LocalTime workStartLocalTime = member.getWorkStartTime();
+            LocalDateTime workStartTime = (workStartLocalTime != null) ? LocalDateTime.of(today, workStartLocalTime) : now;
+            LocalDateTime savedWorkStartTime = now.isBefore(workStartTime) ? workStartTime : now;
+            
+            Attendance attendance = Attendance.builder()
+                    .member(member)
+                    .date(today)
+                    .startTime(savedWorkStartTime)
+                    .build();
+            Attendance savedAttendance = attendanceRepository.save(attendance);
+            return AttendanceResponse.from(savedAttendance);
+        } else {
+            // 두 번째 스캔 - 퇴근 처리 또는 에러
+            if (existingAttendance.getEndTime() != null) {
+                throw new BusinessException(ErrorCode.ALREADY_ENDED);
+            }
+            
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startTimePlusOneHour = existingAttendance.getStartTime().plusHours(1);
+            
+            if (now.isBefore(startTimePlusOneHour)) {
+                throw new BusinessException(ErrorCode.TOO_EARLY_FOR_END);
+            }
+            
+            existingAttendance.updateEndTime(now);
+            Attendance updatedAttendance = attendanceRepository.save(existingAttendance);
+            return AttendanceResponse.from(updatedAttendance);
+        }
+    }
+
     // 근무 종료
     @Transactional
     public AttendanceResponse endShift(Long memberId) {
@@ -78,17 +121,6 @@ public class AttendanceService {
     // 출석 목록 조회
     public PagingAttendanceResponse getAttendanceList(Pageable pageable) {
         Page<Attendance> attendancePage = attendanceRepository.findAll(pageable);
-        List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
-                .map(AttendanceResponse::from)
-                .collect(Collectors.toList());
-        return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
-    }
-
-    // 내 출석 목록 조회
-    public PagingAttendanceResponse getMyAttendanceList(Long memberId, Pageable pageable) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        Page<Attendance> attendancePage = attendanceRepository.findAllByMember(member, pageable);
         List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
                 .map(AttendanceResponse::from)
                 .collect(Collectors.toList());

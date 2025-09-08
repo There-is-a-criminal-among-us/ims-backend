@@ -71,6 +71,8 @@ public enum ErrorCode {
     INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다."),
     ATTENDANCE_ALREADY_EXISTS(HttpStatus.CONFLICT, "AT004", "이미 출근한 기록이 존재합니다."),
     INVALID_MEMBER_ROLE(HttpStatus.BAD_REQUEST, "AT005", "아르바이트 사용자가 아닙니다."),
+    ALREADY_ENDED(HttpStatus.BAD_REQUEST, "AT006", "이미 퇴근 처리된 기록입니다."),
+    TOO_EARLY_FOR_END(HttpStatus.BAD_REQUEST, "AT007", "출근 후 1시간이 지나야 퇴근할 수 있습니다."),
     ;
 
     private final HttpStatus httpStatus;
