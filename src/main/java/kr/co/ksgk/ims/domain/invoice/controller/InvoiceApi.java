@@ -47,6 +47,10 @@ public interface InvoiceApi {
             @Auth Long memberId,
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
+            @Parameter(description = "년도 (예: 2024)")
+            @RequestParam(required = false) Integer year,
+            @Parameter(description = "월 (1-12)")
+            @RequestParam(required = false) Integer month,
 
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,

@@ -36,13 +36,15 @@ public class InvoiceController implements InvoiceApi {
             @Auth Long memberId,
             @Parameter(description = "고객명, 전화번호, 품목명, 송장번호 검색어")
             @RequestParam(defaultValue = "") String search,
-
+            @Parameter(description = "년도 (2024)")
+            @RequestParam(required = false) Integer year,
+            @Parameter(description = "월 (1-12)")
+            @RequestParam(required = false) Integer month,
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
-
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(memberId, search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(memberId, search, year, month, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
     }
 

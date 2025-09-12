@@ -62,4 +62,66 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             @Param("productIds") Set<Long> productIds,
             Pageable pageable
     );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE YEAR(ip.invoice.createdAt) = :year
+            AND MONTH(ip.invoice.createdAt) = :month
+            """)
+    Page<InvoiceProduct> findAllByYearAndMonth(
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            AND YEAR(i.createdAt) = :year
+            AND MONTH(i.createdAt) = :month
+            """)
+    Page<InvoiceProduct> findInvoiceProductByNameOrNumberAndYearAndMonth(
+            @Param("keyword") String keyword,
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE ip.product.id IN :productIds
+            AND YEAR(ip.invoice.createdAt) = :year
+            AND MONTH(ip.invoice.createdAt) = :month
+            """)
+    Page<InvoiceProduct> findByProductIdInAndYearAndMonth(
+            @Param("productIds") Set<Long> productIds,
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            AND ip.product.id IN :productIds
+            AND YEAR(i.createdAt) = :year
+            AND MONTH(i.createdAt) = :month
+            """)
+    Page<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdInAndYearAndMonth(
+            @Param("keyword") String keyword,
+            @Param("productIds") Set<Long> productIds,
+            @Param("year") Integer year,
+            @Param("month") Integer month,
+            Pageable pageable
+    );
 }

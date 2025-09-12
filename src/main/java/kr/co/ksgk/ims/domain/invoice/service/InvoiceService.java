@@ -68,14 +68,20 @@ public class InvoiceService {
         return SimpleInvoiceInfoResponse.from(saved);
     }
 
-    public PagingInvoiceInfoResponse getInvoiceList(Long memberId, String search, Pageable pageable) {
+    public PagingInvoiceInfoResponse getInvoiceList(Long memberId, String search, Integer year, Integer month, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
 
         Page<InvoiceProduct> invoiceProductPage;
         if (member.getRole().equals(Role.ADMIN) || member.getRole().equals(Role.OCR)) {
             // ADMIN and OCR can see all invoice products
-            if (search == null || search.isBlank()) {
+            if (year != null && month != null) {
+                if (search == null || search.isBlank()) {
+                    invoiceProductPage = invoiceProductRepository.findAllByYearAndMonth(year, month, pageable);
+                } else {
+                    invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberAndYearAndMonth(search, year, month, pageable);
+                }
+            } else if (search == null || search.isBlank()) {
                 invoiceProductPage = invoiceProductRepository.findAll(pageable);
             } else {
                 invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumber(search, pageable);
@@ -84,7 +90,13 @@ public class InvoiceService {
             // MEMBER can only see invoice products from their managed brands/companies
             Set<Long> allowedProductIds = getAllowedProductIds(member);
             
-            if (search == null || search.isBlank()) {
+            if (year != null && month != null) {
+                if (search == null || search.isBlank()) {
+                    invoiceProductPage = invoiceProductRepository.findByProductIdInAndYearAndMonth(allowedProductIds, year, month, pageable);
+                } else {
+                    invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdInAndYearAndMonth(search, allowedProductIds, year, month, pageable);
+                }
+            } else if (search == null || search.isBlank()) {
                 invoiceProductPage = invoiceProductRepository.findByProductIdIn(allowedProductIds, pageable);
             } else {
                 invoiceProductPage = invoiceProductRepository.findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(search, allowedProductIds, pageable);
