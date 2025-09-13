@@ -124,4 +124,109 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             @Param("month") Integer month,
             Pageable pageable
     );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            ORDER BY ip.invoice.createdAt DESC
+            """)
+    List<InvoiceProduct> findAllOrderByCreatedAtDesc();
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE i.name LIKE %:keyword%
+               OR i.number LIKE %:keyword%
+               OR p.name LIKE %:keyword%
+            ORDER BY i.createdAt DESC
+            """)
+    List<InvoiceProduct> findInvoiceProductByNameOrNumber(@Param("keyword") String keyword);
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE YEAR(ip.invoice.createdAt) = :year
+            AND MONTH(ip.invoice.createdAt) = :month
+            ORDER BY ip.invoice.createdAt DESC
+            """)
+    List<InvoiceProduct> findAllByYearAndMonth(
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            AND YEAR(i.createdAt) = :year
+            AND MONTH(i.createdAt) = :month
+            ORDER BY i.createdAt DESC
+            """)
+    List<InvoiceProduct> findInvoiceProductByNameOrNumberAndYearAndMonth(
+            @Param("keyword") String keyword,
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE ip.product.id IN :productIds
+            ORDER BY ip.invoice.createdAt DESC
+            """)
+    List<InvoiceProduct> findByProductIdInOrderByCreatedAtDesc(@Param("productIds") Set<Long> productIds);
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            AND ip.product.id IN :productIds
+            ORDER BY i.createdAt DESC
+            """)
+    List<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(
+            @Param("keyword") String keyword,
+            @Param("productIds") Set<Long> productIds
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip FROM InvoiceProduct ip
+            WHERE ip.product.id IN :productIds
+            AND YEAR(ip.invoice.createdAt) = :year
+            AND MONTH(ip.invoice.createdAt) = :month
+            ORDER BY ip.invoice.createdAt DESC
+            """)
+    List<InvoiceProduct> findByProductIdInAndYearAndMonth(
+            @Param("productIds") Set<Long> productIds,
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
+
+    @EntityGraph(attributePaths = {"invoice", "product"})
+    @Query("""
+            SELECT ip
+            FROM InvoiceProduct ip
+            JOIN ip.invoice i
+            JOIN ip.product p
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            AND ip.product.id IN :productIds
+            AND YEAR(i.createdAt) = :year
+            AND MONTH(i.createdAt) = :month
+            ORDER BY i.createdAt DESC
+            """)
+    List<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdInAndYearAndMonth(
+            @Param("keyword") String keyword,
+            @Param("productIds") Set<Long> productIds,
+            @Param("year") Integer year,
+            @Param("month") Integer month
+    );
 }

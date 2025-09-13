@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
 import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceProductInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
 import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
 import kr.co.ksgk.ims.global.annotation.Auth;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,6 +49,20 @@ public class InvoiceController implements InvoiceApi {
             @RequestParam(defaultValue = "20") int size) {
         PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(memberId, search, year, month, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(pagingInvoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
+    @GetMapping("/all")
+    public ResponseEntity<SuccessResponse<?>> getInvoiceListAll(
+            @Auth Long memberId,
+            @Parameter(description = "고객명, 전화번호, 품목명, 송장번호 검색어")
+            @RequestParam(defaultValue = "") String search,
+            @Parameter(description = "년도 (예: 2024)")
+            @RequestParam(required = false) Integer year,
+            @Parameter(description = "월 (1-12)")
+            @RequestParam(required = false) Integer month) {
+        List<SimpleInvoiceProductInfoResponse> invoiceList = invoiceService.getInvoiceListAll(memberId, search, year, month);
+        return SuccessResponse.ok(invoiceList);
     }
 
     @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")

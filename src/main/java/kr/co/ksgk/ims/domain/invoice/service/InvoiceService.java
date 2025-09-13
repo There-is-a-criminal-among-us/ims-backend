@@ -108,6 +108,46 @@ public class InvoiceService {
                 .toList();
         return PagingInvoiceInfoResponse.of(invoiceProductPage, simpleInvoiceProductInfoResponses);
     }
+
+    public List<SimpleInvoiceProductInfoResponse> getInvoiceListAll(Long memberId, String search, Integer year, Integer month) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<InvoiceProduct> invoiceProductList;
+        if (member.getRole().equals(Role.ADMIN) || member.getRole().equals(Role.OCR)) {
+            // ADMIN and OCR can see all invoice products
+            if (year != null && month != null) {
+                if (search == null || search.isBlank()) {
+                    invoiceProductList = invoiceProductRepository.findAllByYearAndMonth(year, month);
+                } else {
+                    invoiceProductList = invoiceProductRepository.findInvoiceProductByNameOrNumberAndYearAndMonth(search, year, month);
+                }
+            } else if (search == null || search.isBlank()) {
+                invoiceProductList = invoiceProductRepository.findAllOrderByCreatedAtDesc();
+            } else {
+                invoiceProductList = invoiceProductRepository.findInvoiceProductByNameOrNumber(search);
+            }
+        } else {
+            // MEMBER can only see invoice products from their managed brands/companies
+            Set<Long> allowedProductIds = getAllowedProductIds(member);
+            
+            if (year != null && month != null) {
+                if (search == null || search.isBlank()) {
+                    invoiceProductList = invoiceProductRepository.findByProductIdInAndYearAndMonth(allowedProductIds, year, month);
+                } else {
+                    invoiceProductList = invoiceProductRepository.findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdInAndYearAndMonth(search, allowedProductIds, year, month);
+                }
+            } else if (search == null || search.isBlank()) {
+                invoiceProductList = invoiceProductRepository.findByProductIdInOrderByCreatedAtDesc(allowedProductIds);
+            } else {
+                invoiceProductList = invoiceProductRepository.findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(search, allowedProductIds);
+            }
+        }
+        
+        return invoiceProductList.stream()
+                .map(SimpleInvoiceProductInfoResponse::from)
+                .toList();
+    }
     
     private Set<Long> getAllowedProductIds(Member member) {
         Set<Long> memberBrandIds = member.getMemberBrands().stream()
