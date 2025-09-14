@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public record SimpleInvoiceProductInfoResponse(
         long id,
         String name,
+        String phone,
         String number,
         String productName,
         Integer returnedQuantity,
@@ -19,6 +20,7 @@ public record SimpleInvoiceProductInfoResponse(
         return SimpleInvoiceProductInfoResponse.builder()
                 .id(invoiceProduct.getInvoice().getId())
                 .name(invoiceProduct.getInvoice().getName())
+                .phone(invoiceProduct.getInvoice().getPhone())
                 .number(invoiceProduct.getInvoice().getNumber())
                 .productName(invoiceProduct.getProduct().getName())
                 .returnedQuantity(invoiceProduct.getReturnedQuantity())
