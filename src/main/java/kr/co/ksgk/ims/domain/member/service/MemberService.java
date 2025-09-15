@@ -1,5 +1,7 @@
 package kr.co.ksgk.ims.domain.member.service;
 
+import kr.co.ksgk.ims.domain.attendance.entity.Attendance;
+import kr.co.ksgk.ims.domain.attendance.repository.AttendanceRepository;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
 import kr.co.ksgk.ims.domain.company.entity.Company;
@@ -21,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -29,6 +32,7 @@ import java.util.List;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final AttendanceRepository attendanceRepository;
     private final PasswordEncoder passwordEncoder;
     private final CompanyRepository companyRepository;
     private final BrandRepository brandRepository;
@@ -112,5 +116,17 @@ public class MemberService {
                 .map(MemberInfoResponse::from)
                 .toList();
         return PagingMemberInfoResponse.of(memberPage, memberInfoResponses);
+    }
+
+    public PagingMemberInfoResponse getTodayPartTimeMembers(Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.PART_TIME, today, pageable);
+        List<MemberInfoResponse> memberInfoResponses = attendancePage.getContent().stream()
+                .map(attendance -> MemberInfoResponse.from(attendance.getMember()))
+                .toList();
+        return PagingMemberInfoResponse.builder()
+                .page(kr.co.ksgk.ims.global.common.PageResponse.from(attendancePage))
+                .members(memberInfoResponses)
+                .build();
     }
 }
