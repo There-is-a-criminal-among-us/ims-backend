@@ -9,7 +9,9 @@ import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
 import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.MemberWithAttendanceResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberWithAttendanceResponse;
 import kr.co.ksgk.ims.domain.member.entity.Member;
 import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
@@ -118,15 +120,12 @@ public class MemberService {
         return PagingMemberInfoResponse.of(memberPage, memberInfoResponses);
     }
 
-    public PagingMemberInfoResponse getTodayPartTimeMembers(Pageable pageable) {
+    public PagingMemberWithAttendanceResponse getTodayPartTimeMembers(Pageable pageable) {
         LocalDate today = LocalDate.now();
         Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.PART_TIME, today, pageable);
-        List<MemberInfoResponse> memberInfoResponses = attendancePage.getContent().stream()
-                .map(attendance -> MemberInfoResponse.from(attendance.getMember()))
+        List<MemberWithAttendanceResponse> memberWithAttendanceResponses = attendancePage.getContent().stream()
+                .map(MemberWithAttendanceResponse::from)
                 .toList();
-        return PagingMemberInfoResponse.builder()
-                .page(kr.co.ksgk.ims.global.common.PageResponse.from(attendancePage))
-                .members(memberInfoResponses)
-                .build();
+        return PagingMemberWithAttendanceResponse.of(attendancePage, memberWithAttendanceResponses);
     }
 }
