@@ -8,6 +8,7 @@ import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
 import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberWithAttendanceResponse;
 import kr.co.ksgk.ims.domain.member.service.MemberService;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -111,7 +112,7 @@ public class MemberController implements MemberApi {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
-        PagingMemberInfoResponse response = memberService.getTodayPartTimeMembers(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PagingMemberWithAttendanceResponse response = memberService.getTodayPartTimeMembers(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 }

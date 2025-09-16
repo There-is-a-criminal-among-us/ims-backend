@@ -22,6 +22,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     boolean existsByMemberAndDate(Member member, LocalDate date);
 
-    @Query("SELECT a FROM Attendance a JOIN a.member m WHERE m.role = :role AND a.date = :date AND a.startTime IS NOT NULL AND a.endTime IS NULL")
+    @Query("SELECT a FROM Attendance a JOIN a.member m WHERE m.role = :role AND a.date = :date AND a.startTime IS NOT NULL")
     Page<Attendance> findTodayWorkingMembersByRole(@Param("role") Role role, @Param("date") LocalDate date, Pageable pageable);
 }
