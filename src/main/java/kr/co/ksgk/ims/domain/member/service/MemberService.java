@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -123,6 +124,20 @@ public class MemberService {
     public PagingMemberWithAttendanceResponse getTodayPartTimeMembers(Pageable pageable) {
         LocalDate today = LocalDate.now();
         Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.PART_TIME, today, pageable);
+        List<MemberWithAttendanceResponse> memberWithAttendanceResponses = attendancePage.getContent().stream()
+                .map(MemberWithAttendanceResponse::from)
+                .toList();
+        return PagingMemberWithAttendanceResponse.of(attendancePage, memberWithAttendanceResponses);
+    }
+
+    public PagingMemberWithAttendanceResponse getPartTimeMembersByDate(String dateString, Pageable pageable) {
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString);
+        } catch (DateTimeParseException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+        Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.PART_TIME, date, pageable);
         List<MemberWithAttendanceResponse> memberWithAttendanceResponses = attendancePage.getContent().stream()
                 .map(MemberWithAttendanceResponse::from)
                 .toList();

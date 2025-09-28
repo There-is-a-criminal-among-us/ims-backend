@@ -106,6 +106,19 @@ public class MemberController implements MemberApi {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/parttime/date/{date}")
+    public ResponseEntity<SuccessResponse<?>> getPartTimeMembersByDate(
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-09-28")
+            @PathVariable String date,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberWithAttendanceResponse response = memberService.getPartTimeMembersByDate(date, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/parttime/today")
     public ResponseEntity<SuccessResponse<?>> getTodayPartTimeMembers(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
