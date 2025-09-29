@@ -7,7 +7,6 @@ import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
-import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnMall;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnRegistrar;
 import lombok.*;
