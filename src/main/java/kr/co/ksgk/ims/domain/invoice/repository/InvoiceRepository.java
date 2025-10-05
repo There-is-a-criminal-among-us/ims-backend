@@ -12,4 +12,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @EntityGraph(attributePaths = {"invoiceProducts", "invoiceProducts.product"})
     Optional<Invoice> findById(Long invoiceId);
+
+    Optional<Invoice> findByNumber(String number);
 }

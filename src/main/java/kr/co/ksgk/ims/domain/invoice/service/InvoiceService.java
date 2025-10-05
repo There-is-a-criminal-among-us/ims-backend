@@ -17,6 +17,8 @@ import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.returns.entity.ReturnInfo;
+import kr.co.ksgk.ims.domain.returns.repository.ReturnInfoRepository;
 import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,7 @@ public class InvoiceService {
     private final MemberRepository memberRepository;
     private final S3Service s3Service;
     private final StockCacheInvalidator cacheInvalidator;
+    private final ReturnInfoRepository returnInfoRepository;
 
     @Transactional
     public SimpleInvoiceInfoResponse createInvoice(UploadInvoiceInfoRequest request) {
@@ -61,10 +65,13 @@ public class InvoiceService {
                 .toList();
         invoice.getInvoiceProducts().addAll(productEntities);
         Invoice saved = invoiceRepository.save(invoice);
-        
+
         // 캐시 무효화: 새로운 Invoice 생성 시 - 관련된 모든 Product 캐시 무효화
         invalidateInvoiceCaches(productEntities);
-        
+
+        // Invoice 등록 시 returnInvoice와 매칭하여 ReturnInfo 상태 자동 완료 처리
+        checkAndCompleteMatchingReturn(saved.getNumber());
+
         return SimpleInvoiceInfoResponse.from(saved);
     }
 
@@ -211,5 +218,10 @@ public class InvoiceService {
             Long productId = invoiceProduct.getProduct().getId();
             cacheInvalidator.invalidateCacheForProductIfToday(productId);
         });
+    }
+
+    private void checkAndCompleteMatchingReturn(String invoiceNumber) {
+        Optional<ReturnInfo> returnInfoOpt = returnInfoRepository.findByReturnInvoice(invoiceNumber);
+        returnInfoOpt.ifPresent(ReturnInfo::complete);
     }
 }
