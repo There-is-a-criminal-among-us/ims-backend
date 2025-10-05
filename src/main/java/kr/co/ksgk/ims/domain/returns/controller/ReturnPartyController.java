@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnPartyRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.UpdateReturnPartyRequest;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/returns")
+@Tag(name = "ReturnParty", description = "반품지(쇼핑몰, 접수자) 관련 API")
 public class ReturnPartyController {
 
     private final ReturnPartyService returnPartyService;

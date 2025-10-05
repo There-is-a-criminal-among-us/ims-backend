@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.returns.dto.request.AcceptReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnRequest;
@@ -32,6 +33,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/returns")
+@Tag(name = "Return", description = "회수 관련 API")
 public class ReturnController {
 
     private final ReturnService returnService;
