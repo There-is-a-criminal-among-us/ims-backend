@@ -26,7 +26,16 @@ public class ReturnHandler extends BaseEntity {
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
-    @OneToMany(mappedBy = "returnRegistrar", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder
+    public ReturnHandler(String name, Brand brand) {
+        this.name = name;
+        this.brand = brand;
+    }
+
     @OneToMany(mappedBy = "returnHandler", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReturnInfo> returnInfos = new ArrayList<>();
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }
