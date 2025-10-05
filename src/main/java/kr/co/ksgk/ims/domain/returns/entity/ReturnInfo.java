@@ -51,8 +51,8 @@ public class ReturnInfo extends BaseEntity {
     private String note;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "return_registrar_id", nullable = false)
-    private ReturnRegistrar returnRegistrar;
+    @JoinColumn(name = "return_handler_id", nullable = false)
+    private ReturnHandler returnHandler;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "return_mall_id", nullable = false)

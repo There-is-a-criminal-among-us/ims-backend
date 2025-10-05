@@ -8,7 +8,7 @@ import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.member.entity.MemberBrand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnMall;
-import kr.co.ksgk.ims.domain.returns.entity.ReturnRegistrar;
+import kr.co.ksgk.ims.domain.returns.entity.ReturnHandler;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -61,7 +61,7 @@ public class Brand extends BaseEntity {
     private List<ReturnMall> returnMalls = new ArrayList<>();
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReturnRegistrar> returnRegistrars = new ArrayList<>();
+    private List<ReturnHandler> returnHandlers = new ArrayList<>();
 
     public void updateName(String name) {
         this.name = name;
