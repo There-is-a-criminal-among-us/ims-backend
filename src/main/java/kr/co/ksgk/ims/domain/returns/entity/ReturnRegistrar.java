@@ -26,5 +26,5 @@ public class ReturnRegistrar extends BaseEntity {
     private Brand brand;
 
     @OneToMany(mappedBy = "returnRegistrar", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Return> returns = new ArrayList<>();
+    private List<ReturnInfo> returnInfos = new ArrayList<>();
 }
