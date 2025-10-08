@@ -30,8 +30,8 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             "JOIN ri.returnMall rm " +
             "JOIN ri.returnHandler rh " +
             "WHERE (rm.brand.id IN :brandIds OR rh.brand.id IN :brandIds) " +
-            "AND (:startDate IS NULL OR ri.createdAt >= :startDate) " +
-            "AND (:endDate IS NULL OR ri.createdAt <= :endDate) " +
+            "AND (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
+            "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
             "AND (:status IS NULL OR ri.returnStatus = :status) " +
             "AND (:search IS NULL OR :search = '' OR " +
             "ri.buyer LIKE %:search% OR " +
@@ -44,8 +44,8 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
                     "JOIN ri.returnMall rm " +
                     "JOIN ri.returnHandler rh " +
                     "WHERE (rm.brand.id IN :brandIds OR rh.brand.id IN :brandIds) " +
-                    "AND (:startDate IS NULL OR ri.createdAt >= :startDate) " +
-                    "AND (:endDate IS NULL OR ri.createdAt <= :endDate) " +
+                    "AND (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
+                    "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
                     "AND (:status IS NULL OR ri.returnStatus = :status) " +
                     "AND (:search IS NULL OR :search = '' OR " +
                     "ri.buyer LIKE %:search% OR " +
@@ -63,8 +63,8 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             Pageable pageable);
 
     @Query(value = "SELECT ri FROM ReturnInfo ri " +
-            "WHERE (:startDate IS NULL OR ri.createdAt >= :startDate) " +
-            "AND (:endDate IS NULL OR ri.createdAt <= :endDate) " +
+            "WHERE (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
+            "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
             "AND (:status IS NULL OR ri.returnStatus = :status) " +
             "AND (:search IS NULL OR :search = '' OR " +
             "ri.buyer LIKE %:search% OR " +
@@ -74,8 +74,8 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             "ri.originalInvoice LIKE %:search% OR " +
             "ri.returnInvoice LIKE %:search%)",
             countQuery = "SELECT COUNT(ri) FROM ReturnInfo ri " +
-                    "WHERE (:startDate IS NULL OR ri.createdAt >= :startDate) " +
-                    "AND (:endDate IS NULL OR ri.createdAt <= :endDate) " +
+                    "WHERE (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
+                    "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
                     "AND (:status IS NULL OR ri.returnStatus = :status) " +
                     "AND (:search IS NULL OR :search = '' OR " +
                     "ri.buyer LIKE %:search% OR " +
