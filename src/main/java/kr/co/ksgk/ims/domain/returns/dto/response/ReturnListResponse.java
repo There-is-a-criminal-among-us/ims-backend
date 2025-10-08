@@ -16,8 +16,10 @@ public record ReturnListResponse(
         String handler,
         String mall,
         String buyer,
+        String address,
         String phone,
         String productName,
+        Integer quantity,
         String originalInvoice,
         ReturnStatus returnStatus
 ) {
@@ -36,8 +38,10 @@ public record ReturnListResponse(
                 .handler(returnInfo.getReturnHandler().getName())
                 .mall(returnInfo.getReturnMall().getName())
                 .buyer(returnInfo.getBuyer())
+                .address(returnInfo.getAddress())
                 .phone(returnInfo.getPhone())
                 .productName(returnInfo.getProductName())
+                .quantity(returnInfo.getQuantity())
                 .originalInvoice(returnInfo.getOriginalInvoice())
                 .returnStatus(returnInfo.getReturnStatus())
                 .build();
