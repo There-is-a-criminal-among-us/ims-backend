@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -221,7 +220,20 @@ public class InvoiceService {
     }
 
     private void checkAndCompleteMatchingReturn(String invoiceNumber) {
-        Optional<ReturnInfo> returnInfoOpt = returnInfoRepository.findByReturnInvoice(invoiceNumber);
-        returnInfoOpt.ifPresent(ReturnInfo::complete);
+        String normalizedInvoiceNumber = normalizeInvoiceNumber(invoiceNumber);
+
+        List<ReturnInfo> allReturnInfos = returnInfoRepository.findAll();
+        allReturnInfos.stream()
+                .filter(returnInfo -> {
+                    String dbReturnInvoice = normalizeInvoiceNumber(returnInfo.getReturnInvoice());
+                    return dbReturnInvoice != null && dbReturnInvoice.equals(normalizedInvoiceNumber);
+                })
+                .findFirst()
+                .ifPresent(ReturnInfo::complete);
+    }
+
+    private String normalizeInvoiceNumber(String invoiceNumber) {
+        if (invoiceNumber == null) return null;
+        return invoiceNumber.replaceAll("-", "").trim();
     }
 }

@@ -253,10 +253,15 @@ public class ReturnService {
                     continue;
                 }
 
-                returnInvoice = returnInvoice.trim();
-                originalInvoice = originalInvoice.trim();
+                returnInvoice = normalizeInvoiceNumber(returnInvoice);
+                originalInvoice = normalizeInvoiceNumber(originalInvoice);
 
-                if (!returnInfoRepository.findByOriginalInvoice(originalInvoice).isPresent()) {
+                if (returnInvoice.isEmpty() || originalInvoice.isEmpty()) {
+                    continue;
+                }
+
+                Optional<ReturnInfo> returnInfoOpt = findReturnInfoByNormalizedInvoice(originalInvoice);
+                if (!returnInfoOpt.isPresent()) {
                     if (!notFoundInvoices.contains(originalInvoice)) {
                         notFoundInvoices.add(originalInvoice);
                     }
@@ -310,14 +315,29 @@ public class ReturnService {
         }
     }
 
+    private String normalizeInvoiceNumber(String invoiceNumber) {
+        if (invoiceNumber == null) return null;
+        return invoiceNumber.replaceAll("-", "").trim();
+    }
+
+    private Optional<ReturnInfo> findReturnInfoByNormalizedInvoice(String normalizedInvoice) {
+        List<ReturnInfo> allReturnInfos = returnInfoRepository.findAll();
+        return allReturnInfos.stream()
+                .filter(returnInfo -> {
+                    String dbInvoice = normalizeInvoiceNumber(returnInfo.getOriginalInvoice());
+                    return dbInvoice != null && dbInvoice.equals(normalizedInvoice);
+                })
+                .findFirst();
+    }
+
     private int updateReturnInvoices(Map<String, String> invoiceMap) {
         int updatedCount = 0;
 
         for (Map.Entry<String, String> entry : invoiceMap.entrySet()) {
-            String originalInvoice = entry.getKey();
+            String normalizedOriginalInvoice = entry.getKey();
             String returnInvoice = entry.getValue();
 
-            Optional<ReturnInfo> returnInfoOpt = returnInfoRepository.findByOriginalInvoice(originalInvoice);
+            Optional<ReturnInfo> returnInfoOpt = findReturnInfoByNormalizedInvoice(normalizedOriginalInvoice);
             if (returnInfoOpt.isPresent()) {
                 ReturnInfo returnInfo = returnInfoOpt.get();
                 returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null);
