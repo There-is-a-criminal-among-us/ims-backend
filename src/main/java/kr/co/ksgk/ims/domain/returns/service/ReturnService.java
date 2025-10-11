@@ -12,6 +12,7 @@ import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadErrorResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadSuccessResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.PagingReturnListResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.ReturnExcelUploadResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnListResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnResponse;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnHandler;
@@ -346,5 +347,181 @@ public class ReturnService {
         }
 
         return updatedCount;
+    }
+
+    @Transactional
+    public ReturnExcelUploadResponse uploadReturnExcel(List<MultipartFile> files) {
+        int totalFiles = files.size();
+        int successFiles = 0;
+        int totalRows = 0;
+        int successCount = 0;
+        List<ReturnExcelUploadResponse.FileErrorSummary> errorDetails = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            try {
+                List<String> fileErrors = new ArrayList<>();
+                int[] counts = processReturnExcelFile(file, fileErrors);
+
+                if (!fileErrors.isEmpty()) {
+                    // 파일에 에러가 있으면 해당 파일 전체 스킵
+                    errorDetails.add(ReturnExcelUploadResponse.FileErrorSummary.builder()
+                            .fileName(file.getOriginalFilename())
+                            .errorMessage("파일 처리 중 오류 발생")
+                            .errorRows(fileErrors)
+                            .build());
+                } else {
+                    // 에러 없으면 성공
+                    totalRows += counts[0];
+                    successCount += counts[1];
+                    successFiles++;
+                }
+            } catch (IOException e) {
+                errorDetails.add(ReturnExcelUploadResponse.FileErrorSummary.builder()
+                        .fileName(file.getOriginalFilename())
+                        .errorMessage("파일을 읽을 수 없습니다: " + e.getMessage())
+                        .errorRows(List.of())
+                        .build());
+            }
+        }
+
+        int errorFiles = totalFiles - successFiles;
+        return ReturnExcelUploadResponse.of(totalFiles, successFiles, errorFiles, totalRows, successCount, errorDetails);
+    }
+
+    private int[] processReturnExcelFile(MultipartFile file, List<String> fileErrors) throws IOException {
+        int totalRows = 0;
+        int successCount = 0;
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+
+            if (headerRow == null) {
+                fileErrors.add("행 0: 헤더 행이 없습니다");
+                return new int[]{0, 0};
+            }
+
+            Map<String, Integer> columnIndexMap = new HashMap<>();
+            columnIndexMap.put("구매자", findColumnIndex(headerRow, "구매자"));
+            columnIndexMap.put("수취인", findColumnIndex(headerRow, "수취인"));
+            columnIndexMap.put("주소", findColumnIndex(headerRow, "주소"));
+            columnIndexMap.put("전화번호", findColumnIndex(headerRow, "전화번호"));
+            columnIndexMap.put("상품명", findColumnIndex(headerRow, "상품명"));
+            columnIndexMap.put("수량", findColumnIndex(headerRow, "수량"));
+            columnIndexMap.put("원송장번호", findColumnIndex(headerRow, "원송장번호"));
+            columnIndexMap.put("비고", findColumnIndex(headerRow, "비고"));
+            columnIndexMap.put("접수자", findColumnIndex(headerRow, "접수자"));
+            columnIndexMap.put("쇼핑몰", findColumnIndex(headerRow, "쇼핑몰"));
+
+            if (columnIndexMap.get("원송장번호") == -1) {
+                columnIndexMap.put("원송장번호", findColumnIndex(headerRow, "운송장번호"));
+            }
+
+            List<String> missingColumns = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : columnIndexMap.entrySet()) {
+                if (!entry.getKey().equals("비고") && entry.getValue() == -1) {
+                    missingColumns.add(entry.getKey());
+                }
+            }
+
+            if (!missingColumns.isEmpty()) {
+                fileErrors.add("행 0: 필수 헤더를 찾을 수 없습니다 - " + String.join(", ", missingColumns));
+                return new int[]{0, 0};
+            }
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                totalRows++;
+
+                try {
+                    String buyer = getCellStringValue(row.getCell(columnIndexMap.get("구매자")));
+                    String receiver = getCellStringValue(row.getCell(columnIndexMap.get("수취인")));
+                    String address = getCellStringValue(row.getCell(columnIndexMap.get("주소")));
+                    String phone = getCellStringValue(row.getCell(columnIndexMap.get("전화번호")));
+                    String productName = getCellStringValue(row.getCell(columnIndexMap.get("상품명")));
+                    String quantityStr = getCellStringValue(row.getCell(columnIndexMap.get("수량")));
+                    String originalInvoice = getCellStringValue(row.getCell(columnIndexMap.get("원송장번호")));
+                    String note = getCellStringValue(row.getCell(columnIndexMap.get("비고")));
+                    String handlerName = getCellStringValue(row.getCell(columnIndexMap.get("접수자")));
+                    String mallName = getCellStringValue(row.getCell(columnIndexMap.get("쇼핑몰")));
+
+                    if (buyer == null || buyer.trim().isEmpty() ||
+                            receiver == null || receiver.trim().isEmpty() ||
+                            address == null || address.trim().isEmpty() ||
+                            phone == null || phone.trim().isEmpty() ||
+                            productName == null || productName.trim().isEmpty() ||
+                            quantityStr == null || quantityStr.trim().isEmpty() ||
+                            originalInvoice == null || originalInvoice.trim().isEmpty() ||
+                            handlerName == null || handlerName.trim().isEmpty() ||
+                            mallName == null || mallName.trim().isEmpty()) {
+                        fileErrors.add("행 " + (i + 1) + ": 필수 필드가 비어있습니다");
+                        continue;
+                    }
+
+                    Integer quantity;
+                    try {
+                        quantity = Integer.parseInt(quantityStr.trim());
+                    } catch (NumberFormatException e) {
+                        fileErrors.add("행 " + (i + 1) + ": 수량은 숫자여야 합니다 - " + quantityStr);
+                        continue;
+                    }
+
+                    List<ReturnHandler> handlers = returnHandlerRepository.findAll();
+                    ReturnHandler handler = handlers.stream()
+                            .filter(h -> h.getName().equals(handlerName.trim()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (handler == null) {
+                        fileErrors.add("행 " + (i + 1) + ": 존재하지 않는 접수자입니다 - " + handlerName);
+                        continue;
+                    }
+
+                    List<ReturnMall> malls = returnMallRepository.findAll();
+                    ReturnMall mall = malls.stream()
+                            .filter(m -> m.getName().equals(mallName.trim()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (mall == null) {
+                        fileErrors.add("행 " + (i + 1) + ": 존재하지 않는 쇼핑몰입니다 - " + mallName);
+                        continue;
+                    }
+
+                    ReturnInfo returnInfo = ReturnInfo.builder()
+                            .buyer(buyer.trim())
+                            .receiver(receiver.trim())
+                            .address(address.trim())
+                            .phone(phone.trim())
+                            .productName(productName.trim())
+                            .quantity(quantity)
+                            .originalInvoice(originalInvoice.trim())
+                            .note(note != null ? note.trim() : null)
+                            .returnHandler(handler)
+                            .returnMall(mall)
+                            .build();
+
+                    returnInfoRepository.save(returnInfo);
+                    successCount++;
+
+                } catch (Exception e) {
+                    fileErrors.add("행 " + (i + 1) + ": 데이터 처리 중 오류 발생 - " + e.getMessage());
+                }
+            }
+        }
+
+        return new int[]{totalRows, successCount};
+    }
+
+    private String getRowData(Row row) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < row.getLastCellNum(); i++) {
+            if (i > 0) sb.append(" | ");
+            String cellValue = getCellStringValue(row.getCell(i));
+            sb.append(cellValue != null ? cellValue : "");
+        }
+        return sb.toString();
     }
 }

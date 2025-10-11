@@ -10,10 +10,7 @@ import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.returns.dto.request.AcceptReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
-import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadErrorResponse;
-import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadSuccessResponse;
-import kr.co.ksgk.ims.domain.returns.dto.response.PagingReturnListResponse;
-import kr.co.ksgk.ims.domain.returns.dto.response.ReturnResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.*;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 import kr.co.ksgk.ims.domain.returns.exception.InvoiceValidationException;
 import kr.co.ksgk.ims.domain.returns.service.ReturnService;
@@ -148,7 +145,7 @@ public class ReturnController {
                     schema = @Schema(implementation = InvoiceUploadErrorResponse.class)
             )
     )
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/upload-invoices", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadReturnInvoices(
             @Parameter(description = "업로드할 엑셀 파일", required = true)
             @RequestPart("files") List<MultipartFile> files
@@ -159,5 +156,24 @@ public class ReturnController {
         } catch (InvoiceValidationException e) {
             return ResponseEntity.badRequest().body(e.getErrorResponse());
         }
+    }
+
+    @Operation(
+            summary = "회수 정보 엑셀 업로드",
+            description = "엑셀 파일을 업로드하여 회수 정보를 일괄 등록합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "회수 정보 업로드 성공",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ReturnExcelUploadResponse.class)
+            )
+    )
+    @PostMapping(value = "/upload-returns", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SuccessResponse<?>> uploadReturnExcel(
+            @Parameter(description = "업로드할 엑셀 파일", required = true)
+            @RequestPart("files") List<MultipartFile> files
+    ) {
+        ReturnExcelUploadResponse response = returnService.uploadReturnExcel(files);
+        return SuccessResponse.ok(response);
     }
 }
