@@ -231,6 +231,10 @@ public class ReturnService {
             int returnInvoiceColumnIndex = findColumnIndex(headerRow, "반송장번호");
             int originalInvoiceColumnIndex = findColumnIndex(headerRow, "원송장번호");
 
+            if (originalInvoiceColumnIndex == -1) {
+                originalInvoiceColumnIndex = findColumnIndex(headerRow, "운송장번호");
+            }
+
             if (returnInvoiceColumnIndex == -1 || originalInvoiceColumnIndex == -1) {
                 throw new BusinessException("필수 헤더를 찾을 수 없습니다: " + file.getOriginalFilename(), ErrorCode.BAD_REQUEST);
             }
