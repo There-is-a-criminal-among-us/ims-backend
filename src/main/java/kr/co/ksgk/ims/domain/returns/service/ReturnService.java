@@ -443,7 +443,9 @@ public class ReturnService {
                     String productName = getCellStringValue(row.getCell(columnIndexMap.get("상품명")));
                     String quantityStr = getCellStringValue(row.getCell(columnIndexMap.get("수량")));
                     String originalInvoice = getCellStringValue(row.getCell(columnIndexMap.get("원송장번호")));
-                    String note = getCellStringValue(row.getCell(columnIndexMap.get("비고")));
+                    String note = columnIndexMap.get("비고") != -1
+                        ? getCellStringValue(row.getCell(columnIndexMap.get("비고")))
+                        : null;
                     String handlerName = getCellStringValue(row.getCell(columnIndexMap.get("접수자")));
                     String mallName = getCellStringValue(row.getCell(columnIndexMap.get("쇼핑몰")));
 
