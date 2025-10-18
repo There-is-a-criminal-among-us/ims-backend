@@ -229,7 +229,10 @@ public class InvoiceService {
                     return dbReturnInvoice != null && dbReturnInvoice.equals(normalizedInvoiceNumber);
                 })
                 .findFirst()
-                .ifPresent(ReturnInfo::complete);
+                .ifPresent(returnInfo -> {
+                    returnInfo.startProcessing();
+                    returnInfo.complete();
+                });
     }
 
     private String normalizeInvoiceNumber(String invoiceNumber) {

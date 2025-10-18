@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.returns.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import kr.co.ksgk.ims.domain.returns.entity.OrderType;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnHandler;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnInfo;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnMall;
@@ -16,7 +17,8 @@ public record CreateReturnRequest(
         @NotBlank String originalInvoice,
         String note,
         @NotNull Long handlerId,
-        @NotNull Long mallId
+        @NotNull Long mallId,
+        @NotNull OrderType orderType
 ) {
     public ReturnInfo toEntity(ReturnHandler returnHandler, ReturnMall returnMall) {
         return ReturnInfo.builder()
@@ -30,6 +32,7 @@ public record CreateReturnRequest(
                 .note(note)
                 .returnHandler(returnHandler)
                 .returnMall(returnMall)
+                .orderType(orderType)
                 .build();
     }
 }

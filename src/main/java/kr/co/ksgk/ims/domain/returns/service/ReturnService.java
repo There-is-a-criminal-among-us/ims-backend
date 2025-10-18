@@ -104,7 +104,9 @@ public class ReturnService {
                 request.returnInvoice(),
                 request.note(),
                 returnHandler,
-                returnMall
+                returnMall,
+                request.orderType(),
+                request.processingStatus()
         );
 
         return ReturnResponse.from(returnInfo, invoiceRepository);
@@ -349,7 +351,7 @@ public class ReturnService {
             Optional<ReturnInfo> returnInfoOpt = findReturnInfoByNormalizedInvoice(normalizedOriginalInvoice);
             if (returnInfoOpt.isPresent()) {
                 ReturnInfo returnInfo = returnInfoOpt.get();
-                returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null);
+                returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null, null, null);
                 updatedCount++;
             }
         }
@@ -420,6 +422,7 @@ public class ReturnService {
             columnIndexMap.put("비고", findColumnIndex(headerRow, "비고"));
             columnIndexMap.put("접수자", findColumnIndex(headerRow, "접수자"));
             columnIndexMap.put("쇼핑몰", findColumnIndex(headerRow, "쇼핑몰"));
+            columnIndexMap.put("주문유형", findColumnIndex(headerRow, "주문유형"));
 
             if (columnIndexMap.get("원송장번호") == -1) {
                 columnIndexMap.put("원송장번호", findColumnIndex(headerRow, "운송장번호"));
@@ -456,6 +459,7 @@ public class ReturnService {
                             : null;
                     String handlerName = getCellStringValue(row.getCell(columnIndexMap.get("접수자")));
                     String mallName = getCellStringValue(row.getCell(columnIndexMap.get("쇼핑몰")));
+                    String orderTypeStr = getCellStringValue(row.getCell(columnIndexMap.get("주문유형")));
 
                     if (buyer == null || buyer.trim().isEmpty() ||
                             receiver == null || receiver.trim().isEmpty() ||
@@ -465,7 +469,8 @@ public class ReturnService {
                             quantityStr == null || quantityStr.trim().isEmpty() ||
                             originalInvoice == null || originalInvoice.trim().isEmpty() ||
                             handlerName == null || handlerName.trim().isEmpty() ||
-                            mallName == null || mallName.trim().isEmpty()) {
+                            mallName == null || mallName.trim().isEmpty() ||
+                            orderTypeStr == null || orderTypeStr.trim().isEmpty()) {
                         fileErrors.add("행 " + (i + 1) + ": 필수 필드가 비어있습니다");
                         continue;
                     }
@@ -500,6 +505,12 @@ public class ReturnService {
                         continue;
                     }
 
+                    kr.co.ksgk.ims.domain.returns.entity.OrderType orderType = parseOrderType(orderTypeStr);
+                    if (orderType == null) {
+                        fileErrors.add("행 " + (i + 1) + ": 잘못된 주문유형입니다 - " + orderTypeStr + " (허용: 반품신청, 교환신청, 기타)");
+                        continue;
+                    }
+
                     ReturnInfo returnInfo = ReturnInfo.builder()
                             .buyer(buyer.trim())
                             .receiver(receiver.trim())
@@ -511,6 +522,7 @@ public class ReturnService {
                             .note(note != null ? note.trim() : null)
                             .returnHandler(handler)
                             .returnMall(mall)
+                            .orderType(orderType)
                             .build();
 
                     returnInfoRepository.save(returnInfo);
@@ -533,5 +545,27 @@ public class ReturnService {
             sb.append(cellValue != null ? cellValue : "");
         }
         return sb.toString();
+    }
+
+    private kr.co.ksgk.ims.domain.returns.entity.OrderType parseOrderType(String orderTypeStr) {
+        if (orderTypeStr == null || orderTypeStr.trim().isEmpty()) {
+            return null;
+        }
+
+        String normalized = orderTypeStr.trim();
+
+        switch (normalized) {
+            case "반품신청":
+            case "RETURN":
+                return kr.co.ksgk.ims.domain.returns.entity.OrderType.RETURN;
+            case "교환신청":
+            case "EXCHANGE":
+                return kr.co.ksgk.ims.domain.returns.entity.OrderType.EXCHANGE;
+            case "기타":
+            case "ETC":
+                return kr.co.ksgk.ims.domain.returns.entity.OrderType.ETC;
+            default:
+                return null;
+        }
     }
 }

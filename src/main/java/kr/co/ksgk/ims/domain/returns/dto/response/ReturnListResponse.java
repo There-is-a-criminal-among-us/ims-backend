@@ -2,6 +2,8 @@ package kr.co.ksgk.ims.domain.returns.dto.response;
 
 import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceRepository;
+import kr.co.ksgk.ims.domain.returns.entity.OrderType;
+import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnInfo;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 import lombok.Builder;
@@ -21,7 +23,9 @@ public record ReturnListResponse(
         String productName,
         Integer quantity,
         String originalInvoice,
-        ReturnStatus returnStatus
+        ReturnStatus returnStatus,
+        OrderType orderType,
+        ProcessingStatus processingStatus
 ) {
     public static ReturnListResponse from(ReturnInfo returnInfo, InvoiceRepository invoiceRepository) {
         Long invoiceId = null;
@@ -44,6 +48,8 @@ public record ReturnListResponse(
                 .quantity(returnInfo.getQuantity())
                 .originalInvoice(returnInfo.getOriginalInvoice())
                 .returnStatus(returnInfo.getReturnStatus())
+                .orderType(returnInfo.getOrderType())
+                .processingStatus(returnInfo.getProcessingStatus())
                 .build();
     }
 }

@@ -49,6 +49,14 @@ public class ReturnInfo extends BaseEntity {
     @Column(length = 20)
     private String returnInvoice;
 
+    @Column
+    @Enumerated(EnumType.STRING)
+    private OrderType orderType;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private ProcessingStatus processingStatus;
+
     @Lob
     private String note;
 
@@ -61,7 +69,7 @@ public class ReturnInfo extends BaseEntity {
     private ReturnMall returnMall;
 
     @Builder
-    public ReturnInfo(String buyer, String receiver, String address, String phone, String productName, Integer quantity, String originalInvoice, String note, ReturnHandler returnHandler, ReturnMall returnMall) {
+    public ReturnInfo(String buyer, String receiver, String address, String phone, String productName, Integer quantity, String originalInvoice, String note, ReturnHandler returnHandler, ReturnMall returnMall, OrderType orderType) {
         this.buyer = buyer;
         this.receiver = receiver;
         this.address = address;
@@ -70,15 +78,18 @@ public class ReturnInfo extends BaseEntity {
         this.quantity = quantity;
         this.originalInvoice = originalInvoice;
         this.returnStatus = ReturnStatus.REQUESTED;
+        this.processingStatus = ProcessingStatus.NOT_STARTED;
         this.note = note;
         this.returnHandler = returnHandler;
         this.returnMall = returnMall;
+        this.orderType = orderType;
     }
 
     public void patch(String buyer, String receiver, String address, String phone,
                       String productName, Integer quantity, String originalInvoice,
                       LocalDate acceptDate, ReturnStatus returnStatus, String returnInvoice,
-                      String note, ReturnHandler returnHandler, ReturnMall returnMall) {
+                      String note, ReturnHandler returnHandler, ReturnMall returnMall,
+                      OrderType orderType, ProcessingStatus processingStatus) {
         if (buyer != null) this.buyer = buyer;
         if (receiver != null) this.receiver = receiver;
         if (address != null) this.address = address;
@@ -92,6 +103,8 @@ public class ReturnInfo extends BaseEntity {
         if (note != null) this.note = note;
         if (returnHandler != null) this.returnHandler = returnHandler;
         if (returnMall != null) this.returnMall = returnMall;
+        if (orderType != null) this.orderType = orderType;
+        if (processingStatus != null) this.processingStatus = processingStatus;
     }
 
     public void accept() {
@@ -106,5 +119,9 @@ public class ReturnInfo extends BaseEntity {
     public void reRequest() {
         this.createdAt = LocalDateTime.now();
         this.returnStatus = ReturnStatus.REQUESTED;
+    }
+
+    public void startProcessing() {
+        this.processingStatus = ProcessingStatus.IN_PROGRESS;
     }
 }

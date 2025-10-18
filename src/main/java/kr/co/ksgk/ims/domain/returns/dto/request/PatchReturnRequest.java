@@ -1,5 +1,7 @@
 package kr.co.ksgk.ims.domain.returns.dto.request;
 
+import kr.co.ksgk.ims.domain.returns.entity.OrderType;
+import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 
 import java.time.LocalDate;
@@ -17,6 +19,8 @@ public record PatchReturnRequest(
         String returnInvoice,
         String note,
         Long handlerId,
-        Long mallId
+        Long mallId,
+        OrderType orderType,
+        ProcessingStatus processingStatus
 ) {
 }
