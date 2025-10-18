@@ -65,6 +65,14 @@ public class ReturnService {
     }
 
     @Transactional
+    public ReturnResponse reRequestReturn(Long returnId) {
+        ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
+        returnInfo.reRequest();
+        return ReturnResponse.from(returnInfo, invoiceRepository);
+    }
+
+    @Transactional
     public ReturnResponse patchReturn(Long memberId, Long returnId, PatchReturnRequest request) {
         ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
@@ -444,8 +452,8 @@ public class ReturnService {
                     String quantityStr = getCellStringValue(row.getCell(columnIndexMap.get("수량")));
                     String originalInvoice = getCellStringValue(row.getCell(columnIndexMap.get("원송장번호")));
                     String note = columnIndexMap.get("비고") != -1
-                        ? getCellStringValue(row.getCell(columnIndexMap.get("비고")))
-                        : null;
+                            ? getCellStringValue(row.getCell(columnIndexMap.get("비고")))
+                            : null;
                     String handlerName = getCellStringValue(row.getCell(columnIndexMap.get("접수자")));
                     String mallName = getCellStringValue(row.getCell(columnIndexMap.get("쇼핑몰")));
 

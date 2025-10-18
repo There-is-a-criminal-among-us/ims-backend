@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -100,5 +101,10 @@ public class ReturnInfo extends BaseEntity {
 
     public void complete() {
         this.returnStatus = ReturnStatus.COMPLETED;
+    }
+
+    public void reRequest() {
+        this.createdAt = LocalDateTime.now();
+        this.returnStatus = ReturnStatus.REQUESTED;
     }
 }

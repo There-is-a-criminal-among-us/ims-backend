@@ -176,4 +176,18 @@ public class ReturnController {
         ReturnExcelUploadResponse response = returnService.uploadReturnExcel(files);
         return SuccessResponse.ok(response);
     }
+
+    @Operation(
+            summary = "회수 정보 재등록",
+            description = "회수 정보를 재등록합니다"
+    )
+    @ApiResponse(responseCode = "200", description = "회수 정보 재등록 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReturnResponse.class))
+    )
+    @PostMapping("/{returnId}/re-request")
+    public ResponseEntity<SuccessResponse<?>> reRequestReturn(@PathVariable Long returnId) {
+        ReturnResponse response = returnService.reRequestReturn(returnId);
+        return SuccessResponse.ok(response);
+    }
 }
