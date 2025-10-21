@@ -199,10 +199,12 @@ public class ReturnService {
     public InvoiceUploadSuccessResponse uploadReturnInvoices(List<MultipartFile> files) {
         List<InvoiceUploadErrorResponse.FileErrorDetail> fileErrors = new ArrayList<>();
         Map<String, String> invoiceMap = new HashMap<>();
+        List<String> allNotFoundInvoices = new ArrayList<>();
 
         for (MultipartFile file : files) {
             try {
-                processInvoiceExcelFile(file, invoiceMap, fileErrors);
+                List<String> notFoundInvoices = processInvoiceExcelFile(file, invoiceMap, fileErrors);
+                allNotFoundInvoices.addAll(notFoundInvoices);
             } catch (IOException e) {
                 fileErrors.add(InvoiceUploadErrorResponse.FileErrorDetail.builder()
                         .fileName(file.getOriginalFilename())
@@ -226,10 +228,10 @@ public class ReturnService {
 
         int updatedCount = updateReturnInvoices(invoiceMap);
 
-        return InvoiceUploadSuccessResponse.of(files.size(), updatedCount);
+        return InvoiceUploadSuccessResponse.of(files.size(), updatedCount, allNotFoundInvoices);
     }
 
-    private void processInvoiceExcelFile(MultipartFile file, Map<String, String> invoiceMap,
+    private List<String> processInvoiceExcelFile(MultipartFile file, Map<String, String> invoiceMap,
                                          List<InvoiceUploadErrorResponse.FileErrorDetail> fileErrors) throws IOException {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -281,14 +283,7 @@ public class ReturnService {
                 }
             }
 
-            if (!notFoundInvoices.isEmpty()) {
-                fileErrors.add(InvoiceUploadErrorResponse.FileErrorDetail.builder()
-                        .fileName(file.getOriginalFilename())
-                        .errorType("INVOICE_NOT_FOUND")
-                        .errorMessage("등록되지 않은 원송장이 있습니다")
-                        .notFoundInvoices(notFoundInvoices)
-                        .build());
-            }
+            return notFoundInvoices;
         }
     }
 
