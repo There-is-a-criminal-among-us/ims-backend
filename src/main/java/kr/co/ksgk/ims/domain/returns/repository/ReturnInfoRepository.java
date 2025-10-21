@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.returns.repository;
 
+import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnInfo;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             "AND (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
             "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
             "AND (:status IS NULL OR ri.returnStatus = :status) " +
+            "AND (:processingStatus IS NULL OR ri.processingStatus = :processingStatus) " +
             "AND (:search IS NULL OR :search = '' OR " +
             "ri.buyer LIKE %:search% OR " +
             "ri.receiver LIKE %:search% OR " +
@@ -47,6 +49,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
                     "AND (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
                     "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
                     "AND (:status IS NULL OR ri.returnStatus = :status) " +
+                    "AND (:processingStatus IS NULL OR ri.processingStatus = :processingStatus) " +
                     "AND (:search IS NULL OR :search = '' OR " +
                     "ri.buyer LIKE %:search% OR " +
                     "ri.receiver LIKE %:search% OR " +
@@ -59,6 +62,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("status") ReturnStatus status,
+            @Param("processingStatus") ProcessingStatus processingStatus,
             @Param("search") String search,
             Pageable pageable);
 
@@ -66,6 +70,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             "WHERE (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
             "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
             "AND (:status IS NULL OR ri.returnStatus = :status) " +
+            "AND (:processingStatus IS NULL OR ri.processingStatus = :processingStatus) " +
             "AND (:search IS NULL OR :search = '' OR " +
             "ri.buyer LIKE %:search% OR " +
             "ri.receiver LIKE %:search% OR " +
@@ -77,6 +82,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
                     "WHERE (:startDate IS NULL OR CAST(ri.createdAt AS date) >= :startDate) " +
                     "AND (:endDate IS NULL OR CAST(ri.createdAt AS date) <= :endDate) " +
                     "AND (:status IS NULL OR ri.returnStatus = :status) " +
+                    "AND (:processingStatus IS NULL OR ri.processingStatus = :processingStatus) " +
                     "AND (:search IS NULL OR :search = '' OR " +
                     "ri.buyer LIKE %:search% OR " +
                     "ri.receiver LIKE %:search% OR " +
@@ -88,6 +94,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("status") ReturnStatus status,
+            @Param("processingStatus") ProcessingStatus processingStatus,
             @Param("search") String search,
             Pageable pageable);
 }

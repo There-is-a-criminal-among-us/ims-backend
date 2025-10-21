@@ -11,6 +11,7 @@ import kr.co.ksgk.ims.domain.returns.dto.request.AcceptReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.response.*;
+import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 import kr.co.ksgk.ims.domain.returns.exception.InvoiceValidationException;
 import kr.co.ksgk.ims.domain.returns.service.ReturnService;
@@ -73,6 +74,9 @@ public class ReturnController {
             @Parameter(description = "회수 상태 (REQUESTED, IN_PROGRESS, COMPLETED)")
             @RequestParam(required = false) ReturnStatus status,
 
+            @Parameter(description = "처리 상태 (NOT_STARTED, IN_PROGRESS, COMPLETED)")
+            @RequestParam(required = false) ProcessingStatus processingStatus,
+
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
@@ -84,6 +88,7 @@ public class ReturnController {
                 startDate,
                 endDate,
                 status,
+                processingStatus,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }

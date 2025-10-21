@@ -15,6 +15,7 @@ import kr.co.ksgk.ims.domain.returns.dto.response.PagingReturnListResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnExcelUploadResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnListResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnResponse;
+import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnHandler;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnInfo;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnMall;
@@ -124,20 +125,21 @@ public class ReturnService {
             LocalDate startDate,
             LocalDate endDate,
             ReturnStatus status,
+            ProcessingStatus processingStatus,
             Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
 
         Page<ReturnInfo> returnInfoPage;
         if (member.getRole() == Role.ADMIN) {
-            returnInfoPage = returnInfoRepository.findAllWithFilters(startDate, endDate, status, search, pageable);
+            returnInfoPage = returnInfoRepository.findAllWithFilters(startDate, endDate, status, processingStatus, search, pageable);
         } else {
             List<Long> brandIds = getManagedBrandIds(memberId);
             if (brandIds.isEmpty()) {
                 return PagingReturnListResponse.of(Page.empty(), List.of());
             }
             returnInfoPage = returnInfoRepository.findByManagedBrandsWithFilters(
-                    brandIds, startDate, endDate, status, search, pageable);
+                    brandIds, startDate, endDate, status, processingStatus, search, pageable);
         }
 
         List<ReturnListResponse> returnListResponses = returnInfoPage.getContent().stream()
