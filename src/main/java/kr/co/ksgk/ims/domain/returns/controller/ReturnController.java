@@ -62,7 +62,7 @@ public class ReturnController {
     public ResponseEntity<SuccessResponse<?>> getReturnInfos(
             @Auth Long memberId,
 
-            @Parameter(description = "검색어 (구매자, 수령인, 전화번호, 상품명, 운송장번호)")
+            @Parameter(description = "검색어 (구매자, 수령인, 전화번호, 상품명, 운송장번호, 담당자)")
             @RequestParam(required = false) String search,
 
             @Parameter(description = "시작일 (YYYY-MM-DD)", example = "2024-01-01")
