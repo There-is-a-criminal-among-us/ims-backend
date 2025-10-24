@@ -198,6 +198,16 @@ public class ReturnService {
     }
 
     @Transactional
+    public void deleteReturn(Long memberId, Long returnId) {
+        validateReturnInfoAccess(memberId, returnId);
+
+        ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
+
+        returnInfoRepository.delete(returnInfo);
+    }
+
+    @Transactional
     public InvoiceUploadSuccessResponse uploadReturnInvoices(List<MultipartFile> files) {
         List<InvoiceUploadErrorResponse.FileErrorDetail> fileErrors = new ArrayList<>();
         Map<String, String> invoiceMap = new HashMap<>();

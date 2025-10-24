@@ -124,6 +124,18 @@ public class ReturnController {
     }
 
     @Operation(
+            summary = "회수 정보 삭제",
+            description = "회수 정보를 삭제합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "회수 정보 삭제 성공")
+    @DeleteMapping("/{returnId}")
+    public ResponseEntity<SuccessResponse<?>> deleteReturn(
+            @Auth Long memberId, @PathVariable Long returnId) {
+        returnService.deleteReturn(memberId, returnId);
+        return SuccessResponse.ok(null);
+    }
+
+    @Operation(
             summary = "회수 접수",
             description = "회수 정보를 접수합니다. 회수 상태를 IN_PROGRESS로 변경하고 접수일을 등록합니다. 단일 또는 여러 건을 동시에 접수할 수 있습니다."
     )
