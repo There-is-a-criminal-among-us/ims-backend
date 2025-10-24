@@ -26,6 +26,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
                 JOIN ip.product p
                 WHERE i.name LIKE %:keyword%
                    OR i.number LIKE %:keyword%
+                   OR REPLACE(i.number, '-', '') LIKE %:keyword%
                    OR p.name LIKE %:keyword%
             """)
     Page<InvoiceProduct> findInvoiceProductByNameOrNumber(@Param("keyword") String keyword, Pageable pageable);
@@ -54,7 +55,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND ip.product.id IN :productIds
             """)
     Page<InvoiceProduct> findInvoiceProductByNameOrNumberOrInvoiceNumberAndProductIdIn(
@@ -81,7 +82,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND YEAR(i.createdAt) = :year
             AND MONTH(i.createdAt) = :month
             """)
@@ -112,7 +113,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND ip.product.id IN :productIds
             AND YEAR(i.createdAt) = :year
             AND MONTH(i.createdAt) = :month
@@ -140,6 +141,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             JOIN ip.product p
             WHERE i.name LIKE %:keyword%
                OR i.number LIKE %:keyword%
+               OR REPLACE(i.number, '-', '') LIKE %:keyword%
                OR p.name LIKE %:keyword%
             ORDER BY i.createdAt DESC
             """)
@@ -163,7 +165,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND YEAR(i.createdAt) = :year
             AND MONTH(i.createdAt) = :month
             ORDER BY i.createdAt DESC
@@ -188,7 +190,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND ip.product.id IN :productIds
             ORDER BY i.createdAt DESC
             """)
@@ -217,7 +219,7 @@ public interface InvoiceProductRepository extends JpaRepository<InvoiceProduct, 
             FROM InvoiceProduct ip
             JOIN ip.invoice i
             JOIN ip.product p
-            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR p.name LIKE %:keyword%)
+            WHERE (i.name LIKE %:keyword% OR i.number LIKE %:keyword% OR REPLACE(i.number, '-', '') LIKE %:keyword% OR p.name LIKE %:keyword%)
             AND ip.product.id IN :productIds
             AND YEAR(i.createdAt) = :year
             AND MONTH(i.createdAt) = :month
