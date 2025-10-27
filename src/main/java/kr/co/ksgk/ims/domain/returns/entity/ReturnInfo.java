@@ -31,7 +31,7 @@ public class ReturnInfo extends BaseEntity {
     @Column(length = 20, nullable = false)
     private String phone;
 
-    @Column(length = 30, nullable = false)
+    @Column(length = 100, nullable = false)
     private String productName;
 
     @Column(nullable = false)
