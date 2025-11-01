@@ -74,6 +74,30 @@ public class ReturnService {
     }
 
     @Transactional
+    public void bulkReRequestReturns(Long memberId, List<Long> returnIds) {
+        for (Long returnId : returnIds) {
+            validateReturnInfoAccess(memberId, returnId);
+
+            ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
+
+            returnInfo.reRequest();
+        }
+    }
+
+    @Transactional
+    public void bulkUpdateProcessingStatus(Long memberId, List<Long> returnIds, ProcessingStatus processingStatus) {
+        for (Long returnId : returnIds) {
+            validateReturnInfoAccess(memberId, returnId);
+
+            ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
+
+            returnInfo.patch(null, null, null, null, null, null, null, null, null, null, null, null, null, null, processingStatus);
+        }
+    }
+
+    @Transactional
     public ReturnResponse patchReturn(Long memberId, Long returnId, PatchReturnRequest request) {
         ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));

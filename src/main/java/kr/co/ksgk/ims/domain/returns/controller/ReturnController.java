@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.returns.dto.request.AcceptReturnRequest;
+import kr.co.ksgk.ims.domain.returns.dto.request.BulkReRequestRequest;
+import kr.co.ksgk.ims.domain.returns.dto.request.BulkUpdateProcessingStatusRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.response.*;
@@ -206,5 +208,31 @@ public class ReturnController {
     public ResponseEntity<SuccessResponse<?>> reRequestReturn(@PathVariable Long returnId) {
         ReturnResponse response = returnService.reRequestReturn(returnId);
         return SuccessResponse.ok(response);
+    }
+
+    @Operation(
+            summary = "회수 정보 일괄 재등록",
+            description = "여러 회수 정보를 한번에 재등록합니다. 회수 상태를 REQUESTED로 변경하고 생성일을 갱신합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "회수 정보 일괄 재등록 성공")
+    @PostMapping("/re-request")
+    public ResponseEntity<SuccessResponse<?>> bulkReRequestReturns(
+            @Auth Long memberId,
+            @RequestBody BulkReRequestRequest request) {
+        returnService.bulkReRequestReturns(memberId, request.returnIds());
+        return SuccessResponse.ok(null);
+    }
+
+    @Operation(
+            summary = "처리상태 일괄 변경",
+            description = "여러 회수 정보의 처리상태를 한번에 변경합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "처리상태 일괄 변경 성공")
+    @PatchMapping("/processing-status")
+    public ResponseEntity<SuccessResponse<?>> bulkUpdateProcessingStatus(
+            @Auth Long memberId,
+            @RequestBody BulkUpdateProcessingStatusRequest request) {
+        returnService.bulkUpdateProcessingStatus(memberId, request.returnIds(), request.processingStatus());
+        return SuccessResponse.ok(null);
     }
 }
