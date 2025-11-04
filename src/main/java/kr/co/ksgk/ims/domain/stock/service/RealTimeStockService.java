@@ -95,7 +95,7 @@ public class RealTimeStockService {
         LocalDateTime startOfDay = targetDate.atStartOfDay();
         LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
 
-        List<Transaction> transactions = transactionRepository.findByProductAndCreatedAtBetweenAndTransactionStatus(
+        List<Transaction> transactions = transactionRepository.findByProductAndUpdatedAtBetweenAndTransactionStatus(
                 product, startOfDay, endOfDay, TransactionStatus.CONFIRMED);
 
         List<Delivery> deliveries = deliveryRepository.findByRawProductProductMappingsProductAndCreatedAtBetween(

@@ -9,11 +9,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long>, TransactionCustomRepository {
-    
+
     List<Transaction> findByProductAndCreatedAtBetweenAndTransactionStatus(
-            Product product, 
-            LocalDateTime startDateTime, 
-            LocalDateTime endDateTime, 
+            Product product,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            TransactionStatus transactionStatus
+    );
+
+    List<Transaction> findByProductAndUpdatedAtBetweenAndTransactionStatus(
+            Product product,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
             TransactionStatus transactionStatus
     );
 }
