@@ -12,7 +12,12 @@ import kr.co.ksgk.ims.domain.returns.dto.request.BulkReRequestRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.BulkUpdateProcessingStatusRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.CreateReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
-import kr.co.ksgk.ims.domain.returns.dto.response.*;
+import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadSuccessResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.ReturnBatchResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.ReturnExcelUploadResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.ReturnResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.PagingReturnListResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadErrorResponse;
 import kr.co.ksgk.ims.domain.returns.entity.ProcessingStatus;
 import kr.co.ksgk.ims.domain.returns.entity.ReturnStatus;
 import kr.co.ksgk.ims.domain.returns.exception.InvoiceValidationException;
@@ -234,5 +239,22 @@ public class ReturnController {
             @RequestBody BulkUpdateProcessingStatusRequest request) {
         returnService.bulkUpdateProcessingStatus(memberId, request.returnIds(), request.processingStatus());
         return SuccessResponse.ok(null);
+    }
+
+    @Operation(
+            summary = "회수 정보 일괄 조회",
+            description = "회수 ID 리스트를 받아 정보를 반환합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "회수 정보 일괄 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReturnBatchResponse.class))
+    )
+    @GetMapping("/batch")
+    public ResponseEntity<SuccessResponse<?>> getReturnBatchInfo(
+            @Auth Long memberId,
+            @Parameter(description = "회수 ID 리스트", example = "1,2,3", required = true)
+            @RequestParam List<Long> ids) {
+        List<ReturnBatchResponse> responses = returnService.getReturnBatchInfo(memberId, ids);
+        return SuccessResponse.ok(responses);
     }
 }

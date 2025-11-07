@@ -1,6 +1,7 @@
 package kr.co.ksgk.ims.domain.returns.service;
 
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.domain.invoice.entity.Invoice;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceRepository;
 import kr.co.ksgk.ims.domain.member.entity.Member;
 import kr.co.ksgk.ims.domain.member.entity.Role;
@@ -12,6 +13,7 @@ import kr.co.ksgk.ims.domain.returns.dto.request.PatchReturnRequest;
 import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadErrorResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadSuccessResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.PagingReturnListResponse;
+import kr.co.ksgk.ims.domain.returns.dto.response.ReturnBatchResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnExcelUploadResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnListResponse;
 import kr.co.ksgk.ims.domain.returns.dto.response.ReturnResponse;
@@ -141,6 +143,32 @@ public class ReturnService {
         ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
         return ReturnResponse.from(returnInfo, invoiceRepository);
+    }
+
+    public List<ReturnBatchResponse> getReturnBatchInfo(Long memberId, List<Long> returnIds) {
+        List<ReturnBatchResponse> responses = new ArrayList<>();
+
+        for (Long returnId : returnIds) {
+            validateReturnInfoAccess(memberId, returnId);
+
+            ReturnInfo returnInfo = returnInfoRepository.findById(returnId)
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ENTITY_NOT_FOUND));
+
+            Integer resalableQuantity = null;
+            if (returnInfo.getReturnInvoice() != null && !returnInfo.getReturnInvoice().trim().isEmpty()) {
+                Optional<Invoice> invoiceOpt = invoiceRepository.findByNumber(returnInfo.getReturnInvoice());
+                if (invoiceOpt.isPresent()) {
+                    Invoice invoice = invoiceOpt.get();
+                    resalableQuantity = invoice.getInvoiceProducts().stream()
+                            .mapToInt(ip -> ip.getResalableQuantity() != null ? ip.getResalableQuantity() : 0)
+                            .sum();
+                }
+            }
+
+            responses.add(ReturnBatchResponse.from(returnInfo, resalableQuantity));
+        }
+
+        return responses;
     }
 
     public PagingReturnListResponse getReturnInfosByMember(
