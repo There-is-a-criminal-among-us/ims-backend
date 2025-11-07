@@ -542,6 +542,14 @@ public class ReturnService {
                         continue;
                     }
 
+                    // 원송장 중복 체크
+                    String normalizedOriginalInvoice = normalizeInvoiceNumber(originalInvoice.trim());
+                    Optional<ReturnInfo> existingReturn = findReturnInfoByNormalizedInvoice(normalizedOriginalInvoice);
+                    if (existingReturn.isPresent()) {
+                        fileErrors.add("행 " + (i + 1) + ": 원송장번호가 이미 존재합니다 - " + originalInvoice.trim());
+                        continue;
+                    }
+
                     ReturnInfo returnInfo = ReturnInfo.builder()
                             .buyer(buyer.trim())
                             .receiver(receiver.trim())
