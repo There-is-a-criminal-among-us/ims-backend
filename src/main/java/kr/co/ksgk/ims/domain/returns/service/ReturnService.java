@@ -156,7 +156,16 @@ public class ReturnService {
 
             Integer resalableQuantity = null;
             if (returnInfo.getReturnInvoice() != null && !returnInfo.getReturnInvoice().trim().isEmpty()) {
-                Optional<Invoice> invoiceOpt = invoiceRepository.findByNumber(returnInfo.getReturnInvoice());
+                String normalizedReturnInvoice = normalizeInvoiceNumber(returnInfo.getReturnInvoice());
+
+                // Invoice number도 정규화해서 비교
+                Optional<Invoice> invoiceOpt = invoiceRepository.findAll().stream()
+                        .filter(invoice -> {
+                            String normalizedInvoiceNumber = normalizeInvoiceNumber(invoice.getNumber());
+                            return normalizedInvoiceNumber != null && normalizedInvoiceNumber.equals(normalizedReturnInvoice);
+                        })
+                        .findFirst();
+
                 if (invoiceOpt.isPresent()) {
                     Invoice invoice = invoiceOpt.get();
                     resalableQuantity = invoice.getInvoiceProducts().stream()
