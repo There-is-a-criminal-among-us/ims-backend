@@ -123,7 +123,7 @@ public class OcrService {
                 .build();
 
         OpenAiFunctionCallRequest requestBody = OpenAiFunctionCallRequest.builder()
-                .model("gpt-4")
+                .model("gpt-4.1-mini")
                 .temperature(0)
                 .messages(List.of(system, user))
                 .functions(List.of(function))
