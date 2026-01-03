@@ -1,8 +1,8 @@
-name: Development CI/CD
+name: Production CI/CD
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
       - name: Create application.yml for build
         run: |
           mkdir -p ./src/main/resources
-          echo "${{ secrets.DEVELOPMENT_APPLICATION }}" > ./src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
 
       # Gradle 캐시 설정 (Gradle Wrapper 포함)
       - name: Cache Gradle packages
@@ -42,8 +42,8 @@ jobs:
       - name: Docker build & push to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/ims-prod:${{ github.sha }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/ims-prod:${{ github.sha }}
           docker logout
 
       # 서버에 배포
@@ -63,40 +63,40 @@ jobs:
             
             # Redis 컨테이너 배포: 네트워크에 연결, 포트 매핑 (내부 통신용)
             echo "🚀 Redis 컨테이너 배포 중..."
-            if [ "$(sudo docker inspect --format='{{.State.Running}}' redis-dev 2>/dev/null)" != "true" ]; then
+            if [ "$(sudo docker inspect --format='{{.State.Running}}' redis-prod 2>/dev/null)" != "true" ]; then
               sudo docker pull redis:alpine
-              sudo docker run -d --name redis-dev --network ims-network -p 6380:6379 redis:alpine
+              sudo docker run -d --name redis-prod --network ims-network -p 6379:6379 redis:alpine
             fi
             
             echo "🚀 최신 Docker 이미지 Pull 중..."
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/ims-prod:${{ github.sha }}
             
             echo "🛑 기존 컨테이너 중지 및 삭제"
-            if [ "$(sudo docker inspect --format='{{.State.Running}}' ims-dev 2>/dev/null)" = "true" ]; then
-              sudo docker stop ims-dev
-              sudo docker rm ims-dev
+            if [ "$(sudo docker inspect --format='{{.State.Running}}' ims-prod 2>/dev/null)" = "true" ]; then
+              sudo docker stop ims-prod
+              sudo docker rm ims-prod
             fi
             
             echo "📂 yml 파일을 저장할 디렉토리 생성"
-            sudo mkdir -p /home/root/ims-dev/src/main/resources
-            sudo chown -R root:root /home/root/ims-dev  # root 사용자가 접근 가능하도록 변경
-            sudo chmod -R 755 /home/root/ims-dev            # 디렉토리에 읽기, 쓰기, 실행 권한 부여
+            sudo mkdir -p /home/root/ims-prod/src/main/resources
+            sudo chown -R root:root /home/root/ims-prod  # root 사용자가 접근 가능하도록 변경
+            sudo chmod -R 755 /home/root/ims-prod            # 디렉토리에 읽기, 쓰기, 실행 권한 부여
             
             echo "📄 yml 파일 생성 및 GitHub Secrets 값 적용"
-            echo "${{ secrets.DEVELOPMENT_APPLICATION }}" | sudo tee /home/root/ims-dev/src/main/resources/application.yml > /dev/null
-            sudo chmod 644 /home/root/ims-dev/src/main/resources/application.yml  # 모든 사용자 읽기 가능, 소유자만 쓰기 가능
+            echo "${{ secrets.APPLICATION }}" | sudo tee /home/root/ims-prod/src/main/resources/application.yml > /dev/null
+            sudo chmod 644 /home/root/ims-prod/src/main/resources/application.yml  # 모든 사용자 읽기 가능, 소유자만 쓰기 가능
             
             echo "🚀 새 컨테이너 실행 중..."
-            sudo docker run -d --log-driver=syslog --name ims-dev \
+            sudo docker run -d --log-driver=syslog --name ims-prod \
               --network ims-network \
               --add-host host.docker.internal:host-gateway \
-              -p 8081:8080 \
-              -v /home/root/ims-dev/src/main/resources:/ims-dev/src/main/resources \
+              -p 8080:8080 \
+              -v /home/root/ims-prod/src/main/resources:/ims-prod/src/main/resources \
               --restart always \
-              ${{ secrets.DOCKER_USERNAME }}/ims-dev:${{ github.sha }}
+              ${{ secrets.DOCKER_USERNAME }}/ims-prod:${{ github.sha }}
             
             echo "✅ 실행 중인 컨테이너 확인"
-            sudo docker ps -a | grep "ims-dev"
+            sudo docker ps -a | grep "ims-prod"
             
             echo "🧹 사용하지 않는 Docker 이미지 정리"
             sudo docker system prune -af
