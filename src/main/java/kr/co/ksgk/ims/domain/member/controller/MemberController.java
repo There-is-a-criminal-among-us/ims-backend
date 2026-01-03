@@ -1,45 +1,131 @@
 package kr.co.ksgk.ims.domain.member.controller;
 
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginResponseDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberSignupRequestDto;
-import kr.co.ksgk.ims.domain.member.dto.MemberLoginRequestDto;
-import  kr.co.ksgk.ims.domain.member.service.MemberService;
+import io.swagger.v3.oas.annotations.Parameter;
+import kr.co.ksgk.ims.domain.auth.dto.request.SignupRequest;
+import kr.co.ksgk.ims.domain.auth.dto.response.MemberResponse;
+import kr.co.ksgk.ims.domain.auth.service.AuthService;
+import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
+import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
+import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberWithAttendanceResponse;
+import kr.co.ksgk.ims.domain.member.service.MemberService;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
-public class MemberController
-{
+public class MemberController implements MemberApi {
+
     private final MemberService memberService;
+    private final AuthService authService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    ResponseEntity<SuccessResponse<?>> signup(MemberSignupRequestDto dto)
-    {
-        memberService.signup(dto);
-
-        return SuccessResponse.ok("signup success");
+    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupRequest request) {
+        MemberResponse memberResponse = authService.signup(request);
+        return SuccessResponse.created(memberResponse);
     }
 
-    @PostMapping("/login")
-    ResponseEntity<SuccessResponse<?>> login(MemberLoginRequestDto dto)
-    {
-        MemberLoginResponseDto response=memberService.login(dto);
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{memberId}")
+    public ResponseEntity<SuccessResponse<?>> updateMemberInfo(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse memberInfoResponse = memberService.updateMemberInfo(memberId, request);
+        return SuccessResponse.ok(memberInfoResponse);
+    }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{memberId}/management")
+    public ResponseEntity<SuccessResponse<?>> updateMemberManagement(@PathVariable Long memberId, @RequestBody MemberUpdateRequest request) {
+        MemberInfoResponse memberInfoResponse = memberService.updateMemberManagement(memberId, request);
+        return SuccessResponse.ok(memberInfoResponse);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<SuccessResponse<?>> getMemberList(
+            @RequestParam(required = false) String search,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberInfoResponse pagingMemberInfoResponse = memberService.getMemberList(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(pagingMemberInfoResponse);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<SuccessResponse<?>> getMyInfo(@Auth Long memberId) {
+        MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
+        return SuccessResponse.ok(memberInfoResponse);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{memberId}")
+    public ResponseEntity<SuccessResponse<?>> getMemberInfoById(@PathVariable Long memberId) {
+        MemberInfoResponse memberInfoResponse = memberService.getMemberInfoById(memberId);
+        return SuccessResponse.ok(memberInfoResponse);
+    }
+
+    @PatchMapping("/{memberId}/password")
+    public ResponseEntity<SuccessResponse<?>> changePassword(@PathVariable Long memberId, @RequestBody ChangePasswordRequest request) {
+        memberService.changePassword(memberId, request);
+        return SuccessResponse.noContent();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{memberId}")
+    public ResponseEntity<SuccessResponse<?>> deleteMember(@PathVariable Long memberId) {
+        memberService.deleteMember(memberId);
+        return SuccessResponse.noContent();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{memberId}/reset-password")
+    public ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long memberId) {
+        memberService.resetPassword(memberId);
+        return SuccessResponse.noContent();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/parttime")
+    public ResponseEntity<SuccessResponse<?>> getPartTimeMembers(
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberInfoResponse response = memberService.getPartTimeMembers(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 
-    @PostMapping("/logout")
-    ResponseEntity<SuccessResponse<?>> logout()
-    {
-        return  SuccessResponse.ok("logout success");
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/parttime/date/{date}")
+    public ResponseEntity<SuccessResponse<?>> getPartTimeMembersByDate(
+            @Parameter(description = "조회할 날짜 (YYYY-MM-DD 형식)", example = "2025-09-28")
+            @PathVariable String date,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberWithAttendanceResponse response = memberService.getPartTimeMembersByDate(date, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(response);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/parttime/today")
+    public ResponseEntity<SuccessResponse<?>> getTodayPartTimeMembers(
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingMemberWithAttendanceResponse response = memberService.getTodayPartTimeMembers(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(response);
+    }
 }

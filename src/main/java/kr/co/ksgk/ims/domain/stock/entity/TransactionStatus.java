@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum TransactionStatus {
     ADJUSTMENT("조정"),
     PENDING("대기"),
-    CONFIRM("확인");
+    CONFIRMED("확인");
 
     private final String description;
 }

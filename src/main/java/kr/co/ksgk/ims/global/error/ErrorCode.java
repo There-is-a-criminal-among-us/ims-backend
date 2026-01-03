@@ -35,10 +35,12 @@ public enum ErrorCode {
     JSON_PARSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "A001", "JSON 파싱에 실패하였습니다."),
     NO_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A002", "저장된 리프레시 토큰이 없습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A003", "아이디나 비밀번호가 잘못되었습니다."),
+    INVALID_AUTHORITY(HttpStatus.FORBIDDEN, "A004", "권한이 존재하지 않습니다."),
 
     // Member
     USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "M001", "이미 존재하는 사용자 이름입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M002", "사용자가 존재하지 않습니다."),
+    MEMBER_MANAGE_CONFLICT(HttpStatus.BAD_REQUEST, "M003", "사용자는 회사와 브랜드 중 하나만 관리할 수 있습니다."),
 
     // Brand
     BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "브랜드를 찾을 수 없습니다."),
@@ -47,10 +49,30 @@ public enum ErrorCode {
     COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "CP001", "업체를 찾을 수 없습니다."),
 
     // Product
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "제품을 찾을 수 없습니다."),
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "품목을 찾을 수 없습니다."),
+    RAW_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "인식된 품목을 찾을 수 없습니다."),
 
     // Inventory
-    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "재고 정보를 찾을 수 없습니다."),
+    INVENTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "IV001", "재고 정보를 찾을 수 없습니다."),
+
+    // Invoice
+    INVOICE_NOT_FOUND(HttpStatus.NOT_FOUND, "IN001", "송장 정보를 찾을 수 없습니다."),
+
+    // Transaction
+    TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "입출고 정보를 찾을 수 없습니다."),
+    TRANSACTION_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "입출고 유형을 찾을 수 없습니다."),
+    TRANSACTION_NOT_PENDING(HttpStatus.BAD_REQUEST, "T003", "입출고 상태가 대기 중이 아닙니다."),
+    SCHEDULED_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "T004", "입출고 유형이 기타수량이 아닌 경우 예정일이 필요합니다."),
+    SCHEDULED_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "T005", "입출고 유형이 기탁수량인 경우 예정일은 허용되지 않습니다."),
+
+    // Attendance
+    ATTENDANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "AT001", "출석 기록을 찾을 수 없습니다."),
+    EXPIRED_ATTENDANCE_TOKEN(HttpStatus.UNAUTHORIZED, "AT002", "출석 토큰이 만료되었습니다."),
+    INVALID_ATTENDANCE_TOKEN_VALUE(HttpStatus.UNAUTHORIZED, "AT003", "출석 토큰의 값이 올바르지 않습니다."),
+    ATTENDANCE_ALREADY_EXISTS(HttpStatus.CONFLICT, "AT004", "이미 출근한 기록이 존재합니다."),
+    INVALID_MEMBER_ROLE(HttpStatus.BAD_REQUEST, "AT005", "아르바이트 사용자가 아닙니다."),
+    ALREADY_ENDED(HttpStatus.BAD_REQUEST, "AT006", "이미 퇴근 처리된 기록입니다."),
+    TOO_EARLY_FOR_END(HttpStatus.BAD_REQUEST, "AT007", "출근 후 1시간이 지나야 퇴근할 수 있습니다."),
     ;
 
     private final HttpStatus httpStatus;

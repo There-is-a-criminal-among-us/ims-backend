@@ -1,0 +1,88 @@
+package kr.co.ksgk.ims.domain.invoice.controller;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import kr.co.ksgk.ims.domain.invoice.dto.request.InvoiceUpdateRequest;
+import kr.co.ksgk.ims.domain.invoice.dto.request.UploadInvoiceInfoRequest;
+import kr.co.ksgk.ims.domain.invoice.dto.response.InvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.SimpleInvoiceProductInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.dto.response.PagingInvoiceInfoResponse;
+import kr.co.ksgk.ims.domain.invoice.service.InvoiceService;
+import kr.co.ksgk.ims.global.annotation.Auth;
+import kr.co.ksgk.ims.global.common.SuccessResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/invoices")
+public class InvoiceController implements InvoiceApi {
+
+    private final InvoiceService invoiceService;
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
+    @PostMapping
+    public ResponseEntity<SuccessResponse<?>> createInvoice(@RequestBody UploadInvoiceInfoRequest request) {
+        SimpleInvoiceInfoResponse response = invoiceService.createInvoice(request);
+        return SuccessResponse.created(response);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
+    @GetMapping
+    public ResponseEntity<SuccessResponse<?>> getInvoiceList(
+            @Auth Long memberId,
+            @Parameter(description = "고객명, 전화번호, 품목명, 송장번호 검색어")
+            @RequestParam(defaultValue = "") String search,
+            @Parameter(description = "년도 (2024)")
+            @RequestParam(required = false) Integer year,
+            @Parameter(description = "월 (1-12)")
+            @RequestParam(required = false) Integer month,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size) {
+        PagingInvoiceInfoResponse pagingInvoiceInfoResponse = invoiceService.getInvoiceList(memberId, search, year, month, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(pagingInvoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
+    @GetMapping("/all")
+    public ResponseEntity<SuccessResponse<?>> getInvoiceListAll(
+            @Auth Long memberId,
+            @Parameter(description = "고객명, 전화번호, 품목명, 송장번호 검색어")
+            @RequestParam(defaultValue = "") String search,
+            @Parameter(description = "년도 (예: 2024)")
+            @RequestParam(required = false) Integer year,
+            @Parameter(description = "월 (1-12)")
+            @RequestParam(required = false) Integer month) {
+        List<SimpleInvoiceProductInfoResponse> invoiceList = invoiceService.getInvoiceListAll(memberId, search, year, month);
+        return SuccessResponse.ok(invoiceList);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN', 'MEMBER')")
+    @GetMapping("/{invoiceId}")
+    public ResponseEntity<SuccessResponse<?>> getInvoice(@PathVariable Long invoiceId) {
+        InvoiceInfoResponse invoiceInfoResponse = invoiceService.getInvoiceInfo(invoiceId);
+        return SuccessResponse.ok(invoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
+    @PutMapping("/{invoiceId}")
+    public ResponseEntity<SuccessResponse<?>> updateInvoiceInfo(@PathVariable Long invoiceId, @RequestBody InvoiceUpdateRequest request) {
+        InvoiceInfoResponse invoiceInfoResponse = invoiceService.updateInvoiceInfo(invoiceId, request);
+        return SuccessResponse.ok(invoiceInfoResponse);
+    }
+
+    @PreAuthorize("hasAnyRole('OCR', 'ADMIN')")
+    @DeleteMapping("/{invoiceId}")
+    public ResponseEntity<SuccessResponse<?>> deleteInvoice(@PathVariable Long invoiceId) {
+        invoiceService.deleteInvoice(invoiceId);
+        return SuccessResponse.noContent();
+    }
+}

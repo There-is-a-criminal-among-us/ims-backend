@@ -1,0 +1,161 @@
+package kr.co.ksgk.ims.domain.attendance.service;
+
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceRequest;
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceUpdateRequest;
+import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceResponse;
+import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceTokenResponse;
+import kr.co.ksgk.ims.domain.attendance.dto.response.PagingAttendanceResponse;
+import kr.co.ksgk.ims.domain.attendance.entity.Attendance;
+import kr.co.ksgk.ims.domain.attendance.repository.AttendanceRepository;
+import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.entity.Role;
+import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
+import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.BusinessException;
+import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
+import kr.co.ksgk.ims.global.jwt.JwtProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class AttendanceService {
+
+    private final JwtProvider jwtProvider;
+    private final AttendanceRepository attendanceRepository;
+    private final MemberRepository memberRepository;
+
+    // 출석 토큰 생성
+    public AttendanceTokenResponse createToken(Long memberId) {
+        String token = jwtProvider.generateAttendanceToken(memberId);
+        return AttendanceTokenResponse.from(token);
+    }
+
+    // 근무 시작
+    @Transactional
+    public AttendanceResponse startShift(AttendanceRequest request) {
+        Long memberId = jwtProvider.validateAttendanceToken(request.token());
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (attendanceRepository.existsByMemberAndDate(member, LocalDate.now())) {
+            throw new EntityNotFoundException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime workStartLocalTime = member.getWorkStartTime();
+        LocalDateTime workStartTime = (workStartLocalTime != null) ? LocalDateTime.of(LocalDate.now(), workStartLocalTime) : now;
+        LocalDateTime savedWorkStartTime = now.isBefore(workStartTime) ? workStartTime : now;
+        Attendance attendance = Attendance.builder()
+                .member(member)
+                .date(LocalDate.now())
+                .startTime(savedWorkStartTime)
+                .build();
+        Attendance savedAttendance = attendanceRepository.save(attendance);
+        return AttendanceResponse.from(savedAttendance);
+    }
+
+    // QR 인식
+    @Transactional
+    public AttendanceResponse readQr(AttendanceRequest request) {
+        Long memberId = jwtProvider.validateAttendanceToken(request.token());
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        
+        LocalDate today = LocalDate.now();
+        Attendance existingAttendance = attendanceRepository.findByMemberAndDate(member, today).orElse(null);
+        
+        if (existingAttendance == null) {
+            // 첫 번째 스캔 - 출근 처리
+            LocalDateTime now = LocalDateTime.now();
+            LocalTime workStartLocalTime = member.getWorkStartTime();
+            LocalDateTime workStartTime = (workStartLocalTime != null) ? LocalDateTime.of(today, workStartLocalTime) : now;
+            LocalDateTime savedWorkStartTime = now.isBefore(workStartTime) ? workStartTime : now;
+            
+            Attendance attendance = Attendance.builder()
+                    .member(member)
+                    .date(today)
+                    .startTime(savedWorkStartTime)
+                    .build();
+            Attendance savedAttendance = attendanceRepository.save(attendance);
+            return AttendanceResponse.from(savedAttendance);
+        } else {
+            // 두 번째 스캔 - 퇴근 처리 또는 에러
+            if (existingAttendance.getEndTime() != null) {
+                throw new BusinessException(ErrorCode.ALREADY_ENDED);
+            }
+            
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startTimePlusOneHour = existingAttendance.getStartTime().plusHours(1);
+            
+            if (now.isBefore(startTimePlusOneHour)) {
+                throw new BusinessException(ErrorCode.TOO_EARLY_FOR_END);
+            }
+            
+            existingAttendance.updateEndTime(now);
+            Attendance updatedAttendance = attendanceRepository.save(existingAttendance);
+            return AttendanceResponse.from(updatedAttendance);
+        }
+    }
+
+    // 근무 종료
+    @Transactional
+    public AttendanceResponse endShift(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        Attendance attendance = attendanceRepository.findByMemberAndDate(member, LocalDate.now())
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ATTENDANCE_NOT_FOUND));
+        attendance.updateEndTime(LocalDateTime.now());
+        Attendance updatedAttendance = attendanceRepository.save(attendance);
+        return AttendanceResponse.from(updatedAttendance);
+    }
+
+    // 출석 목록 조회
+    public PagingAttendanceResponse getAttendanceList(Pageable pageable) {
+        Page<Attendance> attendancePage = attendanceRepository.findAll(pageable);
+        List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
+                .map(AttendanceResponse::from)
+                .collect(Collectors.toList());
+        return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
+    }
+
+    @Transactional
+    public AttendanceResponse updatePartTimeAttendance(Long attendanceId, AttendanceUpdateRequest request) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ATTENDANCE_NOT_FOUND));
+        if (attendance.getMember().getRole() != Role.PART_TIME) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
+        }
+        attendance.updateAttendanceTimes(request.startTime(), request.endTime());
+        Attendance updatedAttendance = attendanceRepository.save(attendance);
+        return AttendanceResponse.from(updatedAttendance);
+    }
+
+    public PagingAttendanceResponse getPartTimeAttendanceList(Long memberId, Integer year, Integer month, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (member.getRole() != Role.PART_TIME) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
+        }
+        Page<Attendance> attendancePage;
+        if (year != null && month != null) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+            attendancePage = attendanceRepository.findAllByMemberAndDateBetween(member, startDate, endDate, pageable);
+        } else {
+            attendancePage = attendanceRepository.findAllByMember(member, pageable);
+        }
+        List<AttendanceResponse> attendanceResponses = attendancePage.getContent().stream()
+                .map(AttendanceResponse::from)
+                .collect(Collectors.toList());
+        return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
+    }
+}

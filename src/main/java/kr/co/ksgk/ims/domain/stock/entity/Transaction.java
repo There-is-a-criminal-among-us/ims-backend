@@ -2,6 +2,10 @@ package kr.co.ksgk.ims.domain.stock.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
+import kr.co.ksgk.ims.domain.product.entity.Product;
+import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.BusinessException;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,8 +21,8 @@ public class Transaction extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "daily_stock_id", nullable = false)
-    private DailyStock dailyStock;
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_type_id", nullable = false)
@@ -27,7 +31,6 @@ public class Transaction extends BaseEntity {
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false)
     private LocalDate scheduledDate;
 
     @Lob
@@ -36,4 +39,21 @@ public class Transaction extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionStatus transactionStatus;
+
+    @Builder
+    public Transaction(Product product, TransactionType transactionType, Integer quantity, LocalDate scheduledDate, String note, TransactionStatus transactionStatus) {
+        this.product = product;
+        this.transactionType = transactionType;
+        this.quantity = quantity;
+        this.scheduledDate = scheduledDate;
+        this.note = note;
+        this.transactionStatus = transactionStatus;
+    }
+
+    public void confirm() {
+        if (this.transactionStatus != TransactionStatus.PENDING) {
+            throw new BusinessException(ErrorCode.TRANSACTION_NOT_PENDING);
+        }
+        this.transactionStatus = TransactionStatus.CONFIRMED;
+    }
 }

@@ -2,12 +2,11 @@ package kr.co.ksgk.ims.domain.stock.entity;
 
 import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -26,17 +25,71 @@ public class DailyStock {
     private Integer currentStock;
 
     @Column(nullable = false)
-    private Integer inboundTotal;
+    private Integer incoming;
 
     @Column(nullable = false)
-    private Integer outboundTotal;
+    private Integer returnIncoming;
 
     @Column(nullable = false)
-    private Integer adjustmentTotal;
+    private Integer outgoing;
 
     @Column(nullable = false)
-    LocalDate stockDate;
+    private Integer coupangFulfillment;
 
-    @OneToMany(mappedBy = "dailyStock", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions = new ArrayList<>();
+    @Column(nullable = false)
+    private Integer naverFulfillment;
+
+    @Column(nullable = false)
+    private Integer deliveryOutgoing;
+
+    @Column(nullable = false)
+    private Integer redelivery;
+
+    @Column(nullable = false)
+    private Integer damaged;
+
+    @Column(nullable = false)
+    private Integer disposal;
+
+    @Column(nullable = false)
+    private Integer lost;
+
+    @Column(nullable = false)
+    private Integer adjustment;
+
+    @Column(nullable = false)
+    private LocalDate stockDate;
+
+    @Builder
+    public DailyStock(Product product, Integer currentStock, Integer incoming, Integer returnIncoming,
+                     Integer outgoing, Integer coupangFulfillment, Integer naverFulfillment,
+                     Integer deliveryOutgoing, Integer redelivery, Integer damaged, Integer disposal,
+                     Integer lost, Integer adjustment, LocalDate stockDate) {
+        this.product = product;
+        this.currentStock = currentStock;
+        this.incoming = incoming;
+        this.returnIncoming = returnIncoming;
+        this.outgoing = outgoing;
+        this.coupangFulfillment = coupangFulfillment;
+        this.naverFulfillment = naverFulfillment;
+        this.deliveryOutgoing = deliveryOutgoing;
+        this.redelivery = redelivery;
+        this.damaged = damaged;
+        this.disposal = disposal;
+        this.lost = lost;
+        this.adjustment = adjustment;
+        this.stockDate = stockDate;
+    }
+
+    public int getInboundTotal() {
+        return incoming + returnIncoming;
+    }
+
+    public int getOutboundTotal() {
+        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
+    }
+
+    public int getAdjustmentTotal() {
+        return damaged + disposal + lost + redelivery - adjustment;
+    }
 }
