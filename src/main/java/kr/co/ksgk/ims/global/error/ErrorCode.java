@@ -73,6 +73,13 @@ public enum ErrorCode {
     INVALID_MEMBER_ROLE(HttpStatus.BAD_REQUEST, "AT005", "아르바이트 사용자가 아닙니다."),
     ALREADY_ENDED(HttpStatus.BAD_REQUEST, "AT006", "이미 퇴근 처리된 기록입니다."),
     TOO_EARLY_FOR_END(HttpStatus.BAD_REQUEST, "AT007", "출근 후 1시간이 지나야 퇴근할 수 있습니다."),
+
+    // Settlement
+    SETTLEMENT_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "정산 타입을 찾을 수 없습니다."),
+    SETTLEMENT_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S002", "정산 카테고리를 찾을 수 없습니다."),
+    SETTLEMENT_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "S003", "정산 항목을 찾을 수 없습니다."),
+    SETTLEMENT_UNIT_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "정산 단위를 찾을 수 없습니다."),
+    CHARGE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "결제 카테고리를 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;

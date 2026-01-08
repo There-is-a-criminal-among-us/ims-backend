@@ -29,4 +29,22 @@ public class SettlementCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SettlementItem> items = new ArrayList<>();
+
+    public static SettlementCategory create(String name, int displayOrder, SettlementType type) {
+        SettlementCategory category = new SettlementCategory();
+        category.name = name;
+        category.displayOrder = displayOrder;
+        category.type = type;
+        return category;
+    }
+
+    public void update(String name, int displayOrder) {
+        this.name = name;
+        this.displayOrder = displayOrder;
+    }
+
+    public void updateItems(List<SettlementItem> items) {
+        this.items.clear();
+        this.items.addAll(items);
+    }
 }

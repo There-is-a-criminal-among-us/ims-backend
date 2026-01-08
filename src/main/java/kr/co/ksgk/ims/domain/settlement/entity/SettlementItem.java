@@ -24,7 +24,7 @@ public class SettlementItem {
     private Integer displayOrder;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
+    @JoinColumn(name = "type_id")
     private SettlementType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,4 +33,32 @@ public class SettlementItem {
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SettlementUnit> units = new ArrayList<>();
+
+    public static SettlementItem createForType(String name, int displayOrder, SettlementType type) {
+        SettlementItem item = new SettlementItem();
+        item.name = name;
+        item.displayOrder = displayOrder;
+        item.type = type;
+        item.category = null;
+        return item;
+    }
+
+    public static SettlementItem createForCategory(String name, int displayOrder, SettlementCategory category) {
+        SettlementItem item = new SettlementItem();
+        item.name = name;
+        item.displayOrder = displayOrder;
+        item.type = null;
+        item.category = category;
+        return item;
+    }
+
+    public void update(String name, int displayOrder) {
+        this.name = name;
+        this.displayOrder = displayOrder;
+    }
+
+    public void updateUnits(List<SettlementUnit> units) {
+        this.units.clear();
+        this.units.addAll(units);
+    }
 }

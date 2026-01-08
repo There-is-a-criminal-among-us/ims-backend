@@ -26,4 +26,19 @@ public class SettlementUnit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     private SettlementItem item;
+
+    public static SettlementUnit create(String name, int price, int displayOrder, SettlementItem item) {
+        SettlementUnit unit = new SettlementUnit();
+        unit.name = name;
+        unit.price = price;
+        unit.displayOrder = displayOrder;
+        unit.item = item;
+        return unit;
+    }
+
+    public void update(String name, int price, int displayOrder) {
+        this.name = name;
+        this.price = price;
+        this.displayOrder = displayOrder;
+    }
 }

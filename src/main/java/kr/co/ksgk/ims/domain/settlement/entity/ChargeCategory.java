@@ -19,4 +19,16 @@ public class ChargeCategory {
 
     @Column(nullable = false)
     private Integer displayOrder;
+
+    public static ChargeCategory create(String name, int displayOrder) {
+        ChargeCategory category = new ChargeCategory();
+        category.name = name;
+        category.displayOrder = displayOrder;
+        return category;
+    }
+
+    public void update(String name, int displayOrder) {
+        this.name = name;
+        this.displayOrder = displayOrder;
+    }
 }
