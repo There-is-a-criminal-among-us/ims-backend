@@ -5,13 +5,15 @@ import kr.co.ksgk.ims.domain.member.entity.Role;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementItem;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementItemRepository;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
+import kr.co.ksgk.ims.domain.stock.dto.request.TransactionWorkRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
-import kr.co.ksgk.ims.domain.stock.entity.Transaction;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionGroup;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
-import kr.co.ksgk.ims.domain.stock.entity.TransactionType;
+import kr.co.ksgk.ims.domain.stock.entity.*;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionTypeRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -38,6 +40,8 @@ public class TransactionService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final StockCacheInvalidator cacheInvalidator;
+    private final SettlementItemRepository settlementItemRepository;
+    private final SettlementUnitRepository settlementUnitRepository;
 
     public PagingTransactionResponse getAllTransactions(
             Long memberId, String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
@@ -104,10 +108,35 @@ public class TransactionService {
                 : TransactionStatus.PENDING;
         Transaction transaction = request.toEntity(product, transactionType, transactionStatus);
         Transaction savedTransaction = transactionRepository.save(transaction);
-        
+
+        // TransactionWork 생성
+        if (request.works() != null && !request.works().isEmpty()) {
+            List<TransactionWork> works = createTransactionWorks(savedTransaction, request.works());
+            savedTransaction.updateWorks(works);
+        }
+
         // 캐시 무효화: 새로운 Transaction 생성 시
         cacheInvalidator.invalidateCacheForProductIfToday(product.getId());
-        
+
         return TransactionResponse.from(savedTransaction);
+    }
+
+    private List<TransactionWork> createTransactionWorks(Transaction transaction, List<TransactionWorkRequest> workRequests) {
+        return workRequests.stream()
+                .map(workRequest -> {
+                    SettlementItem item = settlementItemRepository.findById(workRequest.settlementItemId())
+                            .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND));
+
+                    if (workRequest.settlementUnitId() != null) {
+                        // 작업종류 (Unit 있음 - 가격 자동계산)
+                        SettlementUnit unit = settlementUnitRepository.findById(workRequest.settlementUnitId())
+                                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_UNIT_NOT_FOUND));
+                        return TransactionWork.createWithUnit(transaction, item, unit, workRequest.quantity());
+                    } else {
+                        // 용차구분 (Unit 없음 - 비용 직접 입력)
+                        return TransactionWork.createWithoutUnit(transaction, item, workRequest.cost());
+                    }
+                })
+                .toList();
     }
 }
