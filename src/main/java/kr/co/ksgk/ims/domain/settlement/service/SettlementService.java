@@ -102,17 +102,18 @@ public class SettlementService {
 
         for (SettlementItemDto itemDto : itemDtos) {
             SettlementItem item;
+            CalculationType calcType = itemDto.calculationType() != null ? itemDto.calculationType() : CalculationType.MANUAL;
 
             if (itemDto.id() == null) {
                 // Create a new item
-                item = SettlementItem.createForCategory(itemDto.name(), itemDto.displayOrder(), category);
+                item = SettlementItem.createForCategory(itemDto.name(), itemDto.displayOrder(), calcType, category);
             } else {
                 // Update the existing item
                 item = category.getItems().stream()
                         .filter(i -> i.getId().equals(itemDto.id()))
                         .findFirst()
                         .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND));
-                item.update(itemDto.name(), itemDto.displayOrder());
+                item.update(itemDto.name(), itemDto.displayOrder(), calcType);
             }
 
             // Update units
@@ -128,17 +129,18 @@ public class SettlementService {
 
         for (SettlementItemDto itemDto : itemDtos) {
             SettlementItem item;
+            CalculationType calcType = itemDto.calculationType() != null ? itemDto.calculationType() : CalculationType.MANUAL;
 
             if (itemDto.id() == null) {
                 // Create a new item
-                item = SettlementItem.createForType(itemDto.name(), itemDto.displayOrder(), type);
+                item = SettlementItem.createForType(itemDto.name(), itemDto.displayOrder(), calcType, type);
             } else {
                 // Update existing item
                 item = type.getDirectItems().stream()
                         .filter(i -> i.getId().equals(itemDto.id()))
                         .findFirst()
                         .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND));
-                item.update(itemDto.name(), itemDto.displayOrder());
+                item.update(itemDto.name(), itemDto.displayOrder(), calcType);
             }
 
             // Update units

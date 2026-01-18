@@ -1,0 +1,6 @@
+package kr.co.ksgk.ims.domain.settlement.entity;
+
+public enum CalculationType {
+    MANUAL,     // 수동 입력 (입출고 시 건수/비용)
+    STORAGE     // 보관료 (일별 재고 기반 자동 계산)
+}

@@ -84,6 +84,15 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         if (request.name() != null) product.updateName(request.name());
         if (request.note() != null) product.updateNote(request.note());
+        if (request.storageType() != null) {
+            product.updateStorageSettings(
+                    request.storageType(),
+                    request.cbm(),
+                    request.storagePricePerCbm(),
+                    request.quantityPerPallet(),
+                    request.storagePricePerPallet()
+            );
+        }
         return ProductResponse.from(product);
     }
 

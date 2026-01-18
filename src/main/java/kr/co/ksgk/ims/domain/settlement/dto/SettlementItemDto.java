@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.settlement.dto;
 
+import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
 import kr.co.ksgk.ims.domain.settlement.entity.SettlementItem;
 import lombok.Builder;
 
@@ -11,6 +12,7 @@ public record SettlementItemDto(
         Long id,
         String name,
         int displayOrder,
+        CalculationType calculationType,
         List<SettlementUnitDto> units
 ) {
     public static SettlementItemDto from(SettlementItem item) {
@@ -18,6 +20,7 @@ public record SettlementItemDto(
                 .id(item.getId())
                 .name(item.getName())
                 .displayOrder(item.getDisplayOrder())
+                .calculationType(item.getCalculationType())
                 .units(item.getUnits().stream()
                         .map(SettlementUnitDto::from)
                         .collect(Collectors.toList())

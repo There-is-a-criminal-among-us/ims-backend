@@ -23,6 +23,10 @@ public class SettlementItem {
     @Column(nullable = false)
     private Integer displayOrder;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CalculationType calculationType = CalculationType.MANUAL;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id")
     private SettlementType type;
@@ -34,27 +38,30 @@ public class SettlementItem {
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SettlementUnit> units = new ArrayList<>();
 
-    public static SettlementItem createForType(String name, int displayOrder, SettlementType type) {
+    public static SettlementItem createForType(String name, int displayOrder, CalculationType calculationType, SettlementType type) {
         SettlementItem item = new SettlementItem();
         item.name = name;
         item.displayOrder = displayOrder;
+        item.calculationType = calculationType;
         item.type = type;
         item.category = null;
         return item;
     }
 
-    public static SettlementItem createForCategory(String name, int displayOrder, SettlementCategory category) {
+    public static SettlementItem createForCategory(String name, int displayOrder, CalculationType calculationType, SettlementCategory category) {
         SettlementItem item = new SettlementItem();
         item.name = name;
         item.displayOrder = displayOrder;
+        item.calculationType = calculationType;
         item.type = null;
         item.category = category;
         return item;
     }
 
-    public void update(String name, int displayOrder) {
+    public void update(String name, int displayOrder, CalculationType calculationType) {
         this.name = name;
         this.displayOrder = displayOrder;
+        this.calculationType = calculationType;
     }
 
     public void updateUnits(List<SettlementUnit> units) {

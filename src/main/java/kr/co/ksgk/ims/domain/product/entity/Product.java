@@ -10,6 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,21 @@ public class Product extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    // 보관료 설정
+    @Enumerated(EnumType.STRING)
+    private StorageType storageType;
+
+    @Column(precision = 10, scale = 4)
+    private BigDecimal cbm;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal storagePricePerCbm;
+
+    private Integer quantityPerPallet;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal storagePricePerPallet;
+
     @Builder
     public Product(Brand brand, String name, String note) {
         this.brand = brand;
@@ -60,5 +76,14 @@ public class Product extends BaseEntity {
 
     public void updateNote(String note) {
         this.note = note;
+    }
+
+    public void updateStorageSettings(StorageType storageType, BigDecimal cbm, BigDecimal storagePricePerCbm,
+                                       Integer quantityPerPallet, BigDecimal storagePricePerPallet) {
+        this.storageType = storageType;
+        this.cbm = cbm;
+        this.storagePricePerCbm = storagePricePerCbm;
+        this.quantityPerPallet = quantityPerPallet;
+        this.storagePricePerPallet = storagePricePerPallet;
     }
 }
