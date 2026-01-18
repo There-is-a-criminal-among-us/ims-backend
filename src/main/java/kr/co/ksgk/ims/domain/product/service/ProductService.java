@@ -59,6 +59,11 @@ public class ProductService {
             product.updateSizeUnit(sizeUnit);
         }
 
+        if (request.returnSizeUnitId() != null) {
+            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
+            product.updateReturnSizeUnit(returnSizeUnit);
+        }
+
         Product saved = productRepository.save(product);
         return ProductResponse.from(saved);
     }
@@ -108,6 +113,10 @@ public class ProductService {
             SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
             product.updateSizeUnit(sizeUnit);
         }
+        if (request.returnSizeUnitId() != null) {
+            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
+            product.updateReturnSizeUnit(returnSizeUnit);
+        }
         if (request.coupangCode() != null) {
             product.updateCoupangCode(request.coupangCode());
         }
@@ -120,6 +129,17 @@ public class ProductService {
 
         if (unit.getItem().getCalculationType() != CalculationType.SIZE) {
             throw new BusinessException(ErrorCode.INVALID_SIZE_UNIT);
+        }
+
+        return unit;
+    }
+
+    private SettlementUnit getValidatedReturnSizeUnit(Long returnSizeUnitId) {
+        SettlementUnit unit = settlementUnitRepository.findById(returnSizeUnitId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_UNIT_NOT_FOUND));
+
+        if (unit.getItem().getCalculationType() != CalculationType.RETURN_SIZE) {
+            throw new BusinessException(ErrorCode.INVALID_RETURN_SIZE_UNIT);
         }
 
         return unit;

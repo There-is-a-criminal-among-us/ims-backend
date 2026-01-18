@@ -55,10 +55,15 @@ public class Product extends BaseEntity {
     @Column(precision = 10, scale = 2)
     private BigDecimal storagePricePerPallet;
 
-    // 사이즈 설정 (택배비용 등)
+    // 사이즈 설정 (출고 택배비용)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "size_unit_id")
     private SettlementUnit sizeUnit;
+
+    // 반품 사이즈 설정 (반품 택배비용)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "return_size_unit_id")
+    private SettlementUnit returnSizeUnit;
 
     // 쿠팡코드 (택배표 매칭용)
     private String coupangCode;
@@ -102,5 +107,9 @@ public class Product extends BaseEntity {
 
     public void updateCoupangCode(String coupangCode) {
         this.coupangCode = coupangCode;
+    }
+
+    public void updateReturnSizeUnit(SettlementUnit returnSizeUnit) {
+        this.returnSizeUnit = returnSizeUnit;
     }
 }

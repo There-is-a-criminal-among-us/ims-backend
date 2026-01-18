@@ -16,6 +16,7 @@ public record ProductCreateRequest(
         Integer quantityPerPallet,
         BigDecimal storagePricePerPallet,
         Long sizeUnitId,
+        Long returnSizeUnitId,
         String coupangCode
 ) {
     public Product toEntity(Brand brand) {

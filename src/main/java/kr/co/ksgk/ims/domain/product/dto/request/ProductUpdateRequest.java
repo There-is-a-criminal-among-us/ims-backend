@@ -13,6 +13,7 @@ public record ProductUpdateRequest(
         Integer quantityPerPallet,
         BigDecimal storagePricePerPallet,
         Long sizeUnitId,
+        Long returnSizeUnitId,
         String coupangCode
 ) {
 }
