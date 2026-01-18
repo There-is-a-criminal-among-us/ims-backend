@@ -82,6 +82,10 @@ public enum ErrorCode {
     CHARGE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "결제 카테고리를 찾을 수 없습니다."),
     INVALID_SIZE_UNIT(HttpStatus.BAD_REQUEST, "S006", "SIZE 타입의 Unit만 선택 가능합니다."),
     INVALID_RETURN_SIZE_UNIT(HttpStatus.BAD_REQUEST, "S007", "RETURN_SIZE 타입의 Unit만 선택 가능합니다."),
+    SETTLEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "S008", "정산서를 찾을 수 없습니다."),
+    SETTLEMENT_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "S009", "정산서 상세를 찾을 수 없습니다."),
+    SETTLEMENT_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "S010", "이미 확정된 정산서는 수정할 수 없습니다."),
+    DELIVERY_SHEET_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "S011", "택배표 업로드에 실패했습니다."),
     ;
 
     private final HttpStatus httpStatus;
