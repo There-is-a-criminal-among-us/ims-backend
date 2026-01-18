@@ -14,7 +14,8 @@ public record ProductCreateRequest(
         BigDecimal cbm,
         BigDecimal storagePricePerCbm,
         Integer quantityPerPallet,
-        BigDecimal storagePricePerPallet
+        BigDecimal storagePricePerPallet,
+        Long sizeUnitId
 ) {
     public Product toEntity(Brand brand) {
         Product product = Product.builder()

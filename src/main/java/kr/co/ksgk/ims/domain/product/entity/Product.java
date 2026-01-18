@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -54,6 +55,11 @@ public class Product extends BaseEntity {
     @Column(precision = 10, scale = 2)
     private BigDecimal storagePricePerPallet;
 
+    // 사이즈 설정 (택배비용 등)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "size_unit_id")
+    private SettlementUnit sizeUnit;
+
     @Builder
     public Product(Brand brand, String name, String note) {
         this.brand = brand;
@@ -85,5 +91,9 @@ public class Product extends BaseEntity {
         this.storagePricePerCbm = storagePricePerCbm;
         this.quantityPerPallet = quantityPerPallet;
         this.storagePricePerPallet = storagePricePerPallet;
+    }
+
+    public void updateSizeUnit(SettlementUnit sizeUnit) {
+        this.sizeUnit = sizeUnit;
     }
 }

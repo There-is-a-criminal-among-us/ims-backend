@@ -80,6 +80,7 @@ public enum ErrorCode {
     SETTLEMENT_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "S003", "정산 항목을 찾을 수 없습니다."),
     SETTLEMENT_UNIT_NOT_FOUND(HttpStatus.NOT_FOUND, "S004", "정산 단위를 찾을 수 없습니다."),
     CHARGE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "결제 카테고리를 찾을 수 없습니다."),
+    INVALID_SIZE_UNIT(HttpStatus.BAD_REQUEST, "S006", "SIZE 타입의 Unit만 선택 가능합니다."),
     ;
 
     private final HttpStatus httpStatus;

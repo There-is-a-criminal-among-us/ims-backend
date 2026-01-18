@@ -14,9 +14,13 @@ import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
 import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,6 +45,7 @@ public class ProductService {
     private final ProductMappingRepository productMappingRepository;
     private final StockRepository stockRepository;
     private final InvoiceProductRepository invoiceProductRepository;
+    private final SettlementUnitRepository settlementUnitRepository;
 
     //등록
     @Transactional
@@ -48,6 +53,12 @@ public class ProductService {
         Brand brand = brandRepository.findById(request.brandId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         Product product = request.toEntity(brand);
+
+        if (request.sizeUnitId() != null) {
+            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
+            product.updateSizeUnit(sizeUnit);
+        }
+
         Product saved = productRepository.save(product);
         return ProductResponse.from(saved);
     }
@@ -93,7 +104,22 @@ public class ProductService {
                     request.storagePricePerPallet()
             );
         }
+        if (request.sizeUnitId() != null) {
+            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
+            product.updateSizeUnit(sizeUnit);
+        }
         return ProductResponse.from(product);
+    }
+
+    private SettlementUnit getValidatedSizeUnit(Long sizeUnitId) {
+        SettlementUnit unit = settlementUnitRepository.findById(sizeUnitId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_UNIT_NOT_FOUND));
+
+        if (unit.getItem().getCalculationType() != CalculationType.SIZE) {
+            throw new BusinessException(ErrorCode.INVALID_SIZE_UNIT);
+        }
+
+        return unit;
     }
 
     @Transactional

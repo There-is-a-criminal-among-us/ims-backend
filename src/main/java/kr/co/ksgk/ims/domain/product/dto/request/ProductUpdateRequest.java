@@ -11,6 +11,7 @@ public record ProductUpdateRequest(
         BigDecimal cbm,
         BigDecimal storagePricePerCbm,
         Integer quantityPerPallet,
-        BigDecimal storagePricePerPallet
+        BigDecimal storagePricePerPallet,
+        Long sizeUnitId
 ) {
 }
