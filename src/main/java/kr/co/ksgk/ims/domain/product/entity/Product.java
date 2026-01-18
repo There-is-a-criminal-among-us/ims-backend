@@ -60,6 +60,9 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "size_unit_id")
     private SettlementUnit sizeUnit;
 
+    // 쿠팡코드 (택배표 매칭용)
+    private String coupangCode;
+
     @Builder
     public Product(Brand brand, String name, String note) {
         this.brand = brand;
@@ -95,5 +98,9 @@ public class Product extends BaseEntity {
 
     public void updateSizeUnit(SettlementUnit sizeUnit) {
         this.sizeUnit = sizeUnit;
+    }
+
+    public void updateCoupangCode(String coupangCode) {
+        this.coupangCode = coupangCode;
     }
 }

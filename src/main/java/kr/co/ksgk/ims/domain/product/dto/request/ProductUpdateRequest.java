@@ -12,6 +12,7 @@ public record ProductUpdateRequest(
         BigDecimal storagePricePerCbm,
         Integer quantityPerPallet,
         BigDecimal storagePricePerPallet,
-        Long sizeUnitId
+        Long sizeUnitId,
+        String coupangCode
 ) {
 }

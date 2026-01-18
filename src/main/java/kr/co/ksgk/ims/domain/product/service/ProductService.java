@@ -108,6 +108,9 @@ public class ProductService {
             SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
             product.updateSizeUnit(sizeUnit);
         }
+        if (request.coupangCode() != null) {
+            product.updateCoupangCode(request.coupangCode());
+        }
         return ProductResponse.from(product);
     }
 

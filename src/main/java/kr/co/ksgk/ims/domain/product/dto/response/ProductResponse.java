@@ -19,7 +19,8 @@ public record ProductResponse(
         Integer quantityPerPallet,
         BigDecimal storagePricePerPallet,
         Long sizeUnitId,
-        String sizeUnitName
+        String sizeUnitName,
+        String coupangCode
 ) {
     public static ProductResponse from(Product product) {
         return ProductResponse.builder()
@@ -34,6 +35,7 @@ public record ProductResponse(
                 .storagePricePerPallet(product.getStoragePricePerPallet())
                 .sizeUnitId(product.getSizeUnit() != null ? product.getSizeUnit().getId() : null)
                 .sizeUnitName(product.getSizeUnit() != null ? product.getSizeUnit().getName() : null)
+                .coupangCode(product.getCoupangCode())
                 .build();
     }
 }
