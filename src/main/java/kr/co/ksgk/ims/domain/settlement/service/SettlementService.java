@@ -47,8 +47,8 @@ public class SettlementService {
                 type = SettlementType.create(typeDto.name(), typeDto.displayOrder());
                 settlementTypeRepository.save(type);
             } else {
-                // Update the existing type
-                type = settlementTypeRepository.findById(typeDto.id())
+                // Update the existing type (fetch all nested entities)
+                type = settlementTypeRepository.findByIdWithAll(typeDto.id())
                         .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_TYPE_NOT_FOUND));
                 type.update(typeDto.name(), typeDto.displayOrder());
             }
