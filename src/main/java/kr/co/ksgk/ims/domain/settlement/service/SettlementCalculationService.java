@@ -15,7 +15,6 @@ import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionWorkRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,8 +55,8 @@ public class SettlementCalculationService {
             Brand brand = entry.getKey();
             List<Product> products = entry.getValue();
 
-            // 기존 정산서 조회 또는 생성
-            Settlement settlement = settlementRepository.findByYearAndMonthAndBrand(year, month, brand)
+            // 기존 정산서 조회 또는 생성 (details fetch join으로 clearDetails 가능하도록)
+            Settlement settlement = settlementRepository.findByYearAndMonthAndBrandWithDetails(year, month, brand)
                     .orElseGet(() -> settlementRepository.save(Settlement.create(year, month, brand)));
 
             // CONFIRMED 상태면 DRAFT로 되돌리기

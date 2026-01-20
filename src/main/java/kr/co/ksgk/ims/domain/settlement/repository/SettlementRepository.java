@@ -15,6 +15,11 @@ public interface SettlementRepository extends JpaRepository<Settlement, Long> {
 
     Optional<Settlement> findByYearAndMonthAndBrand(Integer year, Integer month, Brand brand);
 
+    @Query("SELECT s FROM Settlement s LEFT JOIN FETCH s.details WHERE s.year = :year AND s.month = :month AND s.brand = :brand")
+    Optional<Settlement> findByYearAndMonthAndBrandWithDetails(@Param("year") Integer year,
+                                                                @Param("month") Integer month,
+                                                                @Param("brand") Brand brand);
+
     @EntityGraph(attributePaths = {"brand", "brand.company"})
     List<Settlement> findByYearAndMonth(Integer year, Integer month);
 
