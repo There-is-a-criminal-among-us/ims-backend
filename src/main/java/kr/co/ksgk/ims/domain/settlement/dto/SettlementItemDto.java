@@ -2,10 +2,11 @@ package kr.co.ksgk.ims.domain.settlement.dto;
 
 import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
 import kr.co.ksgk.ims.domain.settlement.entity.SettlementItem;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
 import lombok.Builder;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Builder
 public record SettlementItemDto(
@@ -22,8 +23,9 @@ public record SettlementItemDto(
                 .displayOrder(item.getDisplayOrder())
                 .calculationType(item.getCalculationType())
                 .units(item.getUnits().stream()
+                        .sorted(Comparator.comparing(SettlementUnit::getDisplayOrder))
                         .map(SettlementUnitDto::from)
-                        .collect(Collectors.toList())
+                        .toList()
                 )
                 .build();
     }

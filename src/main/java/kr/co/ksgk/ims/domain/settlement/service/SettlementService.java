@@ -11,9 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +86,7 @@ public class SettlementService {
     }
 
     private void updateCategories(SettlementType type, List<SettlementCategoryDto> categoryDtos) {
-        List<SettlementCategory> categories = new ArrayList<>();
+        Set<SettlementCategory> categories = new HashSet<>();
 
         for (SettlementCategoryDto categoryDto : categoryDtos) {
             SettlementCategory category;
@@ -111,7 +112,7 @@ public class SettlementService {
     }
 
     private void updateCategoryItems(SettlementCategory category, List<SettlementItemDto> itemDtos) {
-        List<SettlementItem> items = new ArrayList<>();
+        Set<SettlementItem> items = new HashSet<>();
 
         for (SettlementItemDto itemDto : itemDtos) {
             SettlementItem item;
@@ -138,7 +139,7 @@ public class SettlementService {
     }
 
     private void updateDirectItems(SettlementType type, List<SettlementItemDto> itemDtos) {
-        List<SettlementItem> items = new ArrayList<>();
+        Set<SettlementItem> items = new HashSet<>();
 
         for (SettlementItemDto itemDto : itemDtos) {
             SettlementItem item;
@@ -165,7 +166,7 @@ public class SettlementService {
     }
 
     private void updateUnits(SettlementItem item, List<SettlementUnitDto> unitDtos) {
-        List<SettlementUnit> units = new ArrayList<>();
+        Set<SettlementUnit> units = new HashSet<>();
 
         for (SettlementUnitDto unitDto : unitDtos) {
             SettlementUnit unit;

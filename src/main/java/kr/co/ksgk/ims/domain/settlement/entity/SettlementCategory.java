@@ -5,8 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -28,7 +28,7 @@ public class SettlementCategory {
     private SettlementType type;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SettlementItem> items = new ArrayList<>();
+    private Set<SettlementItem> items = new HashSet<>();
 
     public static SettlementCategory create(String name, int displayOrder, SettlementType type) {
         SettlementCategory category = new SettlementCategory();
@@ -43,7 +43,7 @@ public class SettlementCategory {
         this.displayOrder = displayOrder;
     }
 
-    public void updateItems(List<SettlementItem> items) {
+    public void updateItems(Set<SettlementItem> items) {
         this.items.clear();
         this.items.addAll(items);
     }
