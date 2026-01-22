@@ -10,6 +10,7 @@ import kr.co.ksgk.ims.domain.member.entity.Member;
 import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.settlement.dto.*;
 import kr.co.ksgk.ims.domain.settlement.dto.request.SettlementDetailUpdateRequest;
+import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
 import kr.co.ksgk.ims.domain.settlement.service.DeliverySheetService;
 import kr.co.ksgk.ims.domain.settlement.service.SettlementManagementService;
 import kr.co.ksgk.ims.domain.settlement.service.SettlementService;
@@ -42,6 +43,15 @@ public class SettlementController {
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementStructureDto.class)))
     public ResponseEntity<SuccessResponse<?>> getSettlementStructure() {
         SettlementStructureDto response = settlementService.getSettlementStructure();
+        return SuccessResponse.ok(response);
+    }
+
+    @GetMapping("/units")
+    @Operation(summary = "정산 단위 목록 조회", description = "CalculationType에 따른 정산 단위 목록 조회 (미지정 시 전체 조회)")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementUnitResponse.class)))
+    public ResponseEntity<SuccessResponse<?>> getUnits(
+            @RequestParam(required = false) CalculationType calculationType) {
+        List<SettlementUnitResponse> response = settlementService.getUnitsByCalculationType(calculationType);
         return SuccessResponse.ok(response);
     }
 

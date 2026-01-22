@@ -4,6 +4,7 @@ import kr.co.ksgk.ims.domain.settlement.dto.*;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.ChargeCategoryRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementTypeRepository;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,23 @@ public class SettlementService {
 
     private final SettlementTypeRepository settlementTypeRepository;
     private final ChargeCategoryRepository chargeCategoryRepository;
+    private final SettlementUnitRepository settlementUnitRepository;
 
     public SettlementStructureDto getSettlementStructure() {
         List<SettlementType> types = settlementTypeRepository.findAll();
         List<ChargeCategory> chargeCategories = chargeCategoryRepository.findAll();
         return SettlementStructureDto.from(types, chargeCategories);
+    }
+
+    public List<SettlementUnitResponse> getUnitsByCalculationType(CalculationType calculationType) {
+        if (calculationType == null) {
+            return settlementUnitRepository.findAllWithItem().stream()
+                    .map(SettlementUnitResponse::from)
+                    .toList();
+        }
+        return settlementUnitRepository.findByCalculationType(calculationType).stream()
+                .map(SettlementUnitResponse::from)
+                .toList();
     }
 
     @Transactional
