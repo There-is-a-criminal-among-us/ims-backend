@@ -47,6 +47,9 @@ public class Transaction extends BaseEntity {
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionWork> works = new ArrayList<>();
 
+    @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StockLot stockLot;
+
     @Builder
     public Transaction(Product product, TransactionType transactionType, Integer quantity, LocalDate scheduledDate, String note, TransactionStatus transactionStatus, LocalDate workDate) {
         this.product = product;
@@ -72,5 +75,9 @@ public class Transaction extends BaseEntity {
             throw new BusinessException(ErrorCode.TRANSACTION_NOT_PENDING);
         }
         this.transactionStatus = TransactionStatus.CONFIRMED;
+    }
+
+    public void updateStockLot(StockLot stockLot) {
+        this.stockLot = stockLot;
     }
 }

@@ -86,6 +86,14 @@ public enum ErrorCode {
     SETTLEMENT_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "S009", "정산서 상세를 찾을 수 없습니다."),
     SETTLEMENT_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "S010", "이미 확정된 정산서는 수정할 수 없습니다."),
     DELIVERY_SHEET_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "S011", "택배표 업로드에 실패했습니다."),
+
+    // Stock Lot
+    STOCK_LOT_NOT_FOUND(HttpStatus.NOT_FOUND, "SL001", "재고 로트를 찾을 수 없습니다."),
+    INSUFFICIENT_LOT_QUANTITY(HttpStatus.BAD_REQUEST, "SL002", "로트 잔여 수량이 부족합니다."),
+
+    // Storage Free Period
+    STORAGE_FREE_PERIOD_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "SF001", "보관료 무료 기간 설정을 찾을 수 없습니다."),
+    DUPLICATE_STORAGE_FREE_PERIOD_CONFIG(HttpStatus.CONFLICT, "SF002", "이미 동일한 업체/상품 조합의 설정이 존재합니다."),
     ;
 
     private final HttpStatus httpStatus;

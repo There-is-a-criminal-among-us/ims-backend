@@ -10,7 +10,9 @@ import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.*;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
+import kr.co.ksgk.ims.domain.stock.entity.DailyStockLot;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionWork;
+import kr.co.ksgk.ims.domain.stock.repository.DailyStockLotRepository;
 import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionWorkRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,8 @@ public class SettlementCalculationService {
     private final ProductRepository productRepository;
     private final StockRepository stockRepository;
     private final TransactionWorkRepository transactionWorkRepository;
+    private final DailyStockLotRepository dailyStockLotRepository;
+    private final StorageFreePeriodService storageFreePeriodService;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -127,54 +131,122 @@ public class SettlementCalculationService {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = YearMonth.of(year, month).atEndOfMonth();
 
-        // 일별 재고 조회
-        List<DailyStock> dailyStocks = stockRepository.findAllByProductsAndDateBetween(
-                List.of(product), startDate, endDate);
-
-        if (dailyStocks.isEmpty()) {
-            return null;
-        }
-
         StorageType storageType = product.getStorageType();
         if (storageType == null) {
             return null;
         }
 
+        // 무료 기간 조회
+        int freePeriodDays = storageFreePeriodService.getFreePeriodDays(product, startDate);
+        log.debug("보관료 계산 - Product: {}, FreePeriodDays: {}", product.getId(), freePeriodDays);
+
+        // DailyStockLot 기반 계산 시도
+        List<DailyStockLot> dailyStockLots = dailyStockLotRepository.findByProductAndDateBetween(
+                product, startDate, endDate);
+
         int totalAmount = 0;
-        int totalDays = dailyStocks.size();
+        int totalDays = 0;
 
-        if (storageType == StorageType.CBM) {
-            // CBM: Σ(일별 재고수) × cbm × storagePricePerCbm
-            if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
+        if (!dailyStockLots.isEmpty()) {
+            // DailyStockLot 기반 계산 (무료 기간 적용)
+            totalDays = (int) dailyStockLots.stream()
+                    .map(DailyStockLot::getStockDate)
+                    .distinct()
+                    .count();
+
+            if (storageType == StorageType.CBM) {
+                if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
+                    return null;
+                }
+
+                // 무료 기간 초과 로트만 합산
+                int billableStock = dailyStockLots.stream()
+                        .filter(dsl -> !dsl.isWithinFreePeriod(freePeriodDays))
+                        .mapToInt(DailyStockLot::getQuantity)
+                        .sum();
+
+                BigDecimal cbm = product.getCbm();
+                BigDecimal pricePerCbm = product.getStoragePricePerCbm();
+
+                totalAmount = BigDecimal.valueOf(billableStock)
+                        .multiply(cbm)
+                        .multiply(pricePerCbm)
+                        .setScale(0, RoundingMode.HALF_UP)
+                        .intValue();
+
+                log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
+                        product.getId(), dailyStockLots.size(), billableStock, totalAmount);
+
+            } else if (storageType == StorageType.PALLET) {
+                if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
+                    return null;
+                }
+
+                int quantityPerPallet = product.getQuantityPerPallet();
+                BigDecimal pricePerPallet = product.getStoragePricePerPallet();
+
+                // 일별로 그룹핑하여 과금 대상 수량 계산 후 팔렛 수 산출
+                Map<LocalDate, Integer> dailyBillableQuantities = dailyStockLots.stream()
+                        .filter(dsl -> !dsl.isWithinFreePeriod(freePeriodDays))
+                        .collect(Collectors.groupingBy(
+                                DailyStockLot::getStockDate,
+                                Collectors.summingInt(DailyStockLot::getQuantity)
+                        ));
+
+                int totalPallets = dailyBillableQuantities.values().stream()
+                        .mapToInt(qty -> (int) Math.ceil((double) qty / quantityPerPallet))
+                        .sum();
+
+                totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
+                        .setScale(0, RoundingMode.HALF_UP)
+                        .intValue();
+
+                log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
+                        product.getId(), totalPallets, totalAmount);
+            }
+        } else {
+            // DailyStockLot 데이터가 없으면 기존 DailyStock 방식으로 폴백 (무료 기간 미적용)
+            List<DailyStock> dailyStocks = stockRepository.findAllByProductsAndDateBetween(
+                    List.of(product), startDate, endDate);
+
+            if (dailyStocks.isEmpty()) {
                 return null;
             }
 
-            int totalStock = dailyStocks.stream().mapToInt(DailyStock::getCurrentStock).sum();
-            BigDecimal cbm = product.getCbm();
-            BigDecimal pricePerCbm = product.getStoragePricePerCbm();
+            totalDays = dailyStocks.size();
+            log.debug("DailyStockLot 없음, DailyStock 폴백 - Product: {}, Days: {}", product.getId(), totalDays);
 
-            totalAmount = BigDecimal.valueOf(totalStock)
-                    .multiply(cbm)
-                    .multiply(pricePerCbm)
-                    .setScale(0, RoundingMode.HALF_UP)
-                    .intValue();
+            if (storageType == StorageType.CBM) {
+                if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
+                    return null;
+                }
 
-        } else if (storageType == StorageType.PALLET) {
-            // PALLET: Σ(ceil(일별 재고수 / quantityPerPallet)) × storagePricePerPallet
-            if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
-                return null;
+                int totalStock = dailyStocks.stream().mapToInt(DailyStock::getCurrentStock).sum();
+                BigDecimal cbm = product.getCbm();
+                BigDecimal pricePerCbm = product.getStoragePricePerCbm();
+
+                totalAmount = BigDecimal.valueOf(totalStock)
+                        .multiply(cbm)
+                        .multiply(pricePerCbm)
+                        .setScale(0, RoundingMode.HALF_UP)
+                        .intValue();
+
+            } else if (storageType == StorageType.PALLET) {
+                if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
+                    return null;
+                }
+
+                int quantityPerPallet = product.getQuantityPerPallet();
+                BigDecimal pricePerPallet = product.getStoragePricePerPallet();
+
+                int totalPallets = dailyStocks.stream()
+                        .mapToInt(ds -> (int) Math.ceil((double) ds.getCurrentStock() / quantityPerPallet))
+                        .sum();
+
+                totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
+                        .setScale(0, RoundingMode.HALF_UP)
+                        .intValue();
             }
-
-            int quantityPerPallet = product.getQuantityPerPallet();
-            BigDecimal pricePerPallet = product.getStoragePricePerPallet();
-
-            int totalPallets = dailyStocks.stream()
-                    .mapToInt(ds -> (int) Math.ceil((double) ds.getCurrentStock() / quantityPerPallet))
-                    .sum();
-
-            totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                    .setScale(0, RoundingMode.HALF_UP)
-                    .intValue();
         }
 
         if (totalAmount == 0) {

@@ -42,6 +42,7 @@ public class TransactionService {
     private final StockCacheInvalidator cacheInvalidator;
     private final SettlementItemRepository settlementItemRepository;
     private final SettlementUnitRepository settlementUnitRepository;
+    private final StockLotService stockLotService;
 
     public PagingTransactionResponse getAllTransactions(
             Long memberId, String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
@@ -86,9 +87,34 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_NOT_FOUND));
         transaction.confirm();
-        
+
+        // 입고 확정 시 StockLot 생성
+        handleStockLotOnConfirm(transaction);
+
         // 캐시 무효화: Transaction 상태 변경 시
         cacheInvalidator.invalidateCacheForProductIfToday(transaction.getProduct().getId());
+    }
+
+    /**
+     * 트랜잭션 확정 시 StockLot 처리
+     */
+    private void handleStockLotOnConfirm(Transaction transaction) {
+        TransactionGroup groupType = transaction.getTransactionType().getGroupType();
+        LocalDate workDate = transaction.getWorkDate() != null ? transaction.getWorkDate() : LocalDate.now();
+
+        if (groupType == TransactionGroup.INCOMING) {
+            // 입고 확정 시 StockLot 생성
+            StockLot stockLot = stockLotService.createLot(
+                    transaction.getProduct(),
+                    transaction,
+                    workDate,
+                    transaction.getQuantity()
+            );
+            transaction.updateStockLot(stockLot);
+        } else if (groupType == TransactionGroup.OUTGOING) {
+            // 출고 확정 시 FIFO 차감
+            stockLotService.deductFifo(transaction.getProduct(), transaction.getQuantity());
+        }
     }
 
     @Transactional
