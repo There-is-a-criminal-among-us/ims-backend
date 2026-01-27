@@ -86,6 +86,11 @@ public class SettlementService {
     }
 
     private void updateCategories(SettlementType type, List<SettlementCategoryDto> categoryDtos) {
+        if (categoryDtos == null || categoryDtos.isEmpty()) {
+            type.updateCategories(new HashSet<>());
+            return;
+        }
+
         Set<SettlementCategory> categories = new HashSet<>();
 
         for (SettlementCategoryDto categoryDto : categoryDtos) {
@@ -112,6 +117,11 @@ public class SettlementService {
     }
 
     private void updateCategoryItems(SettlementCategory category, List<SettlementItemDto> itemDtos) {
+        if (itemDtos == null || itemDtos.isEmpty()) {
+            category.updateItems(new HashSet<>());
+            return;
+        }
+
         Set<SettlementItem> items = new HashSet<>();
 
         for (SettlementItemDto itemDto : itemDtos) {
@@ -139,6 +149,11 @@ public class SettlementService {
     }
 
     private void updateDirectItems(SettlementType type, List<SettlementItemDto> itemDtos) {
+        if (itemDtos == null || itemDtos.isEmpty()) {
+            type.updateDirectItems(new HashSet<>());
+            return;
+        }
+
         Set<SettlementItem> items = new HashSet<>();
 
         for (SettlementItemDto itemDto : itemDtos) {
@@ -166,6 +181,11 @@ public class SettlementService {
     }
 
     private void updateUnits(SettlementItem item, List<SettlementUnitDto> unitDtos) {
+        if (unitDtos == null || unitDtos.isEmpty()) {
+            item.updateUnits(new HashSet<>());
+            return;
+        }
+
         Set<SettlementUnit> units = new HashSet<>();
 
         for (SettlementUnitDto unitDto : unitDtos) {
