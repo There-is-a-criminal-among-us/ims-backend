@@ -3,6 +3,7 @@ package kr.co.ksgk.ims.domain.settlement.service;
 import kr.co.ksgk.ims.domain.settlement.dto.*;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.ChargeCategoryRepository;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementItemRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementTypeRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -24,6 +25,7 @@ public class SettlementService {
     private final SettlementTypeRepository settlementTypeRepository;
     private final ChargeCategoryRepository chargeCategoryRepository;
     private final SettlementUnitRepository settlementUnitRepository;
+    private final SettlementItemRepository settlementItemRepository;
 
     public SettlementStructureDto getSettlementStructure() {
         List<SettlementType> types = settlementTypeRepository.findAll();
@@ -132,11 +134,14 @@ public class SettlementService {
                 // Create a new item
                 item = SettlementItem.createForCategory(itemDto.name(), itemDto.displayOrder(), calcType, category);
             } else {
-                // Update the existing item
+                // Find existing item - first try in category, then in repository (for moving items)
                 item = category.getItems().stream()
                         .filter(i -> i.getId().equals(itemDto.id()))
                         .findFirst()
-                        .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND));
+                        .orElseGet(() -> settlementItemRepository.findById(itemDto.id())
+                                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND)));
+                // Move item to this category (handles case where item was in type.directItems or another category)
+                item.moveToCategory(category);
                 item.update(itemDto.name(), itemDto.displayOrder(), calcType);
             }
 
@@ -164,11 +169,14 @@ public class SettlementService {
                 // Create a new item
                 item = SettlementItem.createForType(itemDto.name(), itemDto.displayOrder(), calcType, type);
             } else {
-                // Update existing item
+                // Find existing item - first try in type.directItems, then in repository (for moving items)
                 item = type.getDirectItems().stream()
                         .filter(i -> i.getId().equals(itemDto.id()))
                         .findFirst()
-                        .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND));
+                        .orElseGet(() -> settlementItemRepository.findById(itemDto.id())
+                                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_ITEM_NOT_FOUND)));
+                // Move item to this type (handles case where item was in a category)
+                item.moveToType(type);
                 item.update(itemDto.name(), itemDto.displayOrder(), calcType);
             }
 

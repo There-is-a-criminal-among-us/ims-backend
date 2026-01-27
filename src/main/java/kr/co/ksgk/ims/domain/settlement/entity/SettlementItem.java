@@ -68,4 +68,20 @@ public class SettlementItem {
         this.units.clear();
         this.units.addAll(units);
     }
+
+    /**
+     * 아이템을 카테고리로 이동 (type 연결 해제)
+     */
+    public void moveToCategory(SettlementCategory category) {
+        this.type = null;
+        this.category = category;
+    }
+
+    /**
+     * 아이템을 타입에 직접 연결 (category 연결 해제)
+     */
+    public void moveToType(SettlementType type) {
+        this.category = null;
+        this.type = type;
+    }
 }
