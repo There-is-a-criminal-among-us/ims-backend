@@ -9,6 +9,7 @@ import kr.co.ksgk.ims.domain.company.dto.response.PagingCompanyResponse;
 import kr.co.ksgk.ims.domain.member.entity.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
@@ -86,6 +87,13 @@ public class CompanyService {
         Company company = request.toEntity();
         Company saved = companyRepository.save(company);
         return CompanyResponse.from(saved);
+    }
+
+    // 전체 조회 (페이지네이션 없음)
+    public List<CompanyResponse> getAllCompaniesWithoutPaging() {
+        return companyRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
+                .map(CompanyResponse::from)
+                .collect(Collectors.toList());
     }
 
     // 전체 조회
