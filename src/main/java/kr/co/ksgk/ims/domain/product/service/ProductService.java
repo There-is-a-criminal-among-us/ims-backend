@@ -53,17 +53,6 @@ public class ProductService {
         Brand brand = brandRepository.findById(request.brandId())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
         Product product = request.toEntity(brand);
-
-        if (request.sizeUnitId() != null) {
-            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
-            product.updateSizeUnit(sizeUnit);
-        }
-
-        if (request.returnSizeUnitId() != null) {
-            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
-            product.updateReturnSizeUnit(returnSizeUnit);
-        }
-
         Product saved = productRepository.save(product);
         return ProductResponse.from(saved);
     }
@@ -109,17 +98,6 @@ public class ProductService {
                     request.storagePricePerPallet()
             );
         }
-        if (request.sizeUnitId() != null) {
-            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
-            product.updateSizeUnit(sizeUnit);
-        }
-        if (request.returnSizeUnitId() != null) {
-            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
-            product.updateReturnSizeUnit(returnSizeUnit);
-        }
-        if (request.coupangCode() != null) {
-            product.updateCoupangCode(request.coupangCode());
-        }
         return ProductResponse.from(product);
     }
 
@@ -156,6 +134,19 @@ public class ProductService {
     public ProductMappingResponse createProductMapping(ProductMappingRequest request) {
         RawProduct rawProduct = request.toEntity();
         RawProduct savedRawProduct = rawProductRepository.save(rawProduct);
+
+        if (request.sizeUnitId() != null) {
+            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
+            savedRawProduct.updateSizeUnit(sizeUnit);
+        }
+        if (request.returnSizeUnitId() != null) {
+            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
+            savedRawProduct.updateReturnSizeUnit(returnSizeUnit);
+        }
+        if (request.coupangCode() != null) {
+            savedRawProduct.updateCoupangCode(request.coupangCode());
+        }
+
         List<ProductMapping> productMappings = new ArrayList<>();
         request.products().forEach(
                 productMappingDetail -> {

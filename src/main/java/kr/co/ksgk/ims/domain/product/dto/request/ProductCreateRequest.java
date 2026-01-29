@@ -14,10 +14,7 @@ public record ProductCreateRequest(
         BigDecimal cbm,
         BigDecimal storagePricePerCbm,
         Integer quantityPerPallet,
-        BigDecimal storagePricePerPallet,
-        Long sizeUnitId,
-        Long returnSizeUnitId,
-        String coupangCode
+        BigDecimal storagePricePerPallet
 ) {
     public Product toEntity(Brand brand) {
         Product product = Product.builder()
@@ -34,10 +31,6 @@ public record ProductCreateRequest(
                     quantityPerPallet,
                     storagePricePerPallet
             );
-        }
-
-        if (coupangCode != null) {
-            product.updateCoupangCode(coupangCode);
         }
 
         return product;

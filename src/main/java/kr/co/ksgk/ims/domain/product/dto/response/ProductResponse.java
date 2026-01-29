@@ -17,12 +17,7 @@ public record ProductResponse(
         BigDecimal cbm,
         BigDecimal storagePricePerCbm,
         Integer quantityPerPallet,
-        BigDecimal storagePricePerPallet,
-        Long sizeUnitId,
-        String sizeUnitName,
-        Long returnSizeUnitId,
-        String returnSizeUnitName,
-        String coupangCode
+        BigDecimal storagePricePerPallet
 ) {
     public static ProductResponse from(Product product) {
         return ProductResponse.builder()
@@ -35,11 +30,6 @@ public record ProductResponse(
                 .storagePricePerCbm(product.getStoragePricePerCbm())
                 .quantityPerPallet(product.getQuantityPerPallet())
                 .storagePricePerPallet(product.getStoragePricePerPallet())
-                .sizeUnitId(product.getSizeUnit() != null ? product.getSizeUnit().getId() : null)
-                .sizeUnitName(product.getSizeUnit() != null ? product.getSizeUnit().getName() : null)
-                .returnSizeUnitId(product.getReturnSizeUnit() != null ? product.getReturnSizeUnit().getId() : null)
-                .returnSizeUnitName(product.getReturnSizeUnit() != null ? product.getReturnSizeUnit().getName() : null)
-                .coupangCode(product.getCoupangCode())
                 .build();
     }
 }

@@ -3,7 +3,10 @@ package kr.co.ksgk.ims.domain.settlement.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.ksgk.ims.domain.product.entity.Product;
-import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
+import kr.co.ksgk.ims.domain.product.entity.RawProduct;
+import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
+import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.domain.settlement.dto.DeliverySheetUploadResponse;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.DeliverySheetRowRepository;
@@ -27,19 +30,22 @@ import java.util.*;
 public class DeliverySheetService {
 
     private final DeliverySheetRowRepository deliverySheetRowRepository;
-    private final ProductRepository productRepository;
+    private final RawProductRepository rawProductRepository;
+    private final ProductMappingRepository productMappingRepository;
     private final SettlementItemRepository settlementItemRepository;
     private final SettlementCalculationService settlementCalculationService;
     private final ObjectMapper objectMapper;
 
     public DeliverySheetService(
             DeliverySheetRowRepository deliverySheetRowRepository,
-            ProductRepository productRepository,
+            RawProductRepository rawProductRepository,
+            ProductMappingRepository productMappingRepository,
             SettlementItemRepository settlementItemRepository,
             @Lazy SettlementCalculationService settlementCalculationService,
             ObjectMapper objectMapper) {
         this.deliverySheetRowRepository = deliverySheetRowRepository;
-        this.productRepository = productRepository;
+        this.rawProductRepository = rawProductRepository;
+        this.productMappingRepository = productMappingRepository;
         this.settlementItemRepository = settlementItemRepository;
         this.settlementCalculationService = settlementCalculationService;
         this.objectMapper = objectMapper;
@@ -61,15 +67,15 @@ public class DeliverySheetService {
                 .filter(item -> item.getCalculationType() == CalculationType.REMOTE_AREA)
                 .toList();
 
-        // 전체 Product 조회 (name 또는 coupangCode로 매칭)
-        List<Product> allProducts = productRepository.findAll();
-        Map<String, Product> productByName = new HashMap<>();
-        Map<String, Product> productByCoupangCode = new HashMap<>();
+        // 전체 RawProduct 조회 (name 또는 coupangCode로 매칭)
+        List<RawProduct> allRawProducts = rawProductRepository.findAll();
+        Map<String, RawProduct> rawProductByName = new HashMap<>();
+        Map<String, RawProduct> rawProductByCoupangCode = new HashMap<>();
 
-        for (Product product : allProducts) {
-            productByName.put(product.getName(), product);
-            if (product.getCoupangCode() != null && !product.getCoupangCode().isEmpty()) {
-                productByCoupangCode.put(product.getCoupangCode(), product);
+        for (RawProduct rawProduct : allRawProducts) {
+            rawProductByName.put(rawProduct.getName(), rawProduct);
+            if (rawProduct.getCoupangCode() != null && !rawProduct.getCoupangCode().isEmpty()) {
+                rawProductByCoupangCode.put(rawProduct.getCoupangCode(), rawProduct);
             }
         }
 
@@ -77,36 +83,55 @@ public class DeliverySheetService {
         List<DeliverySheetRow> successRows = new ArrayList<>();
 
         for (ParsedRow row : parsedRows) {
-            // 상품 매칭
-            Product matchedProduct = matchProduct(row.productName(), productByName, productByCoupangCode);
+            // RawProduct 매칭
+            RawProduct matchedRawProduct = matchRawProduct(row.productName(),
+                    rawProductByName, rawProductByCoupangCode);
 
-            if (matchedProduct == null) {
+            if (matchedRawProduct == null) {
                 failedRows.add(new DeliverySheetUploadResponse.FailedRow(
                         row.rowNumber(), row.productName(), "상품을 찾을 수 없습니다."));
                 continue;
             }
 
-            // SIZE/RETURN_SIZE Unit 검증
-            WorkType workType = determineWorkType(row.workType(), row.productName(), productByCoupangCode);
+            // WorkType 결정
+            WorkType workType = determineWorkType(row.workType(), row.productName(),
+                    rawProductByCoupangCode);
 
-            if (workType == WorkType.OUTBOUND && matchedProduct.getSizeUnit() == null) {
+            // SizeUnit 검증 (RawProduct 기준)
+            if (workType == WorkType.OUTBOUND && matchedRawProduct.getSizeUnit() == null) {
                 failedRows.add(new DeliverySheetUploadResponse.FailedRow(
                         row.rowNumber(), row.productName(), "출고 사이즈 단가가 설정되지 않았습니다."));
                 continue;
             }
 
-            if (workType == WorkType.RETURN && matchedProduct.getReturnSizeUnit() == null) {
+            if (workType == WorkType.RETURN && matchedRawProduct.getReturnSizeUnit() == null) {
                 failedRows.add(new DeliverySheetUploadResponse.FailedRow(
                         row.rowNumber(), row.productName(), "반품 사이즈 단가가 설정되지 않았습니다."));
+                continue;
+            }
+
+            // 매핑된 Products 조회
+            List<ProductMapping> mappings = productMappingRepository.findByRawProduct(matchedRawProduct);
+            if (mappings.isEmpty()) {
+                failedRows.add(new DeliverySheetUploadResponse.FailedRow(
+                        row.rowNumber(), row.productName(), "매핑된 상품이 없습니다."));
                 continue;
             }
 
             // REMOTE_AREA 비용 JSON 생성
             String remoteAreaFeesJson = buildRemoteAreaFeesJson(row.remoteAreaFees(), remoteAreaItems);
 
-            DeliverySheetRow deliverySheetRow = DeliverySheetRow.create(
-                    year, month, row.productName(), matchedProduct, workType, remoteAreaFeesJson);
-            successRows.add(deliverySheetRow);
+            // 매핑된 모든 Product에 DeliverySheetRow 생성
+            boolean isFirst = true;
+            for (ProductMapping mapping : mappings) {
+                Product product = mapping.getProduct();
+                DeliverySheetRow deliverySheetRow = DeliverySheetRow.create(
+                        year, month, row.productName(), product, workType,
+                        isFirst ? remoteAreaFeesJson : null,
+                        isFirst, mapping.getQuantity());
+                successRows.add(deliverySheetRow);
+                isFirst = false;
+            }
         }
 
         // 매칭 실패 시 전체 업로드 실패
@@ -199,22 +224,23 @@ public class DeliverySheetService {
         return parsedRows;
     }
 
-    private Product matchProduct(String productName, Map<String, Product> productByName,
-                                  Map<String, Product> productByCoupangCode) {
+    private RawProduct matchRawProduct(String productName,
+                                       Map<String, RawProduct> rawProductByName,
+                                       Map<String, RawProduct> rawProductByCoupangCode) {
         // 먼저 coupangCode로 매칭 시도
-        Product product = productByCoupangCode.get(productName);
-        if (product != null) {
-            return product;
+        RawProduct rawProduct = rawProductByCoupangCode.get(productName);
+        if (rawProduct != null) {
+            return rawProduct;
         }
 
-        // name으로 매칭 시도
-        return productByName.get(productName);
+        // RawProduct.name으로 매칭 시도
+        return rawProductByName.get(productName);
     }
 
     private WorkType determineWorkType(String workTypeStr, String productName,
-                                        Map<String, Product> productByCoupangCode) {
+                                        Map<String, RawProduct> rawProductByCoupangCode) {
         // coupangCode로 매칭된 경우 RETURN
-        if (productByCoupangCode.containsKey(productName)) {
+        if (rawProductByCoupangCode.containsKey(productName)) {
             return WorkType.RETURN;
         }
 

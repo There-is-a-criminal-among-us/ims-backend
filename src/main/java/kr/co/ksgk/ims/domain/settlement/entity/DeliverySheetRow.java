@@ -36,8 +36,15 @@ public class DeliverySheetRow extends BaseEntity {
     @Column(columnDefinition = "JSON")
     private String remoteAreaFees;
 
+    @Column(nullable = false)
+    private Boolean costTarget = true;
+
+    @Column(nullable = false)
+    private Integer quantity = 1;
+
     public static DeliverySheetRow create(Integer year, Integer month, String productName,
-                                          Product product, WorkType workType, String remoteAreaFees) {
+                                          Product product, WorkType workType, String remoteAreaFees,
+                                          Boolean costTarget, Integer quantity) {
         DeliverySheetRow row = new DeliverySheetRow();
         row.year = year;
         row.month = month;
@@ -45,6 +52,8 @@ public class DeliverySheetRow extends BaseEntity {
         row.product = product;
         row.workType = workType;
         row.remoteAreaFees = remoteAreaFees;
+        row.costTarget = costTarget;
+        row.quantity = quantity;
         return row;
     }
 }

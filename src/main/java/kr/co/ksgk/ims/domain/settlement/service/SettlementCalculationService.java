@@ -5,8 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.product.entity.Product;
+import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.entity.StorageType;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.*;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
@@ -34,10 +36,10 @@ import java.util.stream.Collectors;
 public class SettlementCalculationService {
 
     private final SettlementRepository settlementRepository;
-    private final SettlementDetailRepository settlementDetailRepository;
     private final SettlementItemRepository settlementItemRepository;
     private final DeliverySheetRowRepository deliverySheetRowRepository;
     private final ProductRepository productRepository;
+    private final RawProductRepository rawProductRepository;
     private final StockRepository stockRepository;
     private final TransactionWorkRepository transactionWorkRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
@@ -257,41 +259,65 @@ public class SettlementCalculationService {
     }
 
     private SettlementDetail calculateSize(int year, int month, Product product, SettlementItem item) {
-        if (product.getSizeUnit() == null) {
+        List<DeliverySheetRow> rows = deliverySheetRowRepository
+                .findByYearAndMonthAndProductAndWorkType(year, month, product, WorkType.OUTBOUND);
+
+        if (rows.isEmpty()) {
             return null;
         }
 
-        // 출고 건수 계산 (택배표에서)
-        long outboundCount = deliverySheetRowRepository.countByYearAndMonthAndProductAndWorkType(
-                year, month, product, WorkType.OUTBOUND);
+        // 수량: 각 row의 quantity 합산
+        int quantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
 
-        if (outboundCount == 0) {
-            return null;
+        // costTarget인 row만 금액 계산 (quantity * unitPrice)
+        int totalAmount = 0;
+        Integer unitPrice = null;
+        for (DeliverySheetRow row : rows) {
+            if (row.getCostTarget()) {
+                RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
+                if (rp != null && rp.getSizeUnit() != null) {
+                    unitPrice = rp.getSizeUnit().getPrice();
+                    totalAmount += unitPrice * row.getQuantity();
+                }
+            }
         }
 
-        int unitPrice = product.getSizeUnit().getPrice();
-        int totalAmount = unitPrice * (int) outboundCount;
+        if (totalAmount == 0 && unitPrice == null) {
+            return createDetail(product, item, quantity, null, 0, null);
+        }
 
-        return createDetail(product, item, (int) outboundCount, unitPrice, totalAmount, null);
+        return createDetail(product, item, quantity, unitPrice, totalAmount, null);
     }
 
     private SettlementDetail calculateReturnSize(int year, int month, Product product, SettlementItem item) {
-        if (product.getReturnSizeUnit() == null) {
+        List<DeliverySheetRow> rows = deliverySheetRowRepository
+                .findByYearAndMonthAndProductAndWorkType(year, month, product, WorkType.RETURN);
+
+        if (rows.isEmpty()) {
             return null;
         }
 
-        // 반품 건수 계산 (택배표에서)
-        long returnCount = deliverySheetRowRepository.countByYearAndMonthAndProductAndWorkType(
-                year, month, product, WorkType.RETURN);
+        // 수량: 각 row의 quantity 합산
+        int quantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
 
-        if (returnCount == 0) {
-            return null;
+        // costTarget인 row만 금액 계산 (quantity * unitPrice)
+        int totalAmount = 0;
+        Integer unitPrice = null;
+        for (DeliverySheetRow row : rows) {
+            if (row.getCostTarget()) {
+                RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
+                if (rp != null && rp.getReturnSizeUnit() != null) {
+                    unitPrice = rp.getReturnSizeUnit().getPrice();
+                    totalAmount += unitPrice * row.getQuantity();
+                }
+            }
         }
 
-        int unitPrice = product.getReturnSizeUnit().getPrice();
-        int totalAmount = unitPrice * (int) returnCount;
+        if (totalAmount == 0 && unitPrice == null) {
+            return createDetail(product, item, quantity, null, 0, null);
+        }
 
-        return createDetail(product, item, (int) returnCount, unitPrice, totalAmount, null);
+        return createDetail(product, item, quantity, unitPrice, totalAmount, null);
     }
 
     private SettlementDetail calculateRemoteArea(int year, int month, Product product, SettlementItem item) {

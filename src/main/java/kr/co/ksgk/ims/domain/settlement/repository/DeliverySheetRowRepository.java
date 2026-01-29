@@ -30,4 +30,7 @@ public interface DeliverySheetRowRepository extends JpaRepository<DeliverySheetR
     List<DeliverySheetRow> findByYearAndMonthAndProduct(@Param("year") Integer year,
                                                          @Param("month") Integer month,
                                                          @Param("product") Product product);
+
+    List<DeliverySheetRow> findByYearAndMonthAndProductAndWorkType(
+            Integer year, Integer month, Product product, WorkType workType);
 }
