@@ -55,6 +55,15 @@ public class SettlementController {
         return SuccessResponse.ok(response);
     }
 
+    @GetMapping("/items")
+    @Operation(summary = "정산 아이템 목록 조회", description = "CalculationType에 따른 정산 아이템 + 단위 목록 조회 (미지정 시 전체 조회)")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementItemResponse.class)))
+    public ResponseEntity<SuccessResponse<?>> getItems(
+            @RequestParam(required = false) CalculationType calculationType) {
+        List<SettlementItemResponse> response = settlementService.getItemsByCalculationType(calculationType);
+        return SuccessResponse.ok(response);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/structure")
     @Operation(summary = "정산서 구조 수정", description = "수정될 최종 버전을 요청(id null이면 생성, 미포함 시 삭제됨)")

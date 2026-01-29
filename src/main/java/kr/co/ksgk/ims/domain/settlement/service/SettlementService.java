@@ -44,6 +44,17 @@ public class SettlementService {
                 .toList();
     }
 
+    public List<SettlementItemResponse> getItemsByCalculationType(CalculationType calculationType) {
+        if (calculationType == null) {
+            return settlementItemRepository.findAllWithUnits().stream()
+                    .map(SettlementItemResponse::from)
+                    .toList();
+        }
+        return settlementItemRepository.findByCalculationTypeWithUnits(calculationType).stream()
+                .map(SettlementItemResponse::from)
+                .toList();
+    }
+
     @Transactional
     public SettlementStructureDto updateSettlementStructure(SettlementStructureDto request) {
         updateSettlementTypes(request.types());
