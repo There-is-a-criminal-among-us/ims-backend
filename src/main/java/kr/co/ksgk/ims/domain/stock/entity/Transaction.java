@@ -61,6 +61,18 @@ public class Transaction extends BaseEntity {
         this.workDate = workDate;
     }
 
+    public void updateQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public void updateNote(String note) {
+        this.note = note;
+    }
+
+    public void updateScheduledDate(LocalDate scheduledDate) {
+        this.scheduledDate = scheduledDate;
+    }
+
     public void updateWorkDate(LocalDate workDate) {
         this.workDate = workDate;
     }

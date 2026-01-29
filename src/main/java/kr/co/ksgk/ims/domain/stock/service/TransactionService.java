@@ -10,6 +10,7 @@ import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementItemRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
+import kr.co.ksgk.ims.domain.stock.dto.request.TransactionUpdateRequest;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionWorkRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
@@ -115,6 +116,26 @@ public class TransactionService {
             // 출고 확정 시 FIFO 차감
             stockLotService.deductFifo(transaction.getProduct(), transaction.getQuantity());
         }
+    }
+
+    @Transactional
+    public TransactionResponse updateTransaction(Long transactionId, TransactionUpdateRequest request) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (request.quantity() != null) transaction.updateQuantity(request.quantity());
+        if (request.note() != null) transaction.updateNote(request.note());
+        if (request.scheduledDate() != null) transaction.updateScheduledDate(request.scheduledDate());
+        if (request.workDate() != null) transaction.updateWorkDate(request.workDate());
+
+        if (request.works() != null) {
+            List<TransactionWork> works = createTransactionWorks(transaction, request.works());
+            transaction.updateWorks(works);
+        }
+
+        cacheInvalidator.invalidateCacheForProductIfToday(transaction.getProduct().getId());
+
+        return TransactionResponse.from(transaction);
     }
 
     @Transactional

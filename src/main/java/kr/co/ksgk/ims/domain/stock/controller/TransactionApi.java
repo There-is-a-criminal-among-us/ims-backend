@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
+import kr.co.ksgk.ims.domain.stock.dto.request.TransactionUpdateRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
 import kr.co.ksgk.ims.global.annotation.Auth;
@@ -72,4 +73,13 @@ public interface TransactionApi {
                     schema = @Schema(implementation = TransactionResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> createTransaction(@RequestBody TransactionRequest request);
+
+    @Operation(summary = "입출고 수정", description = "입출고 내역을 수정합니다. null인 필드는 기존 값을 유지합니다.")
+    @ApiResponse(responseCode = "200", description = "입출고 수정 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = TransactionResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> updateTransaction(
+            @PathVariable Long transactionId,
+            @RequestBody TransactionUpdateRequest request);
 }
