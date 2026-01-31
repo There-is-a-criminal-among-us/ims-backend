@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface SettlementUnitRepository extends JpaRepository<SettlementUnit, Long> {
 
-    @Query("SELECT u FROM SettlementUnit u JOIN FETCH u.item i WHERE i.calculationType = :calculationType ORDER BY i.displayOrder, u.displayOrder")
-    List<SettlementUnit> findByCalculationType(@Param("calculationType") CalculationType calculationType);
+    @Query("SELECT u FROM SettlementUnit u JOIN FETCH u.item i WHERE i.calculationType IN :calculationTypes ORDER BY i.displayOrder, u.displayOrder")
+    List<SettlementUnit> findByCalculationTypes(@Param("calculationTypes") List<CalculationType> calculationTypes);
 
     @Query("SELECT u FROM SettlementUnit u JOIN FETCH u.item i ORDER BY i.displayOrder, u.displayOrder")
     List<SettlementUnit> findAllWithItem();

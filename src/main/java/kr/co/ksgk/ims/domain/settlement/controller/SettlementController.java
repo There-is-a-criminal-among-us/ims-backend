@@ -59,8 +59,8 @@ public class SettlementController {
     @Operation(summary = "정산 단위 목록 조회", description = "CalculationType에 따른 정산 단위 목록 조회 (미지정 시 전체 조회)")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementUnitResponse.class)))
     public ResponseEntity<SuccessResponse<?>> getUnits(
-            @RequestParam(required = false) CalculationType calculationType) {
-        List<SettlementUnitResponse> response = settlementService.getUnitsByCalculationType(calculationType);
+            @RequestParam(required = false) List<CalculationType> calculationType) {
+        List<SettlementUnitResponse> response = settlementService.getUnitsByCalculationTypes(calculationType);
         return SuccessResponse.ok(response);
     }
 
@@ -68,8 +68,8 @@ public class SettlementController {
     @Operation(summary = "정산 아이템 목록 조회", description = "CalculationType에 따른 정산 아이템 + 단위 목록 조회 (미지정 시 전체 조회)")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementItemResponse.class)))
     public ResponseEntity<SuccessResponse<?>> getItems(
-            @RequestParam(required = false) CalculationType calculationType) {
-        List<SettlementItemResponse> response = settlementService.getItemsByCalculationType(calculationType);
+            @RequestParam(required = false) List<CalculationType> calculationType) {
+        List<SettlementItemResponse> response = settlementService.getItemsByCalculationTypes(calculationType);
         return SuccessResponse.ok(response);
     }
 

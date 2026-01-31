@@ -13,6 +13,6 @@ public interface SettlementItemRepository extends JpaRepository<SettlementItem, 
     @Query("SELECT DISTINCT i FROM SettlementItem i LEFT JOIN FETCH i.units ORDER BY i.displayOrder")
     List<SettlementItem> findAllWithUnits();
 
-    @Query("SELECT DISTINCT i FROM SettlementItem i LEFT JOIN FETCH i.units WHERE i.calculationType = :calculationType ORDER BY i.displayOrder")
-    List<SettlementItem> findByCalculationTypeWithUnits(@Param("calculationType") CalculationType calculationType);
+    @Query("SELECT DISTINCT i FROM SettlementItem i LEFT JOIN FETCH i.units WHERE i.calculationType IN :calculationTypes ORDER BY i.displayOrder")
+    List<SettlementItem> findByCalculationTypesWithUnits(@Param("calculationTypes") List<CalculationType> calculationTypes);
 }

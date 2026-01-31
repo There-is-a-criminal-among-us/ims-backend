@@ -41,24 +41,24 @@ public class SettlementService {
         return SettlementStructureDto.from(types, chargeCategories);
     }
 
-    public List<SettlementUnitResponse> getUnitsByCalculationType(CalculationType calculationType) {
-        if (calculationType == null) {
+    public List<SettlementUnitResponse> getUnitsByCalculationTypes(List<CalculationType> calculationTypes) {
+        if (calculationTypes == null || calculationTypes.isEmpty()) {
             return settlementUnitRepository.findAllWithItem().stream()
                     .map(SettlementUnitResponse::from)
                     .toList();
         }
-        return settlementUnitRepository.findByCalculationType(calculationType).stream()
+        return settlementUnitRepository.findByCalculationTypes(calculationTypes).stream()
                 .map(SettlementUnitResponse::from)
                 .toList();
     }
 
-    public List<SettlementItemResponse> getItemsByCalculationType(CalculationType calculationType) {
-        if (calculationType == null) {
+    public List<SettlementItemResponse> getItemsByCalculationTypes(List<CalculationType> calculationTypes) {
+        if (calculationTypes == null || calculationTypes.isEmpty()) {
             return settlementItemRepository.findAllWithUnits().stream()
                     .map(SettlementItemResponse::from)
                     .toList();
         }
-        return settlementItemRepository.findByCalculationTypeWithUnits(calculationType).stream()
+        return settlementItemRepository.findByCalculationTypesWithUnits(calculationTypes).stream()
                 .map(SettlementItemResponse::from)
                 .toList();
     }
