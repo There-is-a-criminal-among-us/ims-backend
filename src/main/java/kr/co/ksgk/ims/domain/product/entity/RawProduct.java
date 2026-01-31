@@ -44,6 +44,10 @@ public class RawProduct extends BaseEntity {
     @OneToMany(mappedBy = "rawProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Delivery> deliveries = new ArrayList<>();
 
+    public void updateName(String name) {
+        this.name = name;
+    }
+
     public void updateSizeUnit(SettlementUnit sizeUnit) {
         this.sizeUnit = sizeUnit;
     }
