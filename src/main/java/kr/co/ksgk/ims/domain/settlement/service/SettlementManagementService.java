@@ -4,6 +4,7 @@ import kr.co.ksgk.ims.domain.brand.entity.Brand;
 import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.settlement.dto.request.SettlementDetailUpdateRequest;
 import kr.co.ksgk.ims.domain.settlement.dto.response.InvoiceResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.SettlementDetailResponse;
@@ -30,6 +31,7 @@ public class SettlementManagementService {
     private final SettlementDetailRepository settlementDetailRepository;
     private final SettlementTypeRepository settlementTypeRepository;
     private final CompanyRepository companyRepository;
+    private final MemberRepository memberRepository;
     private final ChargeCategoryRepository chargeCategoryRepository;
     private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
 
@@ -72,7 +74,9 @@ public class SettlementManagementService {
     }
 
     @Transactional
-    public SettlementResponse confirmSettlement(Long settlementId, Member confirmedBy) {
+    public SettlementResponse confirmSettlement(Long settlementId, Long memberId) {
+        Member confirmedBy = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         Settlement settlement = settlementRepository.findById(settlementId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_NOT_FOUND));
 

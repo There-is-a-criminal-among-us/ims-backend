@@ -5,9 +5,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.ksgk.ims.domain.auth.dto.AuthDto;
-import kr.co.ksgk.ims.domain.member.entity.Member;
-import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.settlement.dto.*;
 import kr.co.ksgk.ims.domain.settlement.dto.request.SettlementDetailUpdateRequest;
 import kr.co.ksgk.ims.domain.settlement.dto.response.*;
@@ -17,8 +14,6 @@ import kr.co.ksgk.ims.domain.settlement.service.SettlementManagementService;
 import kr.co.ksgk.ims.domain.settlement.service.SettlementService;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
-import kr.co.ksgk.ims.global.error.ErrorCode;
-import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,7 +31,6 @@ public class SettlementController {
     private final SettlementService settlementService;
     private final DeliverySheetService deliverySheetService;
     private final SettlementManagementService settlementManagementService;
-    private final MemberRepository memberRepository;
 
     @GetMapping("/charge-categories")
     @Operation(summary = "청구 카테고리 목록 조회", description = "모든 청구 카테고리를 조회합니다")
@@ -153,10 +147,8 @@ public class SettlementController {
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementResponse.class)))
     public ResponseEntity<SuccessResponse<?>> confirmSettlement(
             @PathVariable Long settlementId,
-            @Auth AuthDto auth) {
-        Member member = memberRepository.findById(auth.memberId())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        SettlementResponse response = settlementManagementService.confirmSettlement(settlementId, member);
+            @Auth Long memberId) {
+        SettlementResponse response = settlementManagementService.confirmSettlement(settlementId, memberId);
         return SuccessResponse.ok(response);
     }
 
