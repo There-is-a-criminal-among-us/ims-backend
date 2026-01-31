@@ -11,4 +11,7 @@ public interface ProductMappingRepository extends JpaRepository<ProductMapping, 
 
     @EntityGraph(attributePaths = {"product"})
     List<ProductMapping> findByRawProduct(RawProduct rawProduct);
+
+    @EntityGraph(attributePaths = {"product", "rawProduct"})
+    List<ProductMapping> findAllBy();
 }

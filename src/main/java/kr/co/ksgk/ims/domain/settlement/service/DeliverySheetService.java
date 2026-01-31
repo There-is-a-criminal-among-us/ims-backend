@@ -105,6 +105,10 @@ public class DeliverySheetService {
             }
         }
 
+        // 전체 ProductMapping 미리 로딩 (N+1 방지)
+        Map<Long, List<ProductMapping>> mappingsByRawProductId = productMappingRepository.findAllBy().stream()
+                .collect(java.util.stream.Collectors.groupingBy(m -> m.getRawProduct().getId()));
+
         List<DeliverySheetUploadResponse.FailedRow> failedRows = new ArrayList<>();
         List<DeliverySheetRow> successRows = new ArrayList<>();
         List<DeliverySheetReturn> returnRows = new ArrayList<>();
@@ -138,8 +142,8 @@ public class DeliverySheetService {
                 continue;
             }
 
-            // 매핑된 Products 조회
-            List<ProductMapping> mappings = productMappingRepository.findByRawProduct(matchedRawProduct);
+            // 매핑된 Products 조회 (미리 로딩된 Map 사용)
+            List<ProductMapping> mappings = mappingsByRawProductId.getOrDefault(matchedRawProduct.getId(), List.of());
             if (mappings.isEmpty()) {
                 failedRows.add(new DeliverySheetUploadResponse.FailedRow(
                         row.rowNumber(), row.productName(), "매핑된 상품이 없습니다."));
