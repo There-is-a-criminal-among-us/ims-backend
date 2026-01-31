@@ -1,4 +1,4 @@
-package kr.co.ksgk.ims.domain.settlement.dto;
+package kr.co.ksgk.ims.domain.settlement.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

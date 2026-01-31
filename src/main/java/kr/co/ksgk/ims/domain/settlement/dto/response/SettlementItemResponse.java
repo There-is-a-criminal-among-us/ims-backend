@@ -1,4 +1,4 @@
-package kr.co.ksgk.ims.domain.settlement.dto;
+package kr.co.ksgk.ims.domain.settlement.dto.response;
 
 import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
 import kr.co.ksgk.ims.domain.settlement.entity.SettlementItem;
