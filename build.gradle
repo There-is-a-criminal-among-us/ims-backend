@@ -58,6 +58,7 @@ dependencies {
 	// POI
 	implementation 'org.apache.poi:poi:5.4.1'
 	implementation 'org.apache.poi:poi-ooxml:5.4.1'
+	implementation 'com.github.pjfanning:excel-streaming-reader:5.0.2'
 
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'

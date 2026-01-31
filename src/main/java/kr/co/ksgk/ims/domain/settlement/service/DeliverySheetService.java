@@ -20,8 +20,8 @@ import kr.co.ksgk.ims.domain.settlement.repository.SettlementItemRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -227,13 +227,12 @@ public class DeliverySheetService {
     private List<ParsedRow> parseExcelFile(MultipartFile file) {
         List<ParsedRow> parsedRows = new ArrayList<>();
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            Sheet sheet = workbook.getSheetAt(0);
-            Row headerRow = sheet.getRow(0);
+        try (Workbook workbook = StreamingReader.builder()
+                .rowCacheSize(200)
+                .bufferSize(4096)
+                .open(file.getInputStream())) {
 
-            if (headerRow == null) {
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-            }
+            Sheet sheet = workbook.getSheetAt(0);
 
             // 헤더에서 열 인덱스 찾기
             int productNameIndex = -1;
@@ -244,41 +243,43 @@ public class DeliverySheetService {
             int receiverNameIndex = -1;
             int receiverAddressIndex = -1;
             Map<String, Integer> remoteAreaColumnIndexes = new HashMap<>();
+            boolean headerParsed = false;
 
-            for (int i = 0; i < headerRow.getLastCellNum(); i++) {
-                Cell cell = headerRow.getCell(i);
-                if (cell == null) continue;
+            for (Row row : sheet) {
+                // 첫 번째 행은 헤더
+                if (!headerParsed) {
+                    for (Cell cell : row) {
+                        if (cell == null) continue;
+                        int i = cell.getColumnIndex();
+                        String headerName = getCellValueAsString(cell).trim();
 
-                String headerName = getCellValueAsString(cell).trim();
+                        if (PRODUCT_NAME_COLUMN.equals(headerName)) {
+                            productNameIndex = i;
+                        } else if (WORK_TYPE_COLUMN.equals(headerName)) {
+                            workTypeIndex = i;
+                        } else if (PICKUP_DATE_COLUMN.equals(headerName)) {
+                            pickupDateIndex = i;
+                        } else if (INVOICE_NUMBER_COLUMN.equals(headerName)) {
+                            invoiceNumberIndex = i;
+                        } else if (SENDER_NAME_COLUMN.equals(headerName)) {
+                            senderNameIndex = i;
+                        } else if (RECEIVER_NAME_COLUMN.equals(headerName)) {
+                            receiverNameIndex = i;
+                        } else if (RECEIVER_ADDRESS_COLUMN.equals(headerName)) {
+                            receiverAddressIndex = i;
+                        } else if (REMOTE_AREA_COLUMNS.contains(headerName)) {
+                            remoteAreaColumnIndexes.put(headerName, i);
+                        }
+                    }
 
-                if (PRODUCT_NAME_COLUMN.equals(headerName)) {
-                    productNameIndex = i;
-                } else if (WORK_TYPE_COLUMN.equals(headerName)) {
-                    workTypeIndex = i;
-                } else if (PICKUP_DATE_COLUMN.equals(headerName)) {
-                    pickupDateIndex = i;
-                } else if (INVOICE_NUMBER_COLUMN.equals(headerName)) {
-                    invoiceNumberIndex = i;
-                } else if (SENDER_NAME_COLUMN.equals(headerName)) {
-                    senderNameIndex = i;
-                } else if (RECEIVER_NAME_COLUMN.equals(headerName)) {
-                    receiverNameIndex = i;
-                } else if (RECEIVER_ADDRESS_COLUMN.equals(headerName)) {
-                    receiverAddressIndex = i;
-                } else if (REMOTE_AREA_COLUMNS.contains(headerName)) {
-                    remoteAreaColumnIndexes.put(headerName, i);
+                    if (productNameIndex == -1) {
+                        throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+                    }
+                    headerParsed = true;
+                    continue;
                 }
-            }
 
-            if (productNameIndex == -1) {
-                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
-            }
-
-            // 데이터 행 파싱
-            for (int rowNum = 1; rowNum <= sheet.getLastRowNum(); rowNum++) {
-                Row row = sheet.getRow(rowNum);
-                if (row == null) continue;
-
+                // 데이터 행 파싱
                 Cell productNameCell = row.getCell(productNameIndex);
                 if (productNameCell == null) continue;
 
@@ -330,8 +331,13 @@ public class DeliverySheetService {
                     }
                 }
 
-                parsedRows.add(new ParsedRow(rowNum + 1, productName, workType, pickupDate, invoiceNumber,
+                int rowNum = row.getRowNum() + 1;
+                parsedRows.add(new ParsedRow(rowNum, productName, workType, pickupDate, invoiceNumber,
                         senderName, receiverName, receiverAddress, remoteAreaFees));
+            }
+
+            if (!headerParsed) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
             }
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
