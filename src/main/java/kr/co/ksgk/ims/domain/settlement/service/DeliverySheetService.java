@@ -21,7 +21,6 @@ import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -35,11 +34,6 @@ import java.util.*;
 @Transactional(readOnly = true)
 @Slf4j
 public class DeliverySheetService {
-
-    static {
-        // Allow larger XLSX zip entries for large delivery sheets.
-        IOUtils.setByteArrayMaxOverride(300_000_000);
-    }
 
     private final DeliverySheetRowRepository deliverySheetRowRepository;
     private final DeliverySheetReturnRepository deliverySheetReturnRepository;
