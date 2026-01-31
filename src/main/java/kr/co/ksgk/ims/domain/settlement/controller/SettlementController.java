@@ -37,6 +37,14 @@ public class SettlementController {
     private final SettlementManagementService settlementManagementService;
     private final MemberRepository memberRepository;
 
+    @GetMapping("/charge-categories")
+    @Operation(summary = "청구 카테고리 목록 조회", description = "모든 청구 카테고리를 조회합니다")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ChargeCategoryDto.class)))
+    public ResponseEntity<SuccessResponse<?>> getChargeCategories() {
+        List<ChargeCategoryDto> response = settlementService.getChargeCategories();
+        return SuccessResponse.ok(response);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/structure")
     @Operation(summary = "정산서 구조 조회")

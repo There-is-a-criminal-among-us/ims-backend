@@ -27,6 +27,12 @@ public class SettlementService {
     private final SettlementUnitRepository settlementUnitRepository;
     private final SettlementItemRepository settlementItemRepository;
 
+    public List<ChargeCategoryDto> getChargeCategories() {
+        return chargeCategoryRepository.findAll().stream()
+                .map(ChargeCategoryDto::from)
+                .toList();
+    }
+
     public SettlementStructureDto getSettlementStructure() {
         List<SettlementType> types = settlementTypeRepository.findAll();
         List<ChargeCategory> chargeCategories = chargeCategoryRepository.findAll();
