@@ -8,6 +8,7 @@ import kr.co.ksgk.ims.domain.settlement.dto.request.SettlementDetailUpdateReques
 import kr.co.ksgk.ims.domain.settlement.dto.response.InvoiceResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.SettlementDetailResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.SettlementResponse;
+import kr.co.ksgk.ims.domain.settlement.dto.response.SettlementResponse.*;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
 import kr.co.ksgk.ims.domain.settlement.repository.*;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -27,6 +28,7 @@ public class SettlementManagementService {
 
     private final SettlementRepository settlementRepository;
     private final SettlementDetailRepository settlementDetailRepository;
+    private final SettlementTypeRepository settlementTypeRepository;
     private final BrandRepository brandRepository;
     private final ChargeCategoryRepository chargeCategoryRepository;
     private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
@@ -40,11 +42,7 @@ public class SettlementManagementService {
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
 
-        List<SettlementDetailResponse> detailResponses = details.stream()
-                .map(SettlementDetailResponse::from)
-                .toList();
-
-        return SettlementResponse.from(settlement, detailResponses);
+        return buildSettlementResponse(settlement, details);
     }
 
     public List<SettlementResponse> getSettlementsByYearAndMonth(int year, int month) {
@@ -53,10 +51,7 @@ public class SettlementManagementService {
         return settlements.stream()
                 .map(settlement -> {
                     List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
-                    List<SettlementDetailResponse> detailResponses = details.stream()
-                            .map(SettlementDetailResponse::from)
-                            .toList();
-                    return SettlementResponse.from(settlement, detailResponses);
+                    return buildSettlementResponse(settlement, details);
                 })
                 .toList();
     }
@@ -84,11 +79,8 @@ public class SettlementManagementService {
         settlement.confirm(confirmedBy);
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlementId);
-        List<SettlementDetailResponse> detailResponses = details.stream()
-                .map(SettlementDetailResponse::from)
-                .toList();
 
-        return SettlementResponse.from(settlement, detailResponses);
+        return buildSettlementResponse(settlement, details);
     }
 
     @Transactional
@@ -99,12 +91,125 @@ public class SettlementManagementService {
         settlement.revertToDraft();
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlementId);
-        List<SettlementDetailResponse> detailResponses = details.stream()
-                .map(SettlementDetailResponse::from)
+
+        return buildSettlementResponse(settlement, details);
+    }
+
+    // --- 피벗 응답 빌드 ---
+
+    private SettlementResponse buildSettlementResponse(Settlement settlement, List<SettlementDetail> details) {
+        // 1. 고유 품목 추출 (열 헤더)
+        List<ProductColumn> products = details.stream()
+                .map(d -> new ProductColumn(d.getProduct().getId(), d.getProduct().getName()))
+                .distinct()
                 .toList();
 
-        return SettlementResponse.from(settlement, detailResponses);
+        List<Long> productIds = products.stream().map(ProductColumn::id).toList();
+
+        // 2. 룩업맵: itemId -> productId -> SettlementDetail
+        Map<Long, Map<Long, SettlementDetail>> detailLookup = new HashMap<>();
+        for (SettlementDetail d : details) {
+            detailLookup
+                    .computeIfAbsent(d.getSettlementItem().getId(), k -> new HashMap<>())
+                    .put(d.getProduct().getId(), d);
+        }
+
+        // 3. 전체 구조 조회
+        List<SettlementType> types = settlementTypeRepository.findAllWithHierarchy();
+
+        // 4. TypeRow 빌드
+        List<TypeRow> typeRows = types.stream()
+                .map(type -> buildTypeRow(type, productIds, detailLookup))
+                .toList();
+
+        // 5. 총합
+        int totalAmount = typeRows.stream()
+                .mapToInt(tr -> tr.subtotalAmount() != null ? tr.subtotalAmount() : 0)
+                .sum();
+
+        return new SettlementResponse(
+                settlement.getId(),
+                settlement.getYear(),
+                settlement.getMonth(),
+                settlement.getBrand().getId(),
+                settlement.getBrand().getName(),
+                settlement.getBrand().getCompany().getId(),
+                settlement.getBrand().getCompany().getName(),
+                settlement.getStatus(),
+                settlement.getConfirmedAt(),
+                settlement.getConfirmedBy() != null ? settlement.getConfirmedBy().getName() : null,
+                products,
+                typeRows,
+                totalAmount
+        );
     }
+
+    private TypeRow buildTypeRow(SettlementType type, List<Long> productIds,
+                                 Map<Long, Map<Long, SettlementDetail>> detailLookup) {
+        List<CategoryRow> categoryRows = type.getCategories().stream()
+                .sorted(Comparator.comparing(SettlementCategory::getDisplayOrder))
+                .map(cat -> buildCategoryRow(cat, productIds, detailLookup))
+                .toList();
+
+        List<ItemRow> directItemRows = type.getDirectItems().stream()
+                .sorted(Comparator.comparing(SettlementItem::getDisplayOrder))
+                .map(item -> buildItemRow(item, productIds, detailLookup))
+                .toList();
+
+        int subtotal = 0;
+        for (CategoryRow cr : categoryRows) {
+            for (ItemRow ir : cr.items()) {
+                subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0;
+            }
+        }
+        for (ItemRow ir : directItemRows) {
+            subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0;
+        }
+
+        return new TypeRow(type.getId(), type.getName(), categoryRows, directItemRows, subtotal);
+    }
+
+    private CategoryRow buildCategoryRow(SettlementCategory category, List<Long> productIds,
+                                         Map<Long, Map<Long, SettlementDetail>> detailLookup) {
+        List<ItemRow> itemRows = category.getItems().stream()
+                .sorted(Comparator.comparing(SettlementItem::getDisplayOrder))
+                .map(item -> buildItemRow(item, productIds, detailLookup))
+                .toList();
+
+        return new CategoryRow(category.getId(), category.getName(), itemRows);
+    }
+
+    private ItemRow buildItemRow(SettlementItem item, List<Long> productIds,
+                                 Map<Long, Map<Long, SettlementDetail>> detailLookup) {
+        Map<Long, SettlementDetail> productMap = detailLookup.getOrDefault(item.getId(), Map.of());
+
+        List<ProductCell> cells = productIds.stream()
+                .map(pid -> {
+                    SettlementDetail d = productMap.get(pid);
+                    if (d == null) {
+                        return new ProductCell(pid, null, null, null, null, null);
+                    }
+                    return new ProductCell(pid, d.getId(), d.getQuantity(), d.getUnitPrice(), d.getAmount(), d.getNote());
+                })
+                .toList();
+
+        List<UnitInfo> units = item.getUnits().stream()
+                .sorted(Comparator.comparing(SettlementUnit::getDisplayOrder))
+                .map(u -> new UnitInfo(u.getId(), u.getName(), u.getPrice()))
+                .toList();
+
+        int totalQuantity = cells.stream()
+                .mapToInt(c -> c.quantity() != null ? c.quantity() : 0)
+                .sum();
+        int totalAmount = cells.stream()
+                .mapToInt(c -> c.amount() != null ? c.amount() : 0)
+                .sum();
+
+        return new ItemRow(item.getId(), item.getName(), item.getCalculationType(),
+                units, cells, totalQuantity, totalAmount);
+    }
+
+    // --- 청구서 (변경 없음) ---
 
     public InvoiceResponse getInvoiceByCompany(int year, int month, Long companyId) {
         // 해당 업체의 확정된 정산서만 조회

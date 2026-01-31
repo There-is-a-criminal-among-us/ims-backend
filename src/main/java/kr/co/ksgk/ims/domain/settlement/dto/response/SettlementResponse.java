@@ -1,6 +1,6 @@
 package kr.co.ksgk.ims.domain.settlement.dto.response;
 
-import kr.co.ksgk.ims.domain.settlement.entity.Settlement;
+import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
 import kr.co.ksgk.ims.domain.settlement.entity.SettlementStatus;
 
 import java.time.LocalDateTime;
@@ -17,27 +17,28 @@ public record SettlementResponse(
         SettlementStatus status,
         LocalDateTime confirmedAt,
         String confirmedByName,
-        List<SettlementDetailResponse> details,
+        List<ProductColumn> products,
+        List<TypeRow> types,
         Integer totalAmount
 ) {
-    public static SettlementResponse from(Settlement settlement, List<SettlementDetailResponse> details) {
-        int totalAmount = details.stream()
-                .mapToInt(d -> d.amount() != null ? d.amount() : 0)
-                .sum();
+    public record ProductColumn(Long id, String name) {}
 
-        return new SettlementResponse(
-                settlement.getId(),
-                settlement.getYear(),
-                settlement.getMonth(),
-                settlement.getBrand().getId(),
-                settlement.getBrand().getName(),
-                settlement.getBrand().getCompany().getId(),
-                settlement.getBrand().getCompany().getName(),
-                settlement.getStatus(),
-                settlement.getConfirmedAt(),
-                settlement.getConfirmedBy() != null ? settlement.getConfirmedBy().getName() : null,
-                details,
-                totalAmount
-        );
-    }
+    public record ProductCell(Long productId, Long detailId,
+                              Integer quantity, Integer unitPrice, Integer amount, String note) {}
+
+    public record ItemRow(Long itemId, String itemName,
+                          CalculationType calculationType,
+                          List<UnitInfo> units,
+                          List<ProductCell> cells,
+                          Integer totalQuantity, Integer totalAmount) {}
+
+    public record UnitInfo(Long id, String name, Integer price) {}
+
+    public record CategoryRow(Long categoryId, String categoryName,
+                               List<ItemRow> items) {}
+
+    public record TypeRow(Long typeId, String typeName,
+                          List<CategoryRow> categories,
+                          List<ItemRow> directItems,
+                          Integer subtotalAmount) {}
 }
