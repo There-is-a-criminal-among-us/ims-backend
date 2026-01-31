@@ -64,7 +64,7 @@ public class TransactionController implements TransactionApi {
         return SuccessResponse.created(transactionResponse);
     }
 
-    @PutMapping("/{transactionId}")
+    @PatchMapping("/{transactionId}")
     public ResponseEntity<SuccessResponse<?>> updateTransaction(
             @PathVariable Long transactionId,
             @RequestBody TransactionUpdateRequest request) {
