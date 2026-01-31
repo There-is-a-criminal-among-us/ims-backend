@@ -3,7 +3,7 @@ package kr.co.ksgk.ims.domain.settlement.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.entity.StorageType;
@@ -48,22 +48,22 @@ public class SettlementCalculationService {
 
     @Transactional
     public void calculateSettlements(int year, int month) {
-        // 모든 품목 조회 (브랜드별로 그룹화)
+        // 모든 품목 조회 (업체별로 그룹화)
         List<Product> allProducts = productRepository.findAll();
-        Map<Brand, List<Product>> productsByBrand = allProducts.stream()
-                .collect(Collectors.groupingBy(Product::getBrand));
+        Map<Company, List<Product>> productsByCompany = allProducts.stream()
+                .collect(Collectors.groupingBy(p -> p.getBrand().getCompany()));
 
         // 모든 SettlementItem 조회
         List<SettlementItem> allItems = settlementItemRepository.findAll();
 
-        // 브랜드별 정산서 생성/갱신
-        for (Map.Entry<Brand, List<Product>> entry : productsByBrand.entrySet()) {
-            Brand brand = entry.getKey();
+        // 업체별 정산서 생성/갱신
+        for (Map.Entry<Company, List<Product>> entry : productsByCompany.entrySet()) {
+            Company company = entry.getKey();
             List<Product> products = entry.getValue();
 
             // 기존 정산서 조회 또는 생성 (details fetch join으로 clearDetails 가능하도록)
-            Settlement settlement = settlementRepository.findByYearAndMonthAndBrandWithDetails(year, month, brand)
-                    .orElseGet(() -> settlementRepository.save(Settlement.create(year, month, brand)));
+            Settlement settlement = settlementRepository.findByYearAndMonthAndCompanyWithDetails(year, month, company)
+                    .orElseGet(() -> settlementRepository.save(Settlement.create(year, month, company)));
 
             // CONFIRMED 상태면 DRAFT로 되돌리기
             if (settlement.getStatus() == SettlementStatus.CONFIRMED) {

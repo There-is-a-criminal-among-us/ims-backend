@@ -10,8 +10,6 @@ public record SettlementResponse(
         Long id,
         Integer year,
         Integer month,
-        Long brandId,
-        String brandName,
         Long companyId,
         String companyName,
         SettlementStatus status,

@@ -1,7 +1,7 @@
 package kr.co.ksgk.ims.domain.settlement.entity;
 
 import jakarta.persistence.*;
-import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.common.entity.BaseEntity;
 import kr.co.ksgk.ims.domain.member.entity.Member;
 import lombok.AccessLevel;
@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"year", "month", "brand_id"})
+        @UniqueConstraint(columnNames = {"year", "month", "company_id"})
 })
 public class Settlement extends BaseEntity {
 
@@ -31,8 +31,8 @@ public class Settlement extends BaseEntity {
     private Integer month;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brand_id", nullable = false)
-    private Brand brand;
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,11 +47,11 @@ public class Settlement extends BaseEntity {
     @OneToMany(mappedBy = "settlement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SettlementDetail> details = new ArrayList<>();
 
-    public static Settlement create(Integer year, Integer month, Brand brand) {
+    public static Settlement create(Integer year, Integer month, Company company) {
         Settlement settlement = new Settlement();
         settlement.year = year;
         settlement.month = month;
-        settlement.brand = brand;
+        settlement.company = company;
         settlement.status = SettlementStatus.DRAFT;
         return settlement;
     }

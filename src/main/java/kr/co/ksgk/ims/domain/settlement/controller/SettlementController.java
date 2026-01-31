@@ -95,13 +95,13 @@ public class SettlementController {
     }
 
     @GetMapping("/detail")
-    @Operation(summary = "정산서 조회 (브랜드별)", description = "특정 브랜드의 월별 정산서 조회")
+    @Operation(summary = "정산서 조회 (업체별)", description = "특정 업체의 월별 정산서 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementResponse.class)))
     public ResponseEntity<SuccessResponse<?>> getSettlement(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam Long brandId) {
-        SettlementResponse response = settlementManagementService.getSettlementByBrand(year, month, brandId);
+            @RequestParam Long companyId) {
+        SettlementResponse response = settlementManagementService.getSettlementByCompany(year, month, companyId);
         return SuccessResponse.ok(response);
     }
 

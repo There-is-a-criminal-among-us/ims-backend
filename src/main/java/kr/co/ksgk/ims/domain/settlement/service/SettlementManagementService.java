@@ -1,8 +1,8 @@
 package kr.co.ksgk.ims.domain.settlement.service;
 
 import kr.co.ksgk.ims.domain.brand.entity.Brand;
-import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
 import kr.co.ksgk.ims.domain.company.entity.Company;
+import kr.co.ksgk.ims.domain.company.repository.CompanyRepository;
 import kr.co.ksgk.ims.domain.member.entity.Member;
 import kr.co.ksgk.ims.domain.settlement.dto.request.SettlementDetailUpdateRequest;
 import kr.co.ksgk.ims.domain.settlement.dto.response.InvoiceResponse;
@@ -29,15 +29,15 @@ public class SettlementManagementService {
     private final SettlementRepository settlementRepository;
     private final SettlementDetailRepository settlementDetailRepository;
     private final SettlementTypeRepository settlementTypeRepository;
-    private final BrandRepository brandRepository;
+    private final CompanyRepository companyRepository;
     private final ChargeCategoryRepository chargeCategoryRepository;
     private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
 
-    public SettlementResponse getSettlementByBrand(int year, int month, Long brandId) {
-        Brand brand = brandRepository.findById(brandId)
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+    public SettlementResponse getSettlementByCompany(int year, int month, Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
 
-        Settlement settlement = settlementRepository.findByYearAndMonthAndBrand(year, month, brand)
+        Settlement settlement = settlementRepository.findByYearAndMonthAndCompany(year, month, company)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_NOT_FOUND));
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
@@ -131,10 +131,8 @@ public class SettlementManagementService {
                 settlement.getId(),
                 settlement.getYear(),
                 settlement.getMonth(),
-                settlement.getBrand().getId(),
-                settlement.getBrand().getName(),
-                settlement.getBrand().getCompany().getId(),
-                settlement.getBrand().getCompany().getName(),
+                settlement.getCompany().getId(),
+                settlement.getCompany().getName(),
                 settlement.getStatus(),
                 settlement.getConfirmedAt(),
                 settlement.getConfirmedBy() != null ? settlement.getConfirmedBy().getName() : null,
@@ -233,11 +231,17 @@ public class SettlementManagementService {
                         m -> m.getChargeCategory().getId()));
 
         // 업체 정보
-        Company company = settlements.get(0).getBrand().getCompany();
+        Company company = settlements.get(0).getCompany();
 
-        // 브랜드별 그룹화
-        Map<Brand, List<Settlement>> settlementsByBrand = settlements.stream()
-                .collect(Collectors.groupingBy(Settlement::getBrand));
+        // 모든 정산서의 detail을 수집하여 브랜드별로 그룹화
+        List<SettlementDetail> allDetails = new ArrayList<>();
+        for (Settlement settlement : settlements) {
+            allDetails.addAll(settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId()));
+        }
+
+        // 브랜드별 그룹화 (SettlementDetail의 product.getBrand() 기준)
+        Map<Brand, List<SettlementDetail>> detailsByBrand = allDetails.stream()
+                .collect(Collectors.groupingBy(d -> d.getProduct().getBrand()));
 
         List<InvoiceResponse.BrandInvoice> brandInvoices = new ArrayList<>();
         Map<String, Integer> companyCategoryTotal = new LinkedHashMap<>();
@@ -247,44 +251,40 @@ public class SettlementManagementService {
             companyCategoryTotal.put(category.getName(), 0);
         }
 
-        for (Map.Entry<Brand, List<Settlement>> entry : settlementsByBrand.entrySet()) {
+        for (Map.Entry<Brand, List<SettlementDetail>> entry : detailsByBrand.entrySet()) {
             Brand brand = entry.getKey();
-            List<Settlement> brandSettlements = entry.getValue();
+            List<SettlementDetail> brandDetails = entry.getValue();
+
+            // 품목별 그룹화
+            Map<Long, List<SettlementDetail>> detailsByProduct = brandDetails.stream()
+                    .collect(Collectors.groupingBy(d -> d.getProduct().getId()));
 
             List<InvoiceResponse.ProductInvoice> productInvoices = new ArrayList<>();
 
-            for (Settlement settlement : brandSettlements) {
-                List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
+            for (Map.Entry<Long, List<SettlementDetail>> productEntry : detailsByProduct.entrySet()) {
+                List<SettlementDetail> productDetails = productEntry.getValue();
+                String productName = productDetails.get(0).getProduct().getName();
 
-                // 품목별 그룹화
-                Map<Long, List<SettlementDetail>> detailsByProduct = details.stream()
-                        .collect(Collectors.groupingBy(d -> d.getProduct().getId()));
+                Map<String, Integer> productCategories = new LinkedHashMap<>();
+                for (ChargeCategory category : chargeCategories) {
+                    productCategories.put(category.getName(), 0);
+                }
 
-                for (Map.Entry<Long, List<SettlementDetail>> productEntry : detailsByProduct.entrySet()) {
-                    List<SettlementDetail> productDetails = productEntry.getValue();
-                    String productName = productDetails.get(0).getProduct().getName();
+                for (SettlementDetail detail : productDetails) {
+                    Long itemId = detail.getSettlementItem().getId();
+                    Long chargeCategoryId = itemToChargeCategory.get(itemId);
 
-                    Map<String, Integer> productCategories = new LinkedHashMap<>();
-                    for (ChargeCategory category : chargeCategories) {
-                        productCategories.put(category.getName(), 0);
-                    }
-
-                    for (SettlementDetail detail : productDetails) {
-                        Long itemId = detail.getSettlementItem().getId();
-                        Long chargeCategoryId = itemToChargeCategory.get(itemId);
-
-                        if (chargeCategoryId != null) {
-                            String categoryName = chargeCategoryNames.get(chargeCategoryId);
-                            if (categoryName != null && detail.getAmount() != null) {
-                                productCategories.merge(categoryName, detail.getAmount(), Integer::sum);
-                                companyCategoryTotal.merge(categoryName, detail.getAmount(), Integer::sum);
-                            }
+                    if (chargeCategoryId != null) {
+                        String categoryName = chargeCategoryNames.get(chargeCategoryId);
+                        if (categoryName != null && detail.getAmount() != null) {
+                            productCategories.merge(categoryName, detail.getAmount(), Integer::sum);
+                            companyCategoryTotal.merge(categoryName, detail.getAmount(), Integer::sum);
                         }
                     }
-
-                    productInvoices.add(new InvoiceResponse.ProductInvoice(
-                            productEntry.getKey(), productName, productCategories));
                 }
+
+                productInvoices.add(new InvoiceResponse.ProductInvoice(
+                        productEntry.getKey(), productName, productCategories));
             }
 
             brandInvoices.add(new InvoiceResponse.BrandInvoice(brand.getId(), brand.getName(), productInvoices));

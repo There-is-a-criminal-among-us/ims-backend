@@ -1,6 +1,6 @@
 package kr.co.ksgk.ims.domain.settlement.repository;
 
-import kr.co.ksgk.ims.domain.brand.entity.Brand;
+import kr.co.ksgk.ims.domain.company.entity.Company;
 import kr.co.ksgk.ims.domain.settlement.entity.Settlement;
 import kr.co.ksgk.ims.domain.settlement.entity.SettlementStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -13,33 +13,19 @@ import java.util.Optional;
 
 public interface SettlementRepository extends JpaRepository<Settlement, Long> {
 
-    Optional<Settlement> findByYearAndMonthAndBrand(Integer year, Integer month, Brand brand);
+    Optional<Settlement> findByYearAndMonthAndCompany(Integer year, Integer month, Company company);
 
-    @Query("SELECT s FROM Settlement s LEFT JOIN FETCH s.details WHERE s.year = :year AND s.month = :month AND s.brand = :brand")
-    Optional<Settlement> findByYearAndMonthAndBrandWithDetails(@Param("year") Integer year,
+    @Query("SELECT s FROM Settlement s LEFT JOIN FETCH s.details WHERE s.year = :year AND s.month = :month AND s.company = :company")
+    Optional<Settlement> findByYearAndMonthAndCompanyWithDetails(@Param("year") Integer year,
                                                                 @Param("month") Integer month,
-                                                                @Param("brand") Brand brand);
+                                                                @Param("company") Company company);
 
-    @EntityGraph(attributePaths = {"brand", "brand.company"})
+    @EntityGraph(attributePaths = {"company"})
     List<Settlement> findByYearAndMonth(Integer year, Integer month);
 
-    @EntityGraph(attributePaths = {"brand", "brand.company"})
-    List<Settlement> findByYearAndMonthAndStatus(Integer year, Integer month, SettlementStatus status);
-
     @Query("""
             SELECT s FROM Settlement s
-            JOIN FETCH s.brand b
-            JOIN FETCH b.company c
-            WHERE s.year = :year AND s.month = :month AND c.id = :companyId
-            """)
-    List<Settlement> findByYearAndMonthAndCompanyId(@Param("year") Integer year,
-                                                     @Param("month") Integer month,
-                                                     @Param("companyId") Long companyId);
-
-    @Query("""
-            SELECT s FROM Settlement s
-            JOIN FETCH s.brand b
-            JOIN FETCH b.company c
+            JOIN FETCH s.company c
             WHERE s.year = :year AND s.month = :month AND c.id = :companyId AND s.status = :status
             """)
     List<Settlement> findByYearAndMonthAndCompanyIdAndStatus(@Param("year") Integer year,
