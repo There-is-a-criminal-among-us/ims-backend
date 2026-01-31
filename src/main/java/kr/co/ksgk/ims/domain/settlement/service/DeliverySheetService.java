@@ -7,7 +7,9 @@ import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetRemoteAreaListResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetRemoteAreaResponse;
+import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetReturnListResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetReturnResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetUploadResponse;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
@@ -208,16 +210,18 @@ public class DeliverySheetService {
         return DeliverySheetUploadResponse.success(year, month, successRows.size());
     }
 
-    public List<DeliverySheetReturnResponse> getDeliverySheetReturns(int year, int month) {
-        return deliverySheetReturnRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
+    public DeliverySheetReturnListResponse getDeliverySheetReturns(int year, int month) {
+        List<DeliverySheetReturnResponse> items = deliverySheetReturnRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
                 .map(DeliverySheetReturnResponse::from)
                 .toList();
+        return DeliverySheetReturnListResponse.of(items);
     }
 
-    public List<DeliverySheetRemoteAreaResponse> getDeliverySheetRemoteAreas(int year, int month) {
-        return deliverySheetRemoteAreaRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
+    public DeliverySheetRemoteAreaListResponse getDeliverySheetRemoteAreas(int year, int month) {
+        List<DeliverySheetRemoteAreaResponse> items = deliverySheetRemoteAreaRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
                 .map(DeliverySheetRemoteAreaResponse::from)
                 .toList();
+        return DeliverySheetRemoteAreaListResponse.of(items);
     }
 
     private List<ParsedRow> parseExcelFile(MultipartFile file) {
