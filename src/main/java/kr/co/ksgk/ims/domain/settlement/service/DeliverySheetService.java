@@ -7,8 +7,12 @@ import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetRemoteAreaResponse;
+import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetReturnResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetUploadResponse;
 import kr.co.ksgk.ims.domain.settlement.entity.*;
+import kr.co.ksgk.ims.domain.settlement.repository.DeliverySheetRemoteAreaRepository;
+import kr.co.ksgk.ims.domain.settlement.repository.DeliverySheetReturnRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.DeliverySheetRowRepository;
 import kr.co.ksgk.ims.domain.settlement.repository.SettlementItemRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -30,6 +34,8 @@ import java.util.*;
 public class DeliverySheetService {
 
     private final DeliverySheetRowRepository deliverySheetRowRepository;
+    private final DeliverySheetReturnRepository deliverySheetReturnRepository;
+    private final DeliverySheetRemoteAreaRepository deliverySheetRemoteAreaRepository;
     private final RawProductRepository rawProductRepository;
     private final ProductMappingRepository productMappingRepository;
     private final SettlementItemRepository settlementItemRepository;
@@ -38,12 +44,16 @@ public class DeliverySheetService {
 
     public DeliverySheetService(
             DeliverySheetRowRepository deliverySheetRowRepository,
+            DeliverySheetReturnRepository deliverySheetReturnRepository,
+            DeliverySheetRemoteAreaRepository deliverySheetRemoteAreaRepository,
             RawProductRepository rawProductRepository,
             ProductMappingRepository productMappingRepository,
             SettlementItemRepository settlementItemRepository,
             @Lazy SettlementCalculationService settlementCalculationService,
             ObjectMapper objectMapper) {
         this.deliverySheetRowRepository = deliverySheetRowRepository;
+        this.deliverySheetReturnRepository = deliverySheetReturnRepository;
+        this.deliverySheetRemoteAreaRepository = deliverySheetRemoteAreaRepository;
         this.rawProductRepository = rawProductRepository;
         this.productMappingRepository = productMappingRepository;
         this.settlementItemRepository = settlementItemRepository;
@@ -53,11 +63,25 @@ public class DeliverySheetService {
 
     private static final String PRODUCT_NAME_COLUMN = "상품명";
     private static final String WORK_TYPE_COLUMN = "작업구분";
+    private static final String PICKUP_DATE_COLUMN = "집하일자";
+    private static final String INVOICE_NUMBER_COLUMN = "운송장번호";
+    private static final String SENDER_NAME_COLUMN = "송하인명";
+    private static final String RECEIVER_NAME_COLUMN = "수하인명";
+    private static final String RECEIVER_ADDRESS_COLUMN = "수하인주소";
+    private static final Set<String> REMOTE_AREA_COLUMNS = Set.of(
+            "제주연계",
+            "집하도선료",
+            "배달도선료",
+            "집하산간",
+            "배달산간"
+    );
 
     @Transactional
     public DeliverySheetUploadResponse uploadDeliverySheet(MultipartFile file, int year, int month) {
         // 기존 데이터 삭제
         deliverySheetRowRepository.deleteByYearAndMonth(year, month);
+        deliverySheetReturnRepository.deleteByYearAndMonth(year, month);
+        deliverySheetRemoteAreaRepository.deleteByYearAndMonth(year, month);
 
         // Excel 파싱
         List<ParsedRow> parsedRows = parseExcelFile(file);
@@ -81,6 +105,8 @@ public class DeliverySheetService {
 
         List<DeliverySheetUploadResponse.FailedRow> failedRows = new ArrayList<>();
         List<DeliverySheetRow> successRows = new ArrayList<>();
+        List<DeliverySheetReturn> returnRows = new ArrayList<>();
+        List<DeliverySheetRemoteArea> remoteAreaRows = new ArrayList<>();
 
         for (ParsedRow row : parsedRows) {
             // RawProduct 매칭
@@ -132,6 +158,38 @@ public class DeliverySheetService {
                 successRows.add(deliverySheetRow);
                 isFirst = false;
             }
+
+            // 반품내역 저장 (작업구분 반품 또는 쿠팡코드 매칭 등 RETURN 처리)
+            if (workType == WorkType.RETURN) {
+                int amount = matchedRawProduct.getReturnSizeUnit().getPrice();
+                returnRows.add(DeliverySheetReturn.create(
+                        year,
+                        month,
+                        row.pickupDate(),
+                        row.invoiceNumber(),
+                        row.workType(),
+                        row.senderName(),
+                        row.receiverName(),
+                        row.productName(),
+                        amount
+                ));
+            }
+
+            // 도서산간 목록 저장 (운임합계 > 0)
+            int remoteAreaTotal = row.remoteAreaFees().values().stream().mapToInt(Integer::intValue).sum();
+            if (remoteAreaTotal > 0) {
+                remoteAreaRows.add(DeliverySheetRemoteArea.create(
+                        year,
+                        month,
+                        row.pickupDate(),
+                        row.invoiceNumber(),
+                        row.senderName(),
+                        row.receiverName(),
+                        row.receiverAddress(),
+                        row.productName(),
+                        remoteAreaTotal
+                ));
+            }
         }
 
         // 매칭 실패 시 전체 업로드 실패
@@ -141,11 +199,25 @@ public class DeliverySheetService {
 
         // 저장
         deliverySheetRowRepository.saveAll(successRows);
+        deliverySheetReturnRepository.saveAll(returnRows);
+        deliverySheetRemoteAreaRepository.saveAll(remoteAreaRows);
 
         // 정산 계산 트리거
         settlementCalculationService.calculateSettlements(year, month);
 
         return DeliverySheetUploadResponse.success(year, month, successRows.size());
+    }
+
+    public List<DeliverySheetReturnResponse> getDeliverySheetReturns(int year, int month) {
+        return deliverySheetReturnRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
+                .map(DeliverySheetReturnResponse::from)
+                .toList();
+    }
+
+    public List<DeliverySheetRemoteAreaResponse> getDeliverySheetRemoteAreas(int year, int month) {
+        return deliverySheetRemoteAreaRepository.findByYearAndMonthOrderByIdAsc(year, month).stream()
+                .map(DeliverySheetRemoteAreaResponse::from)
+                .toList();
     }
 
     private List<ParsedRow> parseExcelFile(MultipartFile file) {
@@ -162,6 +234,11 @@ public class DeliverySheetService {
             // 헤더에서 열 인덱스 찾기
             int productNameIndex = -1;
             int workTypeIndex = -1;
+            int pickupDateIndex = -1;
+            int invoiceNumberIndex = -1;
+            int senderNameIndex = -1;
+            int receiverNameIndex = -1;
+            int receiverAddressIndex = -1;
             Map<String, Integer> remoteAreaColumnIndexes = new HashMap<>();
 
             for (int i = 0; i < headerRow.getLastCellNum(); i++) {
@@ -174,8 +251,17 @@ public class DeliverySheetService {
                     productNameIndex = i;
                 } else if (WORK_TYPE_COLUMN.equals(headerName)) {
                     workTypeIndex = i;
-                } else if (!headerName.isEmpty()) {
-                    // REMOTE_AREA 열로 간주
+                } else if (PICKUP_DATE_COLUMN.equals(headerName)) {
+                    pickupDateIndex = i;
+                } else if (INVOICE_NUMBER_COLUMN.equals(headerName)) {
+                    invoiceNumberIndex = i;
+                } else if (SENDER_NAME_COLUMN.equals(headerName)) {
+                    senderNameIndex = i;
+                } else if (RECEIVER_NAME_COLUMN.equals(headerName)) {
+                    receiverNameIndex = i;
+                } else if (RECEIVER_ADDRESS_COLUMN.equals(headerName)) {
+                    receiverAddressIndex = i;
+                } else if (REMOTE_AREA_COLUMNS.contains(headerName)) {
                     remoteAreaColumnIndexes.put(headerName, i);
                 }
             }
@@ -203,6 +289,31 @@ public class DeliverySheetService {
                     }
                 }
 
+                String pickupDate = "";
+                if (pickupDateIndex >= 0) {
+                    pickupDate = getCellValueAsString(row.getCell(pickupDateIndex)).trim();
+                }
+
+                String invoiceNumber = "";
+                if (invoiceNumberIndex >= 0) {
+                    invoiceNumber = getCellValueAsString(row.getCell(invoiceNumberIndex)).trim();
+                }
+
+                String senderName = "";
+                if (senderNameIndex >= 0) {
+                    senderName = getCellValueAsString(row.getCell(senderNameIndex)).trim();
+                }
+
+                String receiverName = "";
+                if (receiverNameIndex >= 0) {
+                    receiverName = getCellValueAsString(row.getCell(receiverNameIndex)).trim();
+                }
+
+                String receiverAddress = "";
+                if (receiverAddressIndex >= 0) {
+                    receiverAddress = getCellValueAsString(row.getCell(receiverAddressIndex)).trim();
+                }
+
                 // REMOTE_AREA 비용 수집
                 Map<String, Integer> remoteAreaFees = new HashMap<>();
                 for (Map.Entry<String, Integer> entry : remoteAreaColumnIndexes.entrySet()) {
@@ -215,7 +326,8 @@ public class DeliverySheetService {
                     }
                 }
 
-                parsedRows.add(new ParsedRow(rowNum + 1, productName, workType, remoteAreaFees));
+                parsedRows.add(new ParsedRow(rowNum + 1, productName, workType, pickupDate, invoiceNumber,
+                        senderName, receiverName, receiverAddress, remoteAreaFees));
             }
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
@@ -292,6 +404,9 @@ public class DeliverySheetService {
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue();
             case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                }
                 double value = cell.getNumericCellValue();
                 if (value == Math.floor(value)) {
                     yield String.valueOf((long) value);
@@ -332,5 +447,13 @@ public class DeliverySheetService {
         };
     }
 
-    private record ParsedRow(int rowNumber, String productName, String workType, Map<String, Integer> remoteAreaFees) {}
+    private record ParsedRow(int rowNumber,
+                             String productName,
+                             String workType,
+                             String pickupDate,
+                             String invoiceNumber,
+                             String senderName,
+                             String receiverName,
+                             String receiverAddress,
+                             Map<String, Integer> remoteAreaFees) {}
 }

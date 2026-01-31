@@ -94,6 +94,26 @@ public class SettlementController {
         return SuccessResponse.ok(response);
     }
 
+    @GetMapping("/returns")
+    @Operation(summary = "반품내역 조회", description = "택배표 업로드 데이터 기반 반품내역 조회")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeliverySheetReturnResponse.class)))
+    public ResponseEntity<SuccessResponse<?>> getDeliverySheetReturns(
+            @RequestParam int year,
+            @RequestParam int month) {
+        List<DeliverySheetReturnResponse> response = deliverySheetService.getDeliverySheetReturns(year, month);
+        return SuccessResponse.ok(response);
+    }
+
+    @GetMapping("/remote-areas")
+    @Operation(summary = "도서산간 목록 조회", description = "택배표 업로드 데이터 기반 도서산간 목록 조회")
+    @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeliverySheetRemoteAreaResponse.class)))
+    public ResponseEntity<SuccessResponse<?>> getDeliverySheetRemoteAreas(
+            @RequestParam int year,
+            @RequestParam int month) {
+        List<DeliverySheetRemoteAreaResponse> response = deliverySheetService.getDeliverySheetRemoteAreas(year, month);
+        return SuccessResponse.ok(response);
+    }
+
     @GetMapping("/detail")
     @Operation(summary = "정산서 조회 (업체별)", description = "특정 업체의 월별 정산서 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementResponse.class)))
