@@ -24,24 +24,12 @@ public class StockLotService {
      * 입고 시 로트 생성
      */
     @Transactional
-    public StockLot createLot(Product product, Transaction transaction, LocalDate inboundDate, Integer quantity) {
-        StockLot stockLot = StockLot.create(product, transaction, inboundDate, quantity);
+    public StockLot createLot(Product product, Transaction transaction, LocalDate inboundDate,
+                               Integer quantity, Integer freePeriodDays) {
+        StockLot stockLot = StockLot.create(product, transaction, inboundDate, quantity, freePeriodDays);
         StockLot savedLot = stockLotRepository.save(stockLot);
-        log.info("StockLot 생성 - Product: {}, Date: {}, Quantity: {}",
-                product.getId(), inboundDate, quantity);
-        return savedLot;
-    }
-
-    /**
-     * 입고 시 로트 생성 (로트 번호 포함)
-     */
-    @Transactional
-    public StockLot createLotWithLotNumber(Product product, Transaction transaction,
-                                            LocalDate inboundDate, Integer quantity, String lotNumber) {
-        StockLot stockLot = StockLot.createWithLotNumber(product, transaction, inboundDate, quantity, lotNumber);
-        StockLot savedLot = stockLotRepository.save(stockLot);
-        log.info("StockLot 생성 (lotNumber: {}) - Product: {}, Date: {}, Quantity: {}",
-                lotNumber, product.getId(), inboundDate, quantity);
+        log.info("StockLot 생성 - Product: {}, Date: {}, Quantity: {}, FreePeriodDays: {}",
+                product.getId(), inboundDate, quantity, freePeriodDays);
         return savedLot;
     }
 
@@ -108,12 +96,5 @@ public class StockLotService {
      */
     public int getTotalRemainingByProduct(Product product) {
         return stockLotRepository.getTotalRemainingByProduct(product);
-    }
-
-    /**
-     * 잔여 수량이 있는 모든 로트 조회 (DailyStockLot 생성용)
-     */
-    public List<StockLot> getAllLotsWithRemaining() {
-        return stockLotRepository.findAllWithRemaining();
     }
 }

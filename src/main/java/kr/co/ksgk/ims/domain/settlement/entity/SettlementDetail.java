@@ -31,13 +31,13 @@ public class SettlementDetail {
 
     private Integer unitPrice;
 
-    private Integer amount;
+    private Long amount;
 
     @Lob
     private String note;
 
     public static SettlementDetail create(Settlement settlement, Product product, SettlementItem settlementItem,
-                                          Integer quantity, Integer unitPrice, Integer amount, String note) {
+                                          Integer quantity, Integer unitPrice, Long amount, String note) {
         SettlementDetail detail = new SettlementDetail();
         detail.settlement = settlement;
         detail.product = product;
@@ -49,15 +49,11 @@ public class SettlementDetail {
         return detail;
     }
 
-    public void update(Integer quantity, Integer unitPrice, Integer amount, String note) {
+    public void update(Integer quantity, Integer unitPrice, Long amount, String note) {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.amount = amount;
         this.note = note;
-    }
-
-    public void updateAmount(Integer amount) {
-        this.amount = amount;
     }
 
     public void updateNote(String note) {

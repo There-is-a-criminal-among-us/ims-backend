@@ -12,8 +12,8 @@ public record InvoiceResponse(
             Long id,
             String name,
             List<BrandInvoice> brands,
-            Map<String, Integer> categoryTotal,
-            Integer total
+            Map<String, Long> categoryTotal,
+            Long total
     ) {}
 
     public record BrandInvoice(
@@ -25,6 +25,6 @@ public record InvoiceResponse(
     public record ProductInvoice(
             Long id,
             String name,
-            Map<String, Integer> categories
+            Map<String, Long> categories
     ) {}
 }

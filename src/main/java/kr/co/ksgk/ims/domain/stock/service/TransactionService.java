@@ -15,6 +15,7 @@ import kr.co.ksgk.ims.domain.stock.dto.request.TransactionWorkRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
 import kr.co.ksgk.ims.domain.stock.entity.*;
+import kr.co.ksgk.ims.domain.settlement.service.StorageFreePeriodService;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionTypeRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
@@ -44,6 +45,7 @@ public class TransactionService {
     private final SettlementItemRepository settlementItemRepository;
     private final SettlementUnitRepository settlementUnitRepository;
     private final StockLotService stockLotService;
+    private final StorageFreePeriodService storageFreePeriodService;
 
     public PagingTransactionResponse getAllTransactions(
             Long memberId, String search, List<String> types, LocalDate startDate, LocalDate endDate, Pageable pageable) {
@@ -104,12 +106,15 @@ public class TransactionService {
         LocalDate workDate = transaction.getWorkDate() != null ? transaction.getWorkDate() : LocalDate.now();
 
         if (groupType == TransactionGroup.INCOMING) {
-            // 입고 확정 시 StockLot 생성
+            // 입고 확정 시 무료 보관 기간 조회 후 StockLot 생성
+            int freePeriodDays = storageFreePeriodService.getFreePeriodDays(
+                    transaction.getProduct(), workDate);
             StockLot stockLot = stockLotService.createLot(
                     transaction.getProduct(),
                     transaction,
                     workDate,
-                    transaction.getQuantity()
+                    transaction.getQuantity(),
+                    freePeriodDays
             );
             transaction.updateStockLot(stockLot);
         } else if (groupType == TransactionGroup.OUTGOING) {

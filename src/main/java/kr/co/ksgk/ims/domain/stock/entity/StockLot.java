@@ -41,36 +41,31 @@ public class StockLot extends BaseEntity {
 
     private String lotNumber;
 
+    @Column(nullable = false)
+    private Integer freePeriodDays = 0;
+
     @Builder
     public StockLot(Product product, Transaction transaction, LocalDate inboundDate,
-                    Integer initialQuantity, Integer remainingQuantity, String lotNumber) {
+                    Integer initialQuantity, Integer remainingQuantity, String lotNumber,
+                    Integer freePeriodDays) {
         this.product = product;
         this.transaction = transaction;
         this.inboundDate = inboundDate;
         this.initialQuantity = initialQuantity;
         this.remainingQuantity = remainingQuantity;
         this.lotNumber = lotNumber;
+        this.freePeriodDays = freePeriodDays != null ? freePeriodDays : 0;
     }
 
-    public static StockLot create(Product product, Transaction transaction, LocalDate inboundDate, Integer quantity) {
+    public static StockLot create(Product product, Transaction transaction, LocalDate inboundDate,
+                                    Integer quantity, Integer freePeriodDays) {
         return StockLot.builder()
                 .product(product)
                 .transaction(transaction)
                 .inboundDate(inboundDate)
                 .initialQuantity(quantity)
                 .remainingQuantity(quantity)
-                .build();
-    }
-
-    public static StockLot createWithLotNumber(Product product, Transaction transaction, LocalDate inboundDate,
-                                                Integer quantity, String lotNumber) {
-        return StockLot.builder()
-                .product(product)
-                .transaction(transaction)
-                .inboundDate(inboundDate)
-                .initialQuantity(quantity)
-                .remainingQuantity(quantity)
-                .lotNumber(lotNumber)
+                .freePeriodDays(freePeriodDays)
                 .build();
     }
 
@@ -93,12 +88,5 @@ public class StockLot extends BaseEntity {
      */
     public int getDaysFromInbound(LocalDate targetDate) {
         return (int) java.time.temporal.ChronoUnit.DAYS.between(this.inboundDate, targetDate);
-    }
-
-    /**
-     * 잔여 수량이 있는지 확인
-     */
-    public boolean hasRemaining() {
-        return this.remainingQuantity > 0;
     }
 }

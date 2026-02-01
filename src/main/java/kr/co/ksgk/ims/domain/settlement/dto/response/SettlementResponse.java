@@ -17,18 +17,18 @@ public record SettlementResponse(
         String confirmedByName,
         List<ProductColumn> products,
         List<TypeRow> types,
-        Integer totalAmount
+        Long totalAmount
 ) {
     public record ProductColumn(Long id, String name) {}
 
     public record ProductCell(Long productId, Long detailId,
-                              Integer quantity, Integer unitPrice, Integer amount, String note) {}
+                              Integer quantity, Integer unitPrice, Long amount, String note) {}
 
     public record ItemRow(Long itemId, String itemName,
                           CalculationType calculationType,
                           List<UnitInfo> units,
                           List<ProductCell> cells,
-                          Integer totalQuantity, Integer totalAmount) {}
+                          Integer totalQuantity, Long totalAmount) {}
 
     public record UnitInfo(Long id, String name, Integer price) {}
 
@@ -38,5 +38,5 @@ public record SettlementResponse(
     public record TypeRow(Long typeId, String typeName,
                           List<CategoryRow> categories,
                           List<ItemRow> directItems,
-                          Integer subtotalAmount) {}
+                          Long subtotalAmount) {}
 }

@@ -49,15 +49,21 @@ public class DailyStockLot {
     @Column(nullable = false)
     private Integer daysFromInbound;
 
+    // 역정규화: 입고 시점의 무료 보관 기간
+    @Column(nullable = false)
+    private Integer freePeriodDays = 0;
+
     @Builder
     public DailyStockLot(StockLot stockLot, Product product, LocalDate stockDate,
-                         Integer quantity, LocalDate inboundDate, Integer daysFromInbound) {
+                         Integer quantity, LocalDate inboundDate, Integer daysFromInbound,
+                         Integer freePeriodDays) {
         this.stockLot = stockLot;
         this.product = product;
         this.stockDate = stockDate;
         this.quantity = quantity;
         this.inboundDate = inboundDate;
         this.daysFromInbound = daysFromInbound;
+        this.freePeriodDays = freePeriodDays != null ? freePeriodDays : 0;
     }
 
     public static DailyStockLot create(StockLot stockLot, LocalDate stockDate) {
@@ -69,21 +75,14 @@ public class DailyStockLot {
                 .quantity(stockLot.getRemainingQuantity())
                 .inboundDate(stockLot.getInboundDate())
                 .daysFromInbound(daysFromInbound)
+                .freePeriodDays(stockLot.getFreePeriodDays())
                 .build();
     }
 
     /**
-     * 무료 기간 내인지 확인
+     * 자체 freePeriodDays를 사용하여 무료 기간 내인지 확인
      */
-    public boolean isWithinFreePeriod(int freePeriodDays) {
-        return this.daysFromInbound <= freePeriodDays;
-    }
-
-    /**
-     * 보관료 과금 대상 수량 반환
-     * 무료 기간 내면 0, 초과하면 전체 수량 반환
-     */
-    public int getBillableQuantity(int freePeriodDays) {
-        return isWithinFreePeriod(freePeriodDays) ? 0 : this.quantity;
+    public boolean isWithinFreePeriod() {
+        return this.daysFromInbound <= this.freePeriodDays;
     }
 }

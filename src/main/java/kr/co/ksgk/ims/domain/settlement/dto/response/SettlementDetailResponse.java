@@ -12,7 +12,7 @@ public record SettlementDetailResponse(
         CalculationType calculationType,
         Integer quantity,
         Integer unitPrice,
-        Integer amount,
+        Long amount,
         String note
 ) {
     public static SettlementDetailResponse from(SettlementDetail detail) {
