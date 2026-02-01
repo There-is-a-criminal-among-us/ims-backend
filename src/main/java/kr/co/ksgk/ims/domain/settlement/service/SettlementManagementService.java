@@ -127,8 +127,8 @@ public class SettlementManagementService {
                 .toList();
 
         // 5. 총합
-        int totalAmount = typeRows.stream()
-                .mapToInt(tr -> tr.subtotalAmount() != null ? tr.subtotalAmount() : 0)
+        long totalAmount = typeRows.stream()
+                .mapToLong(tr -> tr.subtotalAmount() != null ? tr.subtotalAmount() : 0L)
                 .sum();
 
         return new SettlementResponse(
@@ -158,14 +158,14 @@ public class SettlementManagementService {
                 .map(item -> buildItemRow(item, productIds, detailLookup))
                 .toList();
 
-        int subtotal = 0;
+        long subtotal = 0L;
         for (CategoryRow cr : categoryRows) {
             for (ItemRow ir : cr.items()) {
-                subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0;
+                subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0L;
             }
         }
         for (ItemRow ir : directItemRows) {
-            subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0;
+            subtotal += ir.totalAmount() != null ? ir.totalAmount() : 0L;
         }
 
         return new TypeRow(type.getId(), type.getName(), categoryRows, directItemRows, subtotal);
@@ -203,8 +203,8 @@ public class SettlementManagementService {
         int totalQuantity = cells.stream()
                 .mapToInt(c -> c.quantity() != null ? c.quantity() : 0)
                 .sum();
-        int totalAmount = cells.stream()
-                .mapToInt(c -> c.amount() != null ? c.amount() : 0)
+        long totalAmount = cells.stream()
+                .mapToLong(c -> c.amount() != null ? c.amount() : 0L)
                 .sum();
 
         return new ItemRow(item.getId(), item.getName(), item.getCalculationType(),
@@ -248,11 +248,11 @@ public class SettlementManagementService {
                 .collect(Collectors.groupingBy(d -> d.getProduct().getBrand()));
 
         List<InvoiceResponse.BrandInvoice> brandInvoices = new ArrayList<>();
-        Map<String, Integer> companyCategoryTotal = new LinkedHashMap<>();
+        Map<String, Long> companyCategoryTotal = new LinkedHashMap<>();
 
         // 카테고리 초기화
         for (ChargeCategory category : chargeCategories) {
-            companyCategoryTotal.put(category.getName(), 0);
+            companyCategoryTotal.put(category.getName(), 0L);
         }
 
         for (Map.Entry<Brand, List<SettlementDetail>> entry : detailsByBrand.entrySet()) {
@@ -269,9 +269,9 @@ public class SettlementManagementService {
                 List<SettlementDetail> productDetails = productEntry.getValue();
                 String productName = productDetails.get(0).getProduct().getName();
 
-                Map<String, Integer> productCategories = new LinkedHashMap<>();
+                Map<String, Long> productCategories = new LinkedHashMap<>();
                 for (ChargeCategory category : chargeCategories) {
-                    productCategories.put(category.getName(), 0);
+                    productCategories.put(category.getName(), 0L);
                 }
 
                 for (SettlementDetail detail : productDetails) {
@@ -281,8 +281,8 @@ public class SettlementManagementService {
                     if (chargeCategoryId != null) {
                         String categoryName = chargeCategoryNames.get(chargeCategoryId);
                         if (categoryName != null && detail.getAmount() != null) {
-                            productCategories.merge(categoryName, detail.getAmount(), Integer::sum);
-                            companyCategoryTotal.merge(categoryName, detail.getAmount(), Integer::sum);
+                            productCategories.merge(categoryName, detail.getAmount(), Long::sum);
+                            companyCategoryTotal.merge(categoryName, detail.getAmount(), Long::sum);
                         }
                     }
                 }
@@ -294,7 +294,7 @@ public class SettlementManagementService {
             brandInvoices.add(new InvoiceResponse.BrandInvoice(brand.getId(), brand.getName(), productInvoices));
         }
 
-        int companyTotal = companyCategoryTotal.values().stream().mapToInt(Integer::intValue).sum();
+        long companyTotal = companyCategoryTotal.values().stream().mapToLong(Long::longValue).sum();
 
         List<InvoiceResponse.CompanyInvoice> companyInvoices = List.of(
                 new InvoiceResponse.CompanyInvoice(

@@ -121,10 +121,10 @@ public class SettlementCalculationService {
         }
 
         int totalQuantity = works.stream().mapToInt(TransactionWork::getQuantity).sum();
-        int totalCost = works.stream().mapToInt(TransactionWork::getTotalCost).sum();
+        long totalCost = works.stream().mapToLong(TransactionWork::getTotalCost).sum();
 
         // 평균 단가 계산
-        int unitPrice = totalQuantity > 0 ? totalCost / totalQuantity : 0;
+        int unitPrice = totalQuantity > 0 ? (int) (totalCost / totalQuantity) : 0;
 
         return createDetail(product, item, totalQuantity, unitPrice, totalCost, null);
     }
@@ -146,7 +146,7 @@ public class SettlementCalculationService {
         List<DailyStockLot> dailyStockLots = dailyStockLotRepository.findByProductAndDateBetween(
                 product, startDate, endDate);
 
-        int totalAmount = 0;
+        long totalAmount = 0L;
         int totalDays = 0;
 
         if (!dailyStockLots.isEmpty()) {
@@ -162,9 +162,9 @@ public class SettlementCalculationService {
                 }
 
                 // 무료 기간 초과 로트만 합산
-                int billableStock = dailyStockLots.stream()
+                long billableStock = dailyStockLots.stream()
                         .filter(dsl -> !dsl.isWithinFreePeriod(freePeriodDays))
-                        .mapToInt(DailyStockLot::getQuantity)
+                        .mapToLong(DailyStockLot::getQuantity)
                         .sum();
 
                 BigDecimal cbm = product.getCbm();
@@ -174,7 +174,7 @@ public class SettlementCalculationService {
                         .multiply(cbm)
                         .multiply(pricePerCbm)
                         .setScale(0, RoundingMode.HALF_UP)
-                        .intValue();
+                        .longValue();
 
                 log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
                         product.getId(), dailyStockLots.size(), billableStock, totalAmount);
@@ -195,13 +195,13 @@ public class SettlementCalculationService {
                                 Collectors.summingInt(DailyStockLot::getQuantity)
                         ));
 
-                int totalPallets = dailyBillableQuantities.values().stream()
-                        .mapToInt(qty -> (int) Math.ceil((double) qty / quantityPerPallet))
+                long totalPallets = dailyBillableQuantities.values().stream()
+                        .mapToLong(qty -> (long) Math.ceil((double) qty / quantityPerPallet))
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
                         .setScale(0, RoundingMode.HALF_UP)
-                        .intValue();
+                        .longValue();
 
                 log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
                         product.getId(), totalPallets, totalAmount);
@@ -223,7 +223,7 @@ public class SettlementCalculationService {
                     return null;
                 }
 
-                int totalStock = dailyStocks.stream().mapToInt(DailyStock::getCurrentStock).sum();
+                long totalStock = dailyStocks.stream().mapToLong(DailyStock::getCurrentStock).sum();
                 BigDecimal cbm = product.getCbm();
                 BigDecimal pricePerCbm = product.getStoragePricePerCbm();
 
@@ -231,7 +231,7 @@ public class SettlementCalculationService {
                         .multiply(cbm)
                         .multiply(pricePerCbm)
                         .setScale(0, RoundingMode.HALF_UP)
-                        .intValue();
+                        .longValue();
 
             } else if (storageType == StorageType.PALLET) {
                 if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
@@ -241,13 +241,13 @@ public class SettlementCalculationService {
                 int quantityPerPallet = product.getQuantityPerPallet();
                 BigDecimal pricePerPallet = product.getStoragePricePerPallet();
 
-                int totalPallets = dailyStocks.stream()
-                        .mapToInt(ds -> (int) Math.ceil((double) ds.getCurrentStock() / quantityPerPallet))
+                long totalPallets = dailyStocks.stream()
+                        .mapToLong(ds -> (long) Math.ceil((double) ds.getCurrentStock() / quantityPerPallet))
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
                         .setScale(0, RoundingMode.HALF_UP)
-                        .intValue();
+                        .longValue();
             }
         }
 
@@ -270,20 +270,20 @@ public class SettlementCalculationService {
         int quantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
 
         // costTarget인 row만 금액 계산 (quantity * unitPrice)
-        int totalAmount = 0;
+        long totalAmount = 0L;
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
                 RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
                 if (rp != null && rp.getSizeUnit() != null) {
                     unitPrice = rp.getSizeUnit().getPrice();
-                    totalAmount += unitPrice * row.getQuantity();
+                    totalAmount += (long) unitPrice * row.getQuantity();
                 }
             }
         }
 
         if (totalAmount == 0 && unitPrice == null) {
-            return createDetail(product, item, quantity, null, 0, null);
+            return createDetail(product, item, quantity, null, 0L, null);
         }
 
         return createDetail(product, item, quantity, unitPrice, totalAmount, null);
@@ -301,20 +301,20 @@ public class SettlementCalculationService {
         int quantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
 
         // costTarget인 row만 금액 계산 (quantity * unitPrice)
-        int totalAmount = 0;
+        long totalAmount = 0L;
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
                 RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
                 if (rp != null && rp.getReturnSizeUnit() != null) {
                     unitPrice = rp.getReturnSizeUnit().getPrice();
-                    totalAmount += unitPrice * row.getQuantity();
+                    totalAmount += (long) unitPrice * row.getQuantity();
                 }
             }
         }
 
         if (totalAmount == 0 && unitPrice == null) {
-            return createDetail(product, item, quantity, null, 0, null);
+            return createDetail(product, item, quantity, null, 0L, null);
         }
 
         return createDetail(product, item, quantity, unitPrice, totalAmount, null);
@@ -329,7 +329,7 @@ public class SettlementCalculationService {
         }
 
         String itemName = item.getName();
-        int totalFee = 0;
+        long totalFee = 0L;
         int count = 0;
 
         for (DeliverySheetRow row : rows) {
@@ -359,7 +359,7 @@ public class SettlementCalculationService {
     }
 
     private SettlementDetail createDetail(Product product, SettlementItem item,
-                                           Integer quantity, Integer unitPrice, Integer amount, String note) {
+                                           Integer quantity, Integer unitPrice, Long amount, String note) {
         // Settlement는 나중에 설정됨 (addDetail에서)
         return SettlementDetail.create(null, product, item, quantity, unitPrice, amount, note);
     }
