@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.stock.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import kr.co.ksgk.ims.domain.stock.dto.request.TransactionRequest;
+import kr.co.ksgk.ims.domain.stock.dto.request.TransactionUpdateRequest;
 import kr.co.ksgk.ims.domain.stock.dto.response.PagingTransactionResponse;
 import kr.co.ksgk.ims.domain.stock.dto.response.TransactionResponse;
 import kr.co.ksgk.ims.domain.stock.service.TransactionService;
@@ -61,5 +62,13 @@ public class TransactionController implements TransactionApi {
     public ResponseEntity<SuccessResponse<?>> createTransaction(@RequestBody TransactionRequest request) {
         TransactionResponse transactionResponse = transactionService.createTransaction(request);
         return SuccessResponse.created(transactionResponse);
+    }
+
+    @PatchMapping("/{transactionId}")
+    public ResponseEntity<SuccessResponse<?>> updateTransaction(
+            @PathVariable Long transactionId,
+            @RequestBody TransactionUpdateRequest request) {
+        TransactionResponse response = transactionService.updateTransaction(transactionId, request);
+        return SuccessResponse.ok(response);
     }
 }

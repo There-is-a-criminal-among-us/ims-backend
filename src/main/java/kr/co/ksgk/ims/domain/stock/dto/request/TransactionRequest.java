@@ -8,6 +8,7 @@ import kr.co.ksgk.ims.domain.stock.entity.TransactionType;
 import kr.co.ksgk.ims.global.annotation.NotZero;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record TransactionRequest(
         Long productId,
@@ -15,7 +16,9 @@ public record TransactionRequest(
         @NotNull  @NotZero
         Integer quantity,
         String note,
-        LocalDate scheduledDate
+        LocalDate scheduledDate,
+        LocalDate workDate,
+        List<TransactionWorkRequest> works
 ) {
     public Transaction toEntity(Product product, TransactionType transactionType, TransactionStatus transactionStatus) {
         return Transaction.builder()
@@ -25,6 +28,7 @@ public record TransactionRequest(
                 .note(note)
                 .scheduledDate(scheduledDate)
                 .transactionStatus(transactionStatus)
+                .workDate(workDate)
                 .build();
     }
 }

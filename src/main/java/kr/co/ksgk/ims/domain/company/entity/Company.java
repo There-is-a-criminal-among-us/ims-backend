@@ -44,13 +44,17 @@ public class Company extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    // 보관료 무료 기간 기본값 (일)
+    private Integer defaultStorageFreePeriodDays;
+
     @Builder
-    public Company(String name, String businessNumber, String representativeName, String address, String note) {
+    public Company(String name, String businessNumber, String representativeName, String address, String note, Integer defaultStorageFreePeriodDays) {
         this.name = name;
         this.businessNumber = businessNumber;
         this.representativeName = representativeName;
         this.address = address;
         this.note = note;
+        this.defaultStorageFreePeriodDays = defaultStorageFreePeriodDays;
     }
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
@@ -78,5 +82,9 @@ public class Company extends BaseEntity {
 
     public void updateNote(String note) {
         this.note = note;
+    }
+
+    public void updateDefaultStorageFreePeriodDays(Integer defaultStorageFreePeriodDays) {
+        this.defaultStorageFreePeriodDays = defaultStorageFreePeriodDays;
     }
 }

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
@@ -81,6 +82,16 @@ public interface ProductApi {
                     schema = @Schema(implementation = PagingProductMappingResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> getProductMapping(String search, int page, int size);
+
+    @Operation(
+            summary = "품목 매핑 수정",
+            description = "특정 품목 매핑을 수정합니다. null인 필드는 기존 값을 유지합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "품목 매핑 수정 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ProductMappingResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> updateProductMapping(Long rawProductId, ProductMappingUpdateRequest request);
 
     @Operation(
             summary = "품목 매핑 삭제",

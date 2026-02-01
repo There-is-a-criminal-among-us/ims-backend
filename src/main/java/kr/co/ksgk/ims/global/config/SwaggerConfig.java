@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class SwaggerConfig {
 
@@ -31,7 +33,7 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(apiInfo())
                 .components(components)
-                .addServersItem(server)
+                .servers(List.of(server))
                 .addSecurityItem(securityRequirement);
     }
 

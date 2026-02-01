@@ -14,4 +14,6 @@ public interface RawProductRepository extends JpaRepository<RawProduct, Long> {
     Page<RawProduct> findByNameContaining(String name, Pageable pageable);
 
     Optional<RawProduct> findByName(String name);
+
+    Optional<RawProduct> findByCoupangCode(String coupangCode);
 }

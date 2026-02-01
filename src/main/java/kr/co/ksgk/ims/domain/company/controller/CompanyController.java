@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/companies")
@@ -33,6 +35,12 @@ public class CompanyController implements CompanyApi {
     public ResponseEntity<SuccessResponse<?>> createCompany(@RequestBody CompanyRequest request) {
         CompanyResponse companyResponse = companyService.createCompany(request);
         return SuccessResponse.created(companyResponse);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<SuccessResponse<?>> getAllCompaniesWithoutPaging() {
+        List<CompanyResponse> response = companyService.getAllCompaniesWithoutPaging();
+        return SuccessResponse.ok(response);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

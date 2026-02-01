@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.brand.repository.BrandRepository;
 import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
@@ -14,9 +15,13 @@ import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.settlement.entity.CalculationType;
+import kr.co.ksgk.ims.domain.settlement.entity.SettlementUnit;
+import kr.co.ksgk.ims.domain.settlement.repository.SettlementUnitRepository;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
 import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
 import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,6 +46,7 @@ public class ProductService {
     private final ProductMappingRepository productMappingRepository;
     private final StockRepository stockRepository;
     private final InvoiceProductRepository invoiceProductRepository;
+    private final SettlementUnitRepository settlementUnitRepository;
 
     //등록
     @Transactional
@@ -84,7 +90,38 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         if (request.name() != null) product.updateName(request.name());
         if (request.note() != null) product.updateNote(request.note());
+        if (request.storageType() != null) {
+            product.updateStorageSettings(
+                    request.storageType(),
+                    request.cbm(),
+                    request.storagePricePerCbm(),
+                    request.quantityPerPallet(),
+                    request.storagePricePerPallet()
+            );
+        }
         return ProductResponse.from(product);
+    }
+
+    private SettlementUnit getValidatedSizeUnit(Long sizeUnitId) {
+        SettlementUnit unit = settlementUnitRepository.findById(sizeUnitId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_UNIT_NOT_FOUND));
+
+        if (unit.getItem().getCalculationType() != CalculationType.SIZE) {
+            throw new BusinessException(ErrorCode.INVALID_SIZE_UNIT);
+        }
+
+        return unit;
+    }
+
+    private SettlementUnit getValidatedReturnSizeUnit(Long returnSizeUnitId) {
+        SettlementUnit unit = settlementUnitRepository.findById(returnSizeUnitId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.SETTLEMENT_UNIT_NOT_FOUND));
+
+        if (unit.getItem().getCalculationType() != CalculationType.RETURN_SIZE) {
+            throw new BusinessException(ErrorCode.INVALID_RETURN_SIZE_UNIT);
+        }
+
+        return unit;
     }
 
     @Transactional
@@ -98,6 +135,19 @@ public class ProductService {
     public ProductMappingResponse createProductMapping(ProductMappingRequest request) {
         RawProduct rawProduct = request.toEntity();
         RawProduct savedRawProduct = rawProductRepository.save(rawProduct);
+
+        if (request.sizeUnitId() != null) {
+            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
+            savedRawProduct.updateSizeUnit(sizeUnit);
+        }
+        if (request.returnSizeUnitId() != null) {
+            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
+            savedRawProduct.updateReturnSizeUnit(returnSizeUnit);
+        }
+        if (request.coupangCode() != null) {
+            savedRawProduct.updateCoupangCode(request.coupangCode());
+        }
+
         List<ProductMapping> productMappings = new ArrayList<>();
         request.products().forEach(
                 productMappingDetail -> {
@@ -107,6 +157,43 @@ public class ProductService {
                 });
         List<ProductMapping> savedProductMappings = productMappingRepository.saveAll(productMappings);
         return ProductMappingResponse.from(savedProductMappings);
+    }
+
+    @Transactional
+    public ProductMappingResponse updateProductMapping(Long rawProductId, ProductMappingUpdateRequest request) {
+        RawProduct rawProduct = rawProductRepository.findById(rawProductId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.RAW_PRODUCT_NOT_FOUND));
+
+        if (request.rawName() != null) {
+            rawProduct.updateName(request.rawName());
+        }
+        if (request.sizeUnitId() != null) {
+            SettlementUnit sizeUnit = getValidatedSizeUnit(request.sizeUnitId());
+            rawProduct.updateSizeUnit(sizeUnit);
+        }
+        if (request.returnSizeUnitId() != null) {
+            SettlementUnit returnSizeUnit = getValidatedReturnSizeUnit(request.returnSizeUnitId());
+            rawProduct.updateReturnSizeUnit(returnSizeUnit);
+        }
+        if (request.coupangCode() != null) {
+            rawProduct.updateCoupangCode(request.coupangCode());
+        }
+
+        if (request.products() != null) {
+            // 기존 매핑 제거 후 새로 생성
+            rawProduct.getProductMappings().clear();
+            List<ProductMapping> newMappings = request.products().stream()
+                    .map(detail -> {
+                        Product product = productRepository.findById(detail.productId())
+                                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+                        return detail.toEntity(product, rawProduct);
+                    })
+                    .toList();
+            rawProduct.getProductMappings().addAll(newMappings);
+        }
+
+        List<ProductMapping> mappings = productMappingRepository.findByRawProduct(rawProduct);
+        return ProductMappingResponse.from(mappings);
     }
 
     public PagingProductMappingResponse getProductMapping(String search, Pageable pageable) {

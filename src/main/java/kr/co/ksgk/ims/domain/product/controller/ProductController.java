@@ -3,6 +3,7 @@ package kr.co.ksgk.ims.domain.product.controller;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
@@ -14,8 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.YearMonth;
 
 @RestController
 @RequiredArgsConstructor
@@ -89,6 +88,15 @@ public class ProductController implements ProductApi {
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size) {
          PagingProductMappingResponse response = productService.getProductMapping(search, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        return SuccessResponse.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/mapping/{rawProductId}")
+    public ResponseEntity<SuccessResponse<?>> updateProductMapping(
+            @PathVariable Long rawProductId,
+            @RequestBody ProductMappingUpdateRequest request) {
+        ProductMappingResponse response = productService.updateProductMapping(rawProductId, request);
         return SuccessResponse.ok(response);
     }
 

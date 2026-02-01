@@ -1,30 +1,35 @@
 package kr.co.ksgk.ims.domain.stock.dto.response;
 
+import kr.co.ksgk.ims.domain.stock.dto.TransactionWorkDto;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
 import lombok.Builder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 public record TransactionResponse(
         long id,
         String type,
         LocalDate scheduledDate,
+        LocalDate workDate,
         String companyName,
         String brandName,
         String productName,
         int quantity,
         String note,
         TransactionStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        List<TransactionWorkDto> works
 ) {
     public static TransactionResponse from(Transaction transaction) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
                 .type(transaction.getTransactionType().getName())
                 .scheduledDate(transaction.getScheduledDate())
+                .workDate(transaction.getWorkDate())
                 .companyName(transaction.getProduct().getBrand().getCompany().getName())
                 .brandName(transaction.getProduct().getBrand().getName())
                 .productName(transaction.getProduct().getName())
@@ -32,6 +37,9 @@ public record TransactionResponse(
                 .note(transaction.getNote())
                 .status(transaction.getTransactionStatus())
                 .createdAt(transaction.getCreatedAt())
+                .works(transaction.getWorks().stream()
+                        .map(TransactionWorkDto::from)
+                        .toList())
                 .build();
     }
 }

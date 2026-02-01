@@ -8,7 +8,10 @@ import java.util.List;
 public record ProductMappingRequest(
         @NotBlank
         String rawName,
-        List<ProductMappingDetailsRequest> products
+        List<ProductMappingDetailsRequest> products,
+        Long sizeUnitId,
+        Long returnSizeUnitId,
+        String coupangCode
 ) {
     public RawProduct toEntity() {
         return RawProduct.builder()

@@ -7,8 +7,12 @@ import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
+import kr.co.ksgk.ims.domain.stock.entity.DailyStockLot;
+import kr.co.ksgk.ims.domain.stock.entity.StockLot;
 import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
+import kr.co.ksgk.ims.domain.stock.repository.DailyStockLotRepository;
+import kr.co.ksgk.ims.domain.stock.repository.StockLotRepository;
 import kr.co.ksgk.ims.domain.stock.repository.StockRepository;
 import kr.co.ksgk.ims.domain.stock.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,8 @@ public class DailyStockScheduler {
     private final TransactionRepository transactionRepository;
     private final DeliveryRepository deliveryRepository;
     private final InvoiceProductRepository invoiceProductRepository;
+    private final StockLotRepository stockLotRepository;
+    private final DailyStockLotRepository dailyStockLotRepository;
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
@@ -56,8 +62,45 @@ public class DailyStockScheduler {
             }
 
             log.info("DailyStock 데이터 생성 완료: {}", yesterday);
+
+            // DailyStockLot 생성
+            createDailyStockLotData(yesterday);
+
         } catch (Exception e) {
             log.error("DailyStock 데이터 생성 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 일별 로트 스냅샷 생성
+     */
+    private void createDailyStockLotData(LocalDate targetDate) {
+        log.info("DailyStockLot 데이터 생성 시작: {}", targetDate);
+
+        try {
+            List<StockLot> lotsWithRemaining = stockLotRepository.findAllWithRemaining();
+            int createdCount = 0;
+
+            for (StockLot stockLot : lotsWithRemaining) {
+                // 이미 존재하는지 확인
+                if (dailyStockLotRepository.existsByStockLotAndStockDate(stockLot, targetDate)) {
+                    log.debug("DailyStockLot 이미 존재 - Lot: {}, Date: {}", stockLot.getId(), targetDate);
+                    continue;
+                }
+
+                DailyStockLot dailyStockLot = DailyStockLot.create(stockLot, targetDate);
+                dailyStockLotRepository.save(dailyStockLot);
+                createdCount++;
+
+                log.debug("DailyStockLot 생성 - Lot: {}, Product: {}, Date: {}, Quantity: {}, DaysFromInbound: {}",
+                        stockLot.getId(), stockLot.getProduct().getId(), targetDate,
+                        stockLot.getRemainingQuantity(), dailyStockLot.getDaysFromInbound());
+            }
+
+            log.info("DailyStockLot 데이터 생성 완료: {} - 생성된 수: {}", targetDate, createdCount);
+        } catch (Exception e) {
+            log.error("DailyStockLot 데이터 생성 중 오류 발생: {}", e.getMessage(), e);
             throw e;
         }
     }
