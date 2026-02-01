@@ -43,7 +43,6 @@ public class SettlementCalculationService {
     private final StockRepository stockRepository;
     private final TransactionWorkRepository transactionWorkRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
-    private final StorageFreePeriodService storageFreePeriodService;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -138,11 +137,7 @@ public class SettlementCalculationService {
             return null;
         }
 
-        // 무료 기간 조회
-        int freePeriodDays = storageFreePeriodService.getFreePeriodDays(product, startDate);
-        log.debug("보관료 계산 - Product: {}, FreePeriodDays: {}", product.getId(), freePeriodDays);
-
-        // DailyStockLot 기반 계산 시도
+        // DailyStockLot 기반 계산 시도 (각 로트에 저장된 freePeriodDays 사용)
         List<DailyStockLot> dailyStockLots = dailyStockLotRepository.findByProductAndDateBetween(
                 product, startDate, endDate);
 
@@ -161,9 +156,9 @@ public class SettlementCalculationService {
                     return null;
                 }
 
-                // 무료 기간 초과 로트만 합산
+                // 무료 기간 초과 로트만 합산 (각 로트의 자체 freePeriodDays 사용)
                 long billableStock = dailyStockLots.stream()
-                        .filter(dsl -> !dsl.isWithinFreePeriod(freePeriodDays))
+                        .filter(dsl -> !dsl.isWithinFreePeriod())
                         .mapToLong(DailyStockLot::getQuantity)
                         .sum();
 
@@ -187,9 +182,9 @@ public class SettlementCalculationService {
                 int quantityPerPallet = product.getQuantityPerPallet();
                 BigDecimal pricePerPallet = product.getStoragePricePerPallet();
 
-                // 일별로 그룹핑하여 과금 대상 수량 계산 후 팔렛 수 산출
+                // 일별로 그룹핑하여 과금 대상 수량 계산 후 팔렛 수 산출 (각 로트의 자체 freePeriodDays 사용)
                 Map<LocalDate, Integer> dailyBillableQuantities = dailyStockLots.stream()
-                        .filter(dsl -> !dsl.isWithinFreePeriod(freePeriodDays))
+                        .filter(dsl -> !dsl.isWithinFreePeriod())
                         .collect(Collectors.groupingBy(
                                 DailyStockLot::getStockDate,
                                 Collectors.summingInt(DailyStockLot::getQuantity)

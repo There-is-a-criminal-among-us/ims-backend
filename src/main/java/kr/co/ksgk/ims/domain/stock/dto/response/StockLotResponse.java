@@ -14,6 +14,7 @@ public record StockLotResponse(
         Integer initialQuantity,
         Integer remainingQuantity,
         String lotNumber,
+        Integer freePeriodDays,
         LocalDateTime createdAt
 ) {
     public static StockLotResponse from(StockLot stockLot) {
@@ -26,6 +27,7 @@ public record StockLotResponse(
                 stockLot.getInitialQuantity(),
                 stockLot.getRemainingQuantity(),
                 stockLot.getLotNumber(),
+                stockLot.getFreePeriodDays(),
                 stockLot.getCreatedAt()
         );
     }
