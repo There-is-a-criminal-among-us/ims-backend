@@ -43,6 +43,7 @@ public class SettlementCalculationService {
     private final StockRepository stockRepository;
     private final TransactionWorkRepository transactionWorkRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
+    private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -72,9 +73,16 @@ public class SettlementCalculationService {
             // 기존 상세 삭제
             settlement.clearDetails();
 
+            // 업체에 매핑된 항목만 필터링
+            Set<Long> visibleItemIds = companyItemChargeMappingRepository
+                    .findSettlementItemIdsByCompanyId(company.getId());
+            List<SettlementItem> companyItems = allItems.stream()
+                    .filter(item -> visibleItemIds.contains(item.getId()))
+                    .toList();
+
             // 각 품목별, 항목별 계산
             for (Product product : products) {
-                for (SettlementItem item : allItems) {
+                for (SettlementItem item : companyItems) {
                     SettlementDetail detail = calculateDetail(year, month, product, item);
                     if (detail != null) {
                         settlement.addDetail(detail);

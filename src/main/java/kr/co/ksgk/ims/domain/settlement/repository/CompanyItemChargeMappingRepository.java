@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Set;
 
 public interface CompanyItemChargeMappingRepository extends JpaRepository<CompanyItemChargeMapping, Long> {
 
@@ -14,6 +15,9 @@ public interface CompanyItemChargeMappingRepository extends JpaRepository<Compan
             "JOIN FETCH m.chargeCategory " +
             "WHERE m.company.id = :companyId")
     List<CompanyItemChargeMapping> findByCompanyId(@Param("companyId") Long companyId);
+
+    @Query("SELECT m.settlementItem.id FROM CompanyItemChargeMapping m WHERE m.company.id = :companyId")
+    Set<Long> findSettlementItemIdsByCompanyId(@Param("companyId") Long companyId);
 
     void deleteByCompanyId(Long companyId);
 }
