@@ -43,7 +43,7 @@ public class Product extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private StorageType storageType;
 
-    @Column(precision = 10, scale = 4)
+    @Column(precision = 12, scale = 6)
     private BigDecimal cbm;
 
     @Column(precision = 10, scale = 2)
