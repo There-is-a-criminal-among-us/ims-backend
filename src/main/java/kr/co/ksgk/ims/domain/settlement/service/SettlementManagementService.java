@@ -44,7 +44,9 @@ public class SettlementManagementService {
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
 
-        return buildSettlementResponse(settlement, details);
+        Set<Long> visibleItemIds = companyItemChargeMappingRepository
+                .findSettlementItemIdsByCompanyId(companyId);
+        return buildSettlementResponse(settlement, details, visibleItemIds);
     }
 
     public List<SettlementResponse> getSettlementsByYearAndMonth(int year, int month) {
@@ -53,7 +55,9 @@ public class SettlementManagementService {
         return settlements.stream()
                 .map(settlement -> {
                     List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlement.getId());
-                    return buildSettlementResponse(settlement, details);
+                    Set<Long> visibleItemIds = companyItemChargeMappingRepository
+                            .findSettlementItemIdsByCompanyId(settlement.getCompany().getId());
+                    return buildSettlementResponse(settlement, details, visibleItemIds);
                 })
                 .toList();
     }
@@ -84,7 +88,9 @@ public class SettlementManagementService {
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlementId);
 
-        return buildSettlementResponse(settlement, details);
+        Set<Long> visibleItemIds = companyItemChargeMappingRepository
+                .findSettlementItemIdsByCompanyId(settlement.getCompany().getId());
+        return buildSettlementResponse(settlement, details, visibleItemIds);
     }
 
     @Transactional
@@ -96,12 +102,15 @@ public class SettlementManagementService {
 
         List<SettlementDetail> details = settlementDetailRepository.findBySettlementIdWithDetails(settlementId);
 
-        return buildSettlementResponse(settlement, details);
+        Set<Long> visibleItemIds = companyItemChargeMappingRepository
+                .findSettlementItemIdsByCompanyId(settlement.getCompany().getId());
+        return buildSettlementResponse(settlement, details, visibleItemIds);
     }
 
     // --- 피벗 응답 빌드 ---
 
-    private SettlementResponse buildSettlementResponse(Settlement settlement, List<SettlementDetail> details) {
+    private SettlementResponse buildSettlementResponse(Settlement settlement, List<SettlementDetail> details,
+                                                         Set<Long> visibleItemIds) {
         // 1. 고유 품목 추출 (열 헤더)
         List<ProductColumn> products = details.stream()
                 .map(d -> new ProductColumn(d.getProduct().getId(), d.getProduct().getName()))
@@ -121,9 +130,10 @@ public class SettlementManagementService {
         // 3. 전체 구조 조회
         List<SettlementType> types = settlementTypeRepository.findAllWithHierarchy();
 
-        // 4. TypeRow 빌드
+        // 4. TypeRow 빌드 (매핑된 항목만 포함, 빈 타입 제거)
         List<TypeRow> typeRows = types.stream()
-                .map(type -> buildTypeRow(type, productIds, detailLookup))
+                .map(type -> buildTypeRow(type, productIds, detailLookup, visibleItemIds))
+                .filter(tr -> !tr.categories().isEmpty() || !tr.directItems().isEmpty())
                 .toList();
 
         // 5. 총합
@@ -147,13 +157,17 @@ public class SettlementManagementService {
     }
 
     private TypeRow buildTypeRow(SettlementType type, List<Long> productIds,
-                                 Map<Long, Map<Long, SettlementDetail>> detailLookup) {
+                                 Map<Long, Map<Long, SettlementDetail>> detailLookup,
+                                 Set<Long> visibleItemIds) {
+        // 빈 카테고리 제거
         List<CategoryRow> categoryRows = type.getCategories().stream()
                 .sorted(Comparator.comparing(SettlementCategory::getDisplayOrder))
-                .map(cat -> buildCategoryRow(cat, productIds, detailLookup))
+                .map(cat -> buildCategoryRow(cat, productIds, detailLookup, visibleItemIds))
+                .filter(cr -> !cr.items().isEmpty())
                 .toList();
 
         List<ItemRow> directItemRows = type.getDirectItems().stream()
+                .filter(item -> visibleItemIds.contains(item.getId()))
                 .sorted(Comparator.comparing(SettlementItem::getDisplayOrder))
                 .map(item -> buildItemRow(item, productIds, detailLookup))
                 .toList();
@@ -172,8 +186,10 @@ public class SettlementManagementService {
     }
 
     private CategoryRow buildCategoryRow(SettlementCategory category, List<Long> productIds,
-                                         Map<Long, Map<Long, SettlementDetail>> detailLookup) {
+                                         Map<Long, Map<Long, SettlementDetail>> detailLookup,
+                                         Set<Long> visibleItemIds) {
         List<ItemRow> itemRows = category.getItems().stream()
+                .filter(item -> visibleItemIds.contains(item.getId()))
                 .sorted(Comparator.comparing(SettlementItem::getDisplayOrder))
                 .map(item -> buildItemRow(item, productIds, detailLookup))
                 .toList();
