@@ -141,6 +141,17 @@ public class StorageFreePeriodService {
     }
 
     /**
+     * 업체 기본값 조회
+     */
+    public Integer getCompanyDefault(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
+        return company.getDefaultStorageFreePeriodDays() != null
+                ? company.getDefaultStorageFreePeriodDays()
+                : SYSTEM_DEFAULT_FREE_PERIOD_DAYS;
+    }
+
+    /**
      * 업체 기본값 수정
      */
     @Transactional
