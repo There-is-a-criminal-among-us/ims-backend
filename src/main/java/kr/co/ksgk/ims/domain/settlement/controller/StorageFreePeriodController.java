@@ -56,6 +56,15 @@ public class StorageFreePeriodController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/company/{companyId}/default")
+    @Operation(summary = "업체 기본값 조회", description = "업체의 기본 무료 기간 조회")
+    @ApiResponse(responseCode = "200")
+    public ResponseEntity<SuccessResponse<?>> getCompanyDefault(@PathVariable Long companyId) {
+        Integer freePeriodDays = storageFreePeriodService.getCompanyDefault(companyId);
+        return SuccessResponse.ok(freePeriodDays);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/company/{companyId}/default")
     @Operation(summary = "업체 기본값 수정", description = "업체의 기본 무료 기간 수정")
     @ApiResponse(responseCode = "200")
