@@ -192,6 +192,12 @@ public class TransactionService {
                 ? TransactionStatus.CONFIRMED
                 : TransactionStatus.PENDING;
         Transaction transaction = request.toEntity(product, transactionType, transactionStatus);
+
+        // ADJUSTMENT 타입은 바로 CONFIRMED 상태이므로 confirmedDate 설정
+        if (transactionStatus == TransactionStatus.CONFIRMED) {
+            transaction.updateConfirmedDate(LocalDate.now());
+        }
+
         Transaction savedTransaction = transactionRepository.save(transaction);
 
         // TransactionWork 생성

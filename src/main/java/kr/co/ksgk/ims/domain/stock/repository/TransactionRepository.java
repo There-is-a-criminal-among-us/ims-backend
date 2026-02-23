@@ -5,6 +5,7 @@ import kr.co.ksgk.ims.domain.stock.entity.Transaction;
 import kr.co.ksgk.ims.domain.stock.entity.TransactionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
             Product product,
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
+            TransactionStatus transactionStatus
+    );
+
+    List<Transaction> findByProductAndConfirmedDateAndTransactionStatus(
+            Product product,
+            LocalDate confirmedDate,
             TransactionStatus transactionStatus
     );
 }

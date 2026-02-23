@@ -44,6 +44,8 @@ public class Transaction extends BaseEntity {
 
     private LocalDate workDate;
 
+    private LocalDate confirmedDate;
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionWork> works = new ArrayList<>();
 
@@ -87,6 +89,7 @@ public class Transaction extends BaseEntity {
             throw new BusinessException(ErrorCode.TRANSACTION_NOT_PENDING);
         }
         this.transactionStatus = TransactionStatus.CONFIRMED;
+        this.confirmedDate = LocalDate.now();
     }
 
     public void updateStockLot(StockLot stockLot) {
@@ -99,5 +102,9 @@ public class Transaction extends BaseEntity {
 
     public void updateTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    public void updateConfirmedDate(LocalDate confirmedDate) {
+        this.confirmedDate = confirmedDate;
     }
 }
