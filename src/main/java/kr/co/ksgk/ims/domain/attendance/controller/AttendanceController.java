@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceCreateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceUpdateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceResponse;
@@ -115,6 +116,20 @@ public class AttendanceController {
             @RequestBody @Valid AttendanceUpdateRequest request
     ) {
         AttendanceResponse response = attendanceService.updatePartTimeAttendance(attendanceId, request);
+        return SuccessResponse.ok(response);
+    }
+
+    @Operation(summary = "출퇴근 기록 수동 생성", description = "관리자가 PART_TIME 사용자의 출퇴근 기록을 수동으로 생성합니다.")
+    @ApiResponse(responseCode = "200", description = "출퇴근 기록 생성 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = AttendanceResponse.class)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{memberId}")
+    public ResponseEntity<SuccessResponse<?>> createAttendance(
+            @PathVariable Long memberId,
+            @RequestBody @Valid AttendanceCreateRequest request
+    ) {
+        AttendanceResponse response = attendanceService.createAttendance(memberId, request);
         return SuccessResponse.ok(response);
     }
 

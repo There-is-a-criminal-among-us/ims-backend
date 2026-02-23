@@ -1,5 +1,6 @@
 package kr.co.ksgk.ims.domain.attendance.service;
 
+import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceCreateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.request.AttendanceUpdateRequest;
 import kr.co.ksgk.ims.domain.attendance.dto.response.AttendanceResponse;
@@ -157,5 +158,25 @@ public class AttendanceService {
                 .map(AttendanceResponse::from)
                 .collect(Collectors.toList());
         return PagingAttendanceResponse.of(attendancePage, attendanceResponses);
+    }
+
+    @Transactional
+    public AttendanceResponse createAttendance(Long memberId, AttendanceCreateRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        if (member.getRole() != Role.PART_TIME) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
+        }
+        if (attendanceRepository.existsByMemberAndDate(member, request.date())) {
+            throw new BusinessException(ErrorCode.ATTENDANCE_ALREADY_EXISTS);
+        }
+        Attendance attendance = Attendance.builder()
+                .member(member)
+                .date(request.date())
+                .startTime(request.startTime())
+                .endTime(request.endTime())
+                .build();
+        Attendance savedAttendance = attendanceRepository.save(attendance);
+        return AttendanceResponse.from(savedAttendance);
     }
 }
