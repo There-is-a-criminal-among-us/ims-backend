@@ -128,6 +128,25 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_NOT_FOUND));
 
+        // PENDING 상태에서만 product/type 수정 가능
+        if (request.productId() != null || request.type() != null) {
+            if (transaction.getTransactionStatus() != TransactionStatus.PENDING) {
+                throw new BusinessException(ErrorCode.TRANSACTION_NOT_PENDING);
+            }
+
+            if (request.productId() != null) {
+                Product product = productRepository.findById(request.productId())
+                        .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+                transaction.updateProduct(product);
+            }
+
+            if (request.type() != null) {
+                TransactionType type = transactionTypeRepository.findByName(request.type())
+                        .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_TYPE_NOT_FOUND));
+                transaction.updateTransactionType(type);
+            }
+        }
+
         if (request.quantity() != null) transaction.updateQuantity(request.quantity());
         if (request.note() != null) transaction.updateNote(request.note());
         if (request.scheduledDate() != null) transaction.updateScheduledDate(request.scheduledDate());
@@ -141,6 +160,20 @@ public class TransactionService {
         cacheInvalidator.invalidateCacheForProductIfToday(transaction.getProduct().getId());
 
         return TransactionResponse.from(transaction);
+    }
+
+    @Transactional
+    public void deleteTransaction(Long transactionId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (transaction.getTransactionStatus() != TransactionStatus.PENDING) {
+            throw new BusinessException(ErrorCode.TRANSACTION_NOT_PENDING);
+        }
+
+        cacheInvalidator.invalidateCacheForProductIfToday(transaction.getProduct().getId());
+
+        transactionRepository.delete(transaction);
     }
 
     @Transactional

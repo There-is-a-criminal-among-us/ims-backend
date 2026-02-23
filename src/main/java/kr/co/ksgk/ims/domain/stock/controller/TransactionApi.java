@@ -74,7 +74,9 @@ public interface TransactionApi {
     )
     ResponseEntity<SuccessResponse<?>> createTransaction(@RequestBody TransactionRequest request);
 
-    @Operation(summary = "입출고 수정", description = "입출고 내역을 수정합니다. null인 필드는 기존 값을 유지합니다.")
+    @Operation(summary = "입출고 수정", description = """
+            입출고 내역을 수정합니다. null인 필드는 기존 값을 유지합니다.
+            productId, type 필드는 PENDING 상태에서만 수정 가능합니다.""")
     @ApiResponse(responseCode = "200", description = "입출고 수정 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = TransactionResponse.class))
@@ -82,4 +84,9 @@ public interface TransactionApi {
     ResponseEntity<SuccessResponse<?>> updateTransaction(
             @PathVariable Long transactionId,
             @RequestBody TransactionUpdateRequest request);
+
+    @Operation(summary = "입출고 삭제", description = """
+            PENDING 상태의 입출고 내역을 삭제합니다.""")
+    @ApiResponse(responseCode = "204", description = "입출고 삭제 성공")
+    ResponseEntity<SuccessResponse<?>> deleteTransaction(@PathVariable Long transactionId);
 }

@@ -71,4 +71,11 @@ public class TransactionController implements TransactionApi {
         TransactionResponse response = transactionService.updateTransaction(transactionId, request);
         return SuccessResponse.ok(response);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{transactionId}")
+    public ResponseEntity<SuccessResponse<?>> deleteTransaction(@PathVariable Long transactionId) {
+        transactionService.deleteTransaction(transactionId);
+        return SuccessResponse.noContent();
+    }
 }

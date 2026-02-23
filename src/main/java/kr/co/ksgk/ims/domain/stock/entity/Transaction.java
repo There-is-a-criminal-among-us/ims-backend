@@ -92,4 +92,12 @@ public class Transaction extends BaseEntity {
     public void updateStockLot(StockLot stockLot) {
         this.stockLot = stockLot;
     }
+
+    public void updateProduct(Product product) {
+        this.product = product;
+    }
+
+    public void updateTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
 }
