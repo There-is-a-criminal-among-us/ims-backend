@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record TransactionUpdateRequest(
+        Long productId,
+        String type,
         Integer quantity,
         String note,
         LocalDate scheduledDate,
