@@ -353,14 +353,31 @@ public class DeliverySheetService {
     private RawProduct matchRawProduct(String productName,
                                        Map<String, RawProduct> rawProductByName,
                                        Map<String, RawProduct> rawProductByCoupangCode) {
-        // 먼저 coupangCode로 매칭 시도
+        // 1. coupangCode로 매칭 시도
         RawProduct rawProduct = rawProductByCoupangCode.get(productName);
         if (rawProduct != null) {
             return rawProduct;
         }
 
-        // RawProduct.name으로 매칭 시도
-        return rawProductByName.get(productName);
+        // 2. name으로 매칭 시도
+        rawProduct = rawProductByName.get(productName);
+        if (rawProduct != null) {
+            return rawProduct;
+        }
+
+        // 3. '*'로 시작하면 '*' 제거 후 재검색 (합쳐서 포장 표시)
+        if (productName.startsWith("*")) {
+            String nameWithoutAsterisk = productName.substring(1);
+            // coupangCode로 재시도
+            rawProduct = rawProductByCoupangCode.get(nameWithoutAsterisk);
+            if (rawProduct != null) {
+                return rawProduct;
+            }
+            // name으로 재시도
+            return rawProductByName.get(nameWithoutAsterisk);
+        }
+
+        return null;
     }
 
     private WorkType determineWorkType(String workTypeStr, String productName,
