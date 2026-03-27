@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.settlement.repository;
 
 import kr.co.ksgk.ims.domain.settlement.entity.CompanyItemChargeMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,5 +20,7 @@ public interface CompanyItemChargeMappingRepository extends JpaRepository<Compan
     @Query("SELECT m.settlementItem.id FROM CompanyItemChargeMapping m WHERE m.company.id = :companyId")
     Set<Long> findSettlementItemIdsByCompanyId(@Param("companyId") Long companyId);
 
-    void deleteByCompanyId(Long companyId);
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM CompanyItemChargeMapping m WHERE m.company.id = :companyId")
+    void deleteByCompanyId(@Param("companyId") Long companyId);
 }
