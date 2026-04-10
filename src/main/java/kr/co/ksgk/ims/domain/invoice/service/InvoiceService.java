@@ -184,6 +184,7 @@ public class InvoiceService {
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.INVOICE_NOT_FOUND));
         if (request.name() != null) invoice.updateName(request.name());
         if (request.phone() != null) invoice.updatePhone(request.phone());
+        if (request.number() != null) invoice.updateNumber(request.number());
         if (request.invoiceKeyName() != null) invoice.updateInvoiceKeyName(request.invoiceKeyName());
         if (request.productKeyName() != null) invoice.updateProductKeyName(request.productKeyName());
         List<InvoiceProduct> invoiceProducts = request.products().stream()

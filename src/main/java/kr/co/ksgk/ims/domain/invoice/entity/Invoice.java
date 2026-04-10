@@ -56,6 +56,10 @@ public class Invoice extends BaseEntity {
         this.invoiceKeyName = invoiceKeyName;
     }
 
+    public void updateNumber(String number) {
+        this.number = number;
+    }
+
     public void updateProductKeyName(String productKeyName) {
         this.productKeyName = productKeyName;
     }
