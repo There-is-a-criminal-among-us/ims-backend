@@ -86,6 +86,7 @@ public enum ErrorCode {
     SETTLEMENT_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "S009", "정산서 상세를 찾을 수 없습니다."),
     SETTLEMENT_ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST, "S010", "이미 확정된 정산서는 수정할 수 없습니다."),
     DELIVERY_SHEET_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "S011", "택배표 업로드에 실패했습니다."),
+    DELIVERY_SHEET_UPLOAD_IN_PROGRESS(HttpStatus.CONFLICT, "S012", "동일한 연월의 운송장 업로드가 이미 진행 중입니다."),
 
     // Stock Lot
     STOCK_LOT_NOT_FOUND(HttpStatus.NOT_FOUND, "SL001", "재고 로트를 찾을 수 없습니다."),
