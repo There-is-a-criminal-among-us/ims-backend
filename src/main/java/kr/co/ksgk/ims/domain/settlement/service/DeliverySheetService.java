@@ -24,11 +24,15 @@ import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @Transactional(readOnly = true)
@@ -43,6 +47,13 @@ public class DeliverySheetService {
     private final SettlementItemRepository settlementItemRepository;
     private final SettlementCalculationService settlementCalculationService;
     private final ObjectMapper objectMapper;
+    private final DeliverySheetService self;
+
+    private static final ConcurrentMap<String, ReentrantLock> UPLOAD_LOCKS = new ConcurrentHashMap<>();
+
+    private static ReentrantLock lockFor(int year, int month) {
+        return UPLOAD_LOCKS.computeIfAbsent(year + "-" + month, k -> new ReentrantLock());
+    }
 
     public DeliverySheetService(
             DeliverySheetRowRepository deliverySheetRowRepository,
@@ -52,7 +63,8 @@ public class DeliverySheetService {
             ProductMappingRepository productMappingRepository,
             SettlementItemRepository settlementItemRepository,
             @Lazy SettlementCalculationService settlementCalculationService,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            @Lazy DeliverySheetService self) {
         this.deliverySheetRowRepository = deliverySheetRowRepository;
         this.deliverySheetReturnRepository = deliverySheetReturnRepository;
         this.deliverySheetRemoteAreaRepository = deliverySheetRemoteAreaRepository;
@@ -61,6 +73,7 @@ public class DeliverySheetService {
         this.settlementItemRepository = settlementItemRepository;
         this.settlementCalculationService = settlementCalculationService;
         this.objectMapper = objectMapper;
+        this.self = self;
     }
 
     private static final String PRODUCT_NAME_COLUMN = "상품명";
@@ -78,13 +91,20 @@ public class DeliverySheetService {
             "배달산간"
     );
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public DeliverySheetUploadResponse uploadDeliverySheet(MultipartFile file, int year, int month) {
-        // 기존 데이터 삭제
-        deliverySheetRowRepository.deleteByYearAndMonth(year, month);
-        deliverySheetReturnRepository.deleteByYearAndMonth(year, month);
-        deliverySheetRemoteAreaRepository.deleteByYearAndMonth(year, month);
+        ReentrantLock lock = lockFor(year, month);
+        if (!lock.tryLock()) {
+            throw new BusinessException(ErrorCode.DELIVERY_SHEET_UPLOAD_IN_PROGRESS);
+        }
+        try {
+            return doUpload(file, year, month);
+        } finally {
+            lock.unlock();
+        }
+    }
 
+    private DeliverySheetUploadResponse doUpload(MultipartFile file, int year, int month) {
         // Excel 파싱
         List<ParsedRow> parsedRows = parseExcelFile(file);
 
@@ -204,14 +224,25 @@ public class DeliverySheetService {
         }
 
         // 저장
-        deliverySheetRowRepository.saveAll(successRows);
-        deliverySheetReturnRepository.saveAll(returnRows);
-        deliverySheetRemoteAreaRepository.saveAll(remoteAreaRows);
+        self.replaceDeliverySheetData(year, month, successRows, returnRows, remoteAreaRows);
 
         // 정산 계산 트리거
         settlementCalculationService.calculateSettlements(year, month);
 
         return DeliverySheetUploadResponse.success(year, month, successRows.size());
+    }
+
+    @Transactional
+    public void replaceDeliverySheetData(int year, int month,
+                                         List<DeliverySheetRow> successRows,
+                                         List<DeliverySheetReturn> returnRows,
+                                         List<DeliverySheetRemoteArea> remoteAreaRows) {
+        deliverySheetRowRepository.deleteByYearAndMonth(year, month);
+        deliverySheetReturnRepository.deleteByYearAndMonth(year, month);
+        deliverySheetRemoteAreaRepository.deleteByYearAndMonth(year, month);
+        deliverySheetRowRepository.saveAll(successRows);
+        deliverySheetReturnRepository.saveAll(returnRows);
+        deliverySheetRemoteAreaRepository.saveAll(remoteAreaRows);
     }
 
     public DeliverySheetReturnListResponse getDeliverySheetReturns(int year, int month) {
