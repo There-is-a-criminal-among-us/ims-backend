@@ -56,6 +56,27 @@ public class SettlementCalculationService {
         // 모든 SettlementItem 조회
         List<SettlementItem> allItems = settlementItemRepository.findAll();
 
+        // --- 사전 데이터 로드 (루프 진입 전 1회 쿼리) ---
+
+        // Bottleneck 1: TransactionWork 전체 월 데이터 사전 로드
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = YearMonth.of(year, month).atEndOfMonth();
+        List<TransactionWork> allWorks = transactionWorkRepository.findByWorkDateBetween(startDate, endDate);
+        // (productId + "-" + settlementItemId) -> List<TransactionWork>
+        Map<String, List<TransactionWork>> worksByProductAndItem = allWorks.stream()
+                .collect(Collectors.groupingBy(tw ->
+                        tw.getTransaction().getProduct().getId() + "-" + tw.getSettlementItem().getId()));
+
+        // Bottleneck 2: RawProduct 전체 사전 로드 (이름 기준)
+        Map<String, RawProduct> rawProductsByName = rawProductRepository.findAll().stream()
+                .collect(Collectors.toMap(RawProduct::getName, rp -> rp, (a, b) -> a));
+
+        // Bottleneck 3: DeliverySheetRow 전체 월 데이터 사전 로드
+        List<DeliverySheetRow> allRows = deliverySheetRowRepository.findByYearAndMonth(year, month);
+        // productId -> List<DeliverySheetRow>
+        Map<Long, List<DeliverySheetRow>> rowsByProduct = allRows.stream()
+                .collect(Collectors.groupingBy(r -> r.getProduct().getId()));
+
         // 업체별 정산서 생성/갱신
         for (Map.Entry<Company, List<Product>> entry : productsByCompany.entrySet()) {
             Company company = entry.getKey();
@@ -83,7 +104,9 @@ public class SettlementCalculationService {
             // 각 품목별, 항목별 계산
             for (Product product : products) {
                 for (SettlementItem item : companyItems) {
-                    SettlementDetail detail = calculateDetail(year, month, product, item);
+                    SettlementDetail detail = calculateDetail(
+                            year, month, product, item,
+                            worksByProductAndItem, rawProductsByName, rowsByProduct);
                     if (detail != null) {
                         settlement.addDetail(detail);
                     }
@@ -92,36 +115,25 @@ public class SettlementCalculationService {
         }
     }
 
-    private SettlementDetail calculateDetail(int year, int month, Product product, SettlementItem item) {
+    private SettlementDetail calculateDetail(int year, int month, Product product, SettlementItem item,
+                                              Map<String, List<TransactionWork>> worksByProductAndItem,
+                                              Map<String, RawProduct> rawProductsByName,
+                                              Map<Long, List<DeliverySheetRow>> rowsByProduct) {
         CalculationType calculationType = item.getCalculationType();
 
         return switch (calculationType) {
-            case MANUAL -> calculateManual(year, month, product, item);
+            case MANUAL -> calculateManual(product, item, worksByProductAndItem);
             case STORAGE -> calculateStorage(year, month, product, item);
-            case SIZE -> calculateSize(year, month, product, item);
-            case RETURN_SIZE -> calculateReturnSize(year, month, product, item);
-            case REMOTE_AREA -> calculateRemoteArea(year, month, product, item);
+            case SIZE -> calculateSize(product, item, rawProductsByName, rowsByProduct);
+            case RETURN_SIZE -> calculateReturnSize(product, item, rawProductsByName, rowsByProduct);
+            case REMOTE_AREA -> calculateRemoteArea(product, item, rowsByProduct);
         };
     }
 
-    private SettlementDetail calculateManual(int year, int month, Product product, SettlementItem item) {
-        // TransactionWork에서 해당 월, 해당 품목, 해당 항목의 데이터 집계
-        LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = YearMonth.of(year, month).atEndOfMonth();
-
-        // TransactionWork를 통해 해당 월의 데이터를 조회해야 함
-        // TransactionWork -> Transaction -> workDate로 필터링
-        // 여기서는 간단하게 구현 (실제로는 Query 최적화 필요)
-        List<TransactionWork> works = transactionWorkRepository.findAll().stream()
-                .filter(w -> w.getSettlementItem().getId().equals(item.getId()))
-                .filter(w -> w.getTransaction().getProduct().getId().equals(product.getId()))
-                .filter(w -> {
-                    LocalDate workDate = w.getTransaction().getWorkDate();
-                    return workDate != null &&
-                            !workDate.isBefore(startDate) &&
-                            !workDate.isAfter(endDate);
-                })
-                .toList();
+    private SettlementDetail calculateManual(Product product, SettlementItem item,
+                                              Map<String, List<TransactionWork>> worksByProductAndItem) {
+        String key = product.getId() + "-" + item.getId();
+        List<TransactionWork> works = worksByProductAndItem.getOrDefault(key, List.of());
 
         if (works.isEmpty()) {
             return null;
@@ -261,9 +273,13 @@ public class SettlementCalculationService {
         return createDetail(product, item, totalDays, null, totalAmount, null);
     }
 
-    private SettlementDetail calculateSize(int year, int month, Product product, SettlementItem item) {
-        List<DeliverySheetRow> rows = deliverySheetRowRepository
-                .findByYearAndMonthAndProductAndWorkType(year, month, product, WorkType.OUTBOUND);
+    private SettlementDetail calculateSize(Product product, SettlementItem item,
+                                           Map<String, RawProduct> rawProductsByName,
+                                           Map<Long, List<DeliverySheetRow>> rowsByProduct) {
+        List<DeliverySheetRow> allProductRows = rowsByProduct.getOrDefault(product.getId(), List.of());
+        List<DeliverySheetRow> rows = allProductRows.stream()
+                .filter(r -> WorkType.OUTBOUND == r.getWorkType())
+                .toList();
 
         if (rows.isEmpty()) {
             return null;
@@ -277,7 +293,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
+                RawProduct rp = rawProductsByName.get(row.getProductName());
                 if (rp != null && rp.getSizeUnit() != null) {
                     unitPrice = rp.getSizeUnit().getPrice();
                     totalAmount += (long) unitPrice * row.getQuantity();
@@ -292,9 +308,13 @@ public class SettlementCalculationService {
         return createDetail(product, item, quantity, unitPrice, totalAmount, null);
     }
 
-    private SettlementDetail calculateReturnSize(int year, int month, Product product, SettlementItem item) {
-        List<DeliverySheetRow> rows = deliverySheetRowRepository
-                .findByYearAndMonthAndProductAndWorkType(year, month, product, WorkType.RETURN);
+    private SettlementDetail calculateReturnSize(Product product, SettlementItem item,
+                                                  Map<String, RawProduct> rawProductsByName,
+                                                  Map<Long, List<DeliverySheetRow>> rowsByProduct) {
+        List<DeliverySheetRow> allProductRows = rowsByProduct.getOrDefault(product.getId(), List.of());
+        List<DeliverySheetRow> rows = allProductRows.stream()
+                .filter(r -> WorkType.RETURN == r.getWorkType())
+                .toList();
 
         if (rows.isEmpty()) {
             return null;
@@ -308,7 +328,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductRepository.findByName(row.getProductName()).orElse(null);
+                RawProduct rp = rawProductsByName.get(row.getProductName());
                 if (rp != null && rp.getReturnSizeUnit() != null) {
                     unitPrice = rp.getReturnSizeUnit().getPrice();
                     totalAmount += (long) unitPrice * row.getQuantity();
@@ -323,9 +343,9 @@ public class SettlementCalculationService {
         return createDetail(product, item, quantity, unitPrice, totalAmount, null);
     }
 
-    private SettlementDetail calculateRemoteArea(int year, int month, Product product, SettlementItem item) {
-        // 택배표에서 해당 품목의 REMOTE_AREA 비용 합산
-        List<DeliverySheetRow> rows = deliverySheetRowRepository.findByYearAndMonthAndProduct(year, month, product);
+    private SettlementDetail calculateRemoteArea(Product product, SettlementItem item,
+                                                  Map<Long, List<DeliverySheetRow>> rowsByProduct) {
+        List<DeliverySheetRow> rows = rowsByProduct.getOrDefault(product.getId(), List.of());
 
         if (rows.isEmpty()) {
             return null;
