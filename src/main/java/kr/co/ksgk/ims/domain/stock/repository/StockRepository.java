@@ -26,4 +26,7 @@ public interface StockRepository extends JpaRepository<DailyStock, Long> {
     boolean existsByProductAndStockDate(Product product, LocalDate stockDate);
 
     Optional<DailyStock> findByProductAndStockDate(Product product, LocalDate stockDate);
+
+    @Query("SELECT MIN(ds.stockDate) FROM DailyStock ds WHERE ds.product = :product AND ds.incoming > 0")
+    Optional<LocalDate> findFirstInboundDateByProduct(@Param("product") Product product);
 }
