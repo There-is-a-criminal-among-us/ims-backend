@@ -44,6 +44,7 @@ public class SettlementCalculationService {
     private final TransactionWorkRepository transactionWorkRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
     private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
+    private final StorageFreePeriodConfigRepository storageFreePeriodConfigRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -222,9 +223,29 @@ public class SettlementCalculationService {
                         product.getId(), totalPallets, totalAmount);
             }
         } else {
-            // DailyStockLot 데이터가 없으면 기존 DailyStock 방식으로 폴백 (무료 기간 미적용)
+            // DailyStockLot 데이터가 없으면 기존 DailyStock 방식으로 폴백
             List<DailyStock> dailyStocks = stockRepository.findAllByProductsAndDateBetween(
                     List.of(product), startDate, endDate);
+
+            if (dailyStocks.isEmpty()) {
+                return null;
+            }
+
+            // 무료 보관 기간 적용
+            Company company = product.getBrand().getCompany();
+            Optional<StorageFreePeriodConfig> config = storageFreePeriodConfigRepository
+                    .findActiveByCompanyAndProduct(company, product)
+                    .or(() -> storageFreePeriodConfigRepository.findCompanyDefault(company));
+            int freePeriodDays = config.map(StorageFreePeriodConfig::getFreePeriodDays).orElse(0);
+            if (freePeriodDays > 0) {
+                Optional<LocalDate> inboundDate = stockRepository.findFirstInboundDateByProduct(product);
+                if (inboundDate.isPresent()) {
+                    LocalDate freeUntilDate = inboundDate.get().plusDays(freePeriodDays);
+                    dailyStocks = dailyStocks.stream()
+                            .filter(ds -> ds.getStockDate().isAfter(freeUntilDate))
+                            .collect(Collectors.toList());
+                }
+            }
 
             if (dailyStocks.isEmpty()) {
                 return null;
