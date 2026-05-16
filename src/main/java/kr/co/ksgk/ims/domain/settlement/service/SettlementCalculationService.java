@@ -128,6 +128,7 @@ public class SettlementCalculationService {
             case SIZE -> calculateSize(product, item, rawProductsByName, rowsByProduct);
             case RETURN_SIZE -> calculateReturnSize(product, item, rawProductsByName, rowsByProduct);
             case REMOTE_AREA -> calculateRemoteArea(product, item, rowsByProduct);
+            case DELIVERY_SHEET_QUANTITY -> calculateDeliverySheetQuantity(product, item, rowsByProduct);
         };
     }
 
@@ -400,6 +401,32 @@ public class SettlementCalculationService {
         }
 
         return createDetail(product, item, count, null, totalFee, null);
+    }
+
+    private SettlementDetail calculateDeliverySheetQuantity(Product product, SettlementItem item,
+                                                             Map<Long, List<DeliverySheetRow>> rowsByProduct) {
+        List<DeliverySheetRow> rows = rowsByProduct.getOrDefault(product.getId(), List.of()).stream()
+                .filter(r -> WorkType.OUTBOUND == r.getWorkType() && r.getCostTarget())
+                .toList();
+
+        if (rows.isEmpty()) {
+            return null;
+        }
+
+        int totalQuantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
+
+        Integer unitPrice = item.getUnits().stream()
+                .findFirst()
+                .map(SettlementUnit::getPrice)
+                .orElse(null);
+
+        if (unitPrice == null) {
+            return null;
+        }
+
+        long totalAmount = (long) unitPrice * totalQuantity;
+
+        return createDetail(product, item, totalQuantity, unitPrice, totalAmount, null);
     }
 
     private SettlementDetail createDetail(Product product, SettlementItem item,
