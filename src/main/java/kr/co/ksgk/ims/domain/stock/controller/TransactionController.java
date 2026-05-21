@@ -25,7 +25,7 @@ public class TransactionController implements TransactionApi {
 
     private final TransactionService transactionService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping
     public ResponseEntity<SuccessResponse<?>> getAllTransactions(
             @Auth Long memberId,

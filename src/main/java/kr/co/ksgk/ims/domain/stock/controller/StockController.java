@@ -8,6 +8,7 @@ import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class StockController implements StockApi {
     private final StockService stockService;
     private final DailyStockScheduler dailyStockScheduler;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/stocks")
     public ResponseEntity<SuccessResponse<?>> getDailyStock(@Auth Long memberId,
                                                             @RequestParam(required = false) Integer year,
@@ -28,6 +30,7 @@ public class StockController implements StockApi {
         return SuccessResponse.ok(dailyStockResponse);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/stocks/generate")
     @Operation(summary = "DailyStock 수동 생성", description = "특정 날짜의 DailyStock 데이터를 수동으로 생성합니다. (테스트용)")
     public ResponseEntity<SuccessResponse<?>> generateDailyStock(
