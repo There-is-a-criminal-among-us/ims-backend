@@ -15,6 +15,7 @@ import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class StockLotController {
     private final StockLotService stockLotService;
     private final ProductRepository productRepository;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/product/{productId}")
     @Operation(summary = "상품별 로트 현황", description = "특정 상품의 모든 로트 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json",
@@ -44,6 +46,7 @@ public class StockLotController {
         return SuccessResponse.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/product/{productId}/remaining")
     @Operation(summary = "상품별 잔여 로트", description = "특정 상품의 잔여 수량이 있는 로트만 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json",
@@ -59,6 +62,7 @@ public class StockLotController {
         return SuccessResponse.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/{lotId}")
     @Operation(summary = "로트 상세 조회", description = "특정 로트의 상세 정보 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json",
@@ -72,6 +76,7 @@ public class StockLotController {
         return SuccessResponse.ok(StockLotResponse.from(stockLot));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/product/{productId}/total")
     @Operation(summary = "상품별 총 잔여 수량", description = "특정 상품의 로트 기반 총 잔여 수량 조회")
     @ApiResponse(responseCode = "200")

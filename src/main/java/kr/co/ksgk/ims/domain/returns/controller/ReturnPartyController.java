@@ -14,6 +14,7 @@ import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/mall")
     public ResponseEntity<SuccessResponse<?>> createReturnMall(@Auth Long memberId,
                                                                @RequestBody @Valid CreateReturnPartyRequest request) {
@@ -49,6 +51,7 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/handler")
     public ResponseEntity<SuccessResponse<?>> createReturnHandler(@Auth Long memberId,
                                                                   @RequestBody @Valid CreateReturnPartyRequest request) {
@@ -61,6 +64,7 @@ public class ReturnPartyController {
             description = "로그인한 사용자가 관리하는 브랜드들의 쇼핑몰 목록을 조회합니다"
     )
     @ApiResponse(responseCode = "200", description = "쇼핑몰 목록 조회 성공")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
     @GetMapping("/malls")
     public ResponseEntity<SuccessResponse<?>> getReturnMalls(@Auth Long memberId) {
         List<ReturnPartyResponse> responses = returnPartyService.getReturnMallsByMember(memberId);
@@ -72,6 +76,7 @@ public class ReturnPartyController {
             description = "로그인한 사용자가 관리하는 브랜드들의 접수자 목록을 조회합니다"
     )
     @ApiResponse(responseCode = "200", description = "접수자 목록 조회 성공")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
     @GetMapping("/handlers")
     public ResponseEntity<SuccessResponse<?>> getReturnHandlers(@Auth Long memberId) {
         List<ReturnPartyResponse> responses = returnPartyService.getReturnHandlersByMember(memberId);
@@ -86,6 +91,7 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/mall/{mallId}")
     public ResponseEntity<SuccessResponse<?>> updateReturnMall(@Auth Long memberId, @PathVariable Long mallId,
                                                                @RequestBody @Valid UpdateReturnPartyRequest request) {
@@ -101,6 +107,7 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/handler/{handlerId}")
     public ResponseEntity<SuccessResponse<?>> updateReturnHandler(@Auth Long memberId, @PathVariable Long handlerId,
                                                                   @RequestBody @Valid UpdateReturnPartyRequest request) {
@@ -113,6 +120,7 @@ public class ReturnPartyController {
             description = "쇼핑몰을 삭제합니다"
     )
     @ApiResponse(responseCode = "204", description = "쇼핑몰 삭제 성공")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/mall/{mallId}")
     public ResponseEntity<SuccessResponse<?>> deleteReturnMall(@Auth Long memberId, @PathVariable Long mallId) {
         returnPartyService.deleteReturnMall(memberId, mallId);
@@ -124,6 +132,7 @@ public class ReturnPartyController {
             description = "접수자를 삭제합니다"
     )
     @ApiResponse(responseCode = "204", description = "접수자 삭제 성공")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/handler/{handlerId}")
     public ResponseEntity<SuccessResponse<?>> deleteReturnHandler(@Auth Long memberId, @PathVariable Long handlerId) {
         returnPartyService.deleteReturnHandler(memberId, handlerId);
