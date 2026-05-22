@@ -21,7 +21,6 @@ public class StockController implements StockApi {
     private final StockService stockService;
     private final DailyStockScheduler dailyStockScheduler;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER')")
     @GetMapping("/stocks")
     public ResponseEntity<SuccessResponse<?>> getDailyStock(@Auth Long memberId,
                                                             @RequestParam(required = false) Integer year,

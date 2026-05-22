@@ -64,7 +64,7 @@ public class ReturnPartyController {
             description = "로그인한 사용자가 관리하는 브랜드들의 쇼핑몰 목록을 조회합니다"
     )
     @ApiResponse(responseCode = "200", description = "쇼핑몰 목록 조회 성공")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS', 'MEMBER')")
     @GetMapping("/malls")
     public ResponseEntity<SuccessResponse<?>> getReturnMalls(@Auth Long memberId) {
         List<ReturnPartyResponse> responses = returnPartyService.getReturnMallsByMember(memberId);
@@ -76,7 +76,7 @@ public class ReturnPartyController {
             description = "로그인한 사용자가 관리하는 브랜드들의 접수자 목록을 조회합니다"
     )
     @ApiResponse(responseCode = "200", description = "접수자 목록 조회 성공")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS', 'MEMBER')")
     @GetMapping("/handlers")
     public ResponseEntity<SuccessResponse<?>> getReturnHandlers(@Auth Long memberId) {
         List<ReturnPartyResponse> responses = returnPartyService.getReturnHandlersByMember(memberId);
