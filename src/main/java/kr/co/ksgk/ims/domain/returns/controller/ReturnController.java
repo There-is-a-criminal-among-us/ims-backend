@@ -67,7 +67,7 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagingReturnListResponse.class))
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS', 'MEMBER')")
     @GetMapping
     public ResponseEntity<SuccessResponse<?>> getReturnInfos(
             @Auth Long memberId,
@@ -111,7 +111,7 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnResponse.class))
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS', 'MEMBER')")
     @GetMapping("/{returnId}")
     public ResponseEntity<SuccessResponse<?>> getReturn(@Auth Long memberId, @PathVariable Long returnId) {
         returnService.validateReturnInfoAccess(memberId, returnId);
@@ -261,7 +261,7 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnBatchResponse.class))
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'CS')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CS', 'MEMBER')")
     @GetMapping("/batch")
     public ResponseEntity<SuccessResponse<?>> getReturnBatchInfo(
             @Auth Long memberId,
