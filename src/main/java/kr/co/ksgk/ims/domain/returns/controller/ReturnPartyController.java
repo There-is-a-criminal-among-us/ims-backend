@@ -35,7 +35,6 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/mall")
     public ResponseEntity<SuccessResponse<?>> createReturnMall(@Auth Long memberId,
                                                                @RequestBody @Valid CreateReturnPartyRequest request) {
@@ -51,7 +50,6 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/handler")
     public ResponseEntity<SuccessResponse<?>> createReturnHandler(@Auth Long memberId,
                                                                   @RequestBody @Valid CreateReturnPartyRequest request) {
@@ -91,7 +89,6 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/mall/{mallId}")
     public ResponseEntity<SuccessResponse<?>> updateReturnMall(@Auth Long memberId, @PathVariable Long mallId,
                                                                @RequestBody @Valid UpdateReturnPartyRequest request) {
@@ -107,7 +104,6 @@ public class ReturnPartyController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnPartyResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/handler/{handlerId}")
     public ResponseEntity<SuccessResponse<?>> updateReturnHandler(@Auth Long memberId, @PathVariable Long handlerId,
                                                                   @RequestBody @Valid UpdateReturnPartyRequest request) {
@@ -120,7 +116,6 @@ public class ReturnPartyController {
             description = "쇼핑몰을 삭제합니다"
     )
     @ApiResponse(responseCode = "204", description = "쇼핑몰 삭제 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/mall/{mallId}")
     public ResponseEntity<SuccessResponse<?>> deleteReturnMall(@Auth Long memberId, @PathVariable Long mallId) {
         returnPartyService.deleteReturnMall(memberId, mallId);
@@ -132,7 +127,6 @@ public class ReturnPartyController {
             description = "접수자를 삭제합니다"
     )
     @ApiResponse(responseCode = "204", description = "접수자 삭제 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/handler/{handlerId}")
     public ResponseEntity<SuccessResponse<?>> deleteReturnHandler(@Auth Long memberId, @PathVariable Long handlerId) {
         returnPartyService.deleteReturnHandler(memberId, handlerId);

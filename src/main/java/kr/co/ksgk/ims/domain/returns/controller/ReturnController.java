@@ -52,7 +52,6 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<SuccessResponse<?>> createReturn(@RequestBody @Valid CreateReturnRequest request) {
         ReturnResponse response = returnService.createReturn(request);
@@ -127,7 +126,6 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{returnId}")
     public ResponseEntity<SuccessResponse<?>> patchReturn(
             @Auth Long memberId, @PathVariable Long returnId, @RequestBody PatchReturnRequest request) {
@@ -140,7 +138,6 @@ public class ReturnController {
             description = "회수 정보를 삭제합니다."
     )
     @ApiResponse(responseCode = "200", description = "회수 정보 삭제 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{returnId}")
     public ResponseEntity<SuccessResponse<?>> deleteReturn(
             @Auth Long memberId, @PathVariable Long returnId) {
@@ -153,7 +150,6 @@ public class ReturnController {
             description = "회수 정보를 접수합니다. 회수 상태를 IN_PROGRESS로 변경하고 접수일을 등록합니다. 단일 또는 여러 건을 동시에 접수할 수 있습니다."
     )
     @ApiResponse(responseCode = "200", description = "회수 접수 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/accept")
     public ResponseEntity<SuccessResponse<?>> acceptReturns(@Auth Long memberId, @RequestBody AcceptReturnRequest request) {
         returnService.acceptReturns(memberId, request.returnIds());
@@ -176,7 +172,6 @@ public class ReturnController {
                     schema = @Schema(implementation = InvoiceUploadErrorResponse.class)
             )
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload-invoices", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadReturnInvoices(
             @Parameter(description = "업로드할 엑셀 파일", required = true)
@@ -200,7 +195,6 @@ public class ReturnController {
                     schema = @Schema(implementation = ReturnExcelUploadResponse.class)
             )
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload-returns", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<?>> uploadReturnExcel(
             @Parameter(description = "업로드할 엑셀 파일", required = true)
@@ -218,7 +212,6 @@ public class ReturnController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ReturnResponse.class))
     )
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{returnId}/re-request")
     public ResponseEntity<SuccessResponse<?>> reRequestReturn(@PathVariable Long returnId) {
         ReturnResponse response = returnService.reRequestReturn(returnId);
@@ -230,7 +223,6 @@ public class ReturnController {
             description = "여러 회수 정보를 한번에 재등록합니다. 회수 상태를 REQUESTED로 변경하고 생성일을 갱신합니다."
     )
     @ApiResponse(responseCode = "200", description = "회수 정보 일괄 재등록 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/re-request")
     public ResponseEntity<SuccessResponse<?>> bulkReRequestReturns(
             @Auth Long memberId,
@@ -244,7 +236,6 @@ public class ReturnController {
             description = "여러 회수 정보의 처리상태를 한번에 변경합니다."
     )
     @ApiResponse(responseCode = "200", description = "처리상태 일괄 변경 성공")
-    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/processing-status")
     public ResponseEntity<SuccessResponse<?>> bulkUpdateProcessingStatus(
             @Auth Long memberId,
