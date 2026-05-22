@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,14 +35,21 @@ public class CompanySettlementService {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMPANY_NOT_FOUND));
 
-        List<CompanyItemChargeMapping> mappings = mappingRepository.findByCompanyId(companyId);
+        List<SettlementItem> allItems = settlementItemRepository.findAll();
+        Map<Long, CompanyItemChargeMapping> mappingByItemId = mappingRepository.findByCompanyId(companyId)
+                .stream()
+                .collect(Collectors.toMap(m -> m.getSettlementItem().getId(), m -> m));
+
+        List<ItemChargeMappingDto> mappings = allItems.stream()
+                .map(item -> mappingByItemId.containsKey(item.getId())
+                        ? ItemChargeMappingDto.from(mappingByItemId.get(item.getId()))
+                        : ItemChargeMappingDto.unmapped(item))
+                .toList();
 
         return CompanyChargeMappingDto.builder()
                 .companyId(company.getId())
                 .companyName(company.getName())
-                .mappings(mappings.stream()
-                        .map(ItemChargeMappingDto::from)
-                        .toList())
+                .mappings(mappings)
                 .build();
     }
 
