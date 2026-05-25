@@ -20,14 +20,4 @@ public record ItemChargeMappingDto(
                 .chargeCategoryName(mapping.getChargeCategory().getName())
                 .build();
     }
-
-    public static ItemChargeMappingDto unmapped(kr.co.ksgk.ims.domain.settlement.entity.SettlementItem item) {
-        return ItemChargeMappingDto.builder()
-                .id(null)
-                .settlementItemId(item.getId())
-                .settlementItemName(item.getName())
-                .chargeCategoryId(null)
-                .chargeCategoryName(null)
-                .build();
-    }
 }
