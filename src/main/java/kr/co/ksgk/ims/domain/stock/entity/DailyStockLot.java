@@ -66,7 +66,7 @@ public class DailyStockLot {
         this.freePeriodDays = freePeriodDays != null ? freePeriodDays : 0;
     }
 
-    public static DailyStockLot create(StockLot stockLot, LocalDate stockDate) {
+    public static DailyStockLot create(StockLot stockLot, LocalDate stockDate, int freePeriodDays) {
         int daysFromInbound = stockLot.getDaysFromInbound(stockDate);
         return DailyStockLot.builder()
                 .stockLot(stockLot)
@@ -75,7 +75,7 @@ public class DailyStockLot {
                 .quantity(stockLot.getRemainingQuantity())
                 .inboundDate(stockLot.getInboundDate())
                 .daysFromInbound(daysFromInbound)
-                .freePeriodDays(stockLot.getFreePeriodDays())
+                .freePeriodDays(freePeriodDays)
                 .build();
     }
 
