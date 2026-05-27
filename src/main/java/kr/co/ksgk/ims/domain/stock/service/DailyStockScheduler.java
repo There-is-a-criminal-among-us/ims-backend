@@ -6,6 +6,8 @@ import kr.co.ksgk.ims.domain.invoice.entity.InvoiceProduct;
 import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.repository.ProductRepository;
+import kr.co.ksgk.ims.domain.settlement.entity.StorageFreePeriodConfig;
+import kr.co.ksgk.ims.domain.settlement.repository.StorageFreePeriodConfigRepository;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStock;
 import kr.co.ksgk.ims.domain.stock.entity.DailyStockLot;
 import kr.co.ksgk.ims.domain.stock.entity.StockLot;
@@ -24,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,6 +41,7 @@ public class DailyStockScheduler {
     private final InvoiceProductRepository invoiceProductRepository;
     private final StockLotRepository stockLotRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
+    private final StorageFreePeriodConfigRepository storageFreePeriodConfigRepository;
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
@@ -79,6 +84,15 @@ public class DailyStockScheduler {
         log.info("DailyStockLot 데이터 생성 시작: {}", targetDate);
 
         try {
+            // 활성화된 상품별 무료 보관 기간 설정 사전 로드 (productId -> freePeriodDays)
+            Map<Long, Integer> freePeriodByProductId = storageFreePeriodConfigRepository
+                    .findAllEffectiveProductConfigsOnDate(targetDate).stream()
+                    .collect(Collectors.toMap(
+                            c -> c.getProduct().getId(),
+                            StorageFreePeriodConfig::getFreePeriodDays,
+                            (a, b) -> a
+                    ));
+
             List<StockLot> lotsWithRemaining = stockLotRepository.findAllWithRemaining();
             int createdCount = 0;
 
@@ -89,13 +103,15 @@ public class DailyStockScheduler {
                     continue;
                 }
 
-                DailyStockLot dailyStockLot = DailyStockLot.create(stockLot, targetDate);
+                int freePeriodDays = freePeriodByProductId.getOrDefault(
+                        stockLot.getProduct().getId(), stockLot.getFreePeriodDays());
+                DailyStockLot dailyStockLot = DailyStockLot.create(stockLot, targetDate, freePeriodDays);
                 dailyStockLotRepository.save(dailyStockLot);
                 createdCount++;
 
-                log.debug("DailyStockLot 생성 - Lot: {}, Product: {}, Date: {}, Quantity: {}, DaysFromInbound: {}",
+                log.debug("DailyStockLot 생성 - Lot: {}, Product: {}, Date: {}, Quantity: {}, DaysFromInbound: {}, FreePeriodDays: {}",
                         stockLot.getId(), stockLot.getProduct().getId(), targetDate,
-                        stockLot.getRemainingQuantity(), dailyStockLot.getDaysFromInbound());
+                        stockLot.getRemainingQuantity(), dailyStockLot.getDaysFromInbound(), freePeriodDays);
             }
 
             log.info("DailyStockLot 데이터 생성 완료: {} - 생성된 수: {}", targetDate, createdCount);

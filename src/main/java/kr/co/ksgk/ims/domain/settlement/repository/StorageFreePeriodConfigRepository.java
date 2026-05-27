@@ -87,4 +87,16 @@ public interface StorageFreePeriodConfigRepository extends JpaRepository<Storage
      * 업체 + 상품 조합이 이미 존재하는지 확인
      */
     boolean existsByCompanyAndProduct(Company company, Product product);
+
+    /**
+     * 특정 날짜에 유효한 상품별 설정 전체 조회 (product fetch join으로 N+1 방지)
+     */
+    @Query("""
+            SELECT c FROM StorageFreePeriodConfig c JOIN FETCH c.product
+            WHERE c.product IS NOT NULL
+            AND c.isActive = true
+            AND (c.effectiveFrom IS NULL OR c.effectiveFrom <= :date)
+            AND (c.effectiveUntil IS NULL OR c.effectiveUntil >= :date)
+            """)
+    List<StorageFreePeriodConfig> findAllEffectiveProductConfigsOnDate(@Param("date") LocalDate date);
 }
