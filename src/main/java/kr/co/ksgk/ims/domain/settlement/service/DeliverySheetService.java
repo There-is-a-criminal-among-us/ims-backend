@@ -446,6 +446,16 @@ public class DeliverySheetService {
             }
         }
 
+        // 컬럼명과 일치하지 않는 REMOTE_AREA 항목(예: "도서산간")은 전체 열 합산값으로 저장
+        int total = remoteAreaFees.values().stream().mapToInt(Integer::intValue).sum();
+        if (total > 0) {
+            for (SettlementItem item : remoteAreaItems) {
+                if (!remoteAreaFees.containsKey(item.getName())) {
+                    matchedFees.put(item.getName(), total);
+                }
+            }
+        }
+
         if (matchedFees.isEmpty()) {
             return null;
         }
