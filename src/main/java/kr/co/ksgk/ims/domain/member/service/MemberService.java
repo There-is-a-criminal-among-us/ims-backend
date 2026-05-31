@@ -54,6 +54,7 @@ public class MemberService {
         if (request.phone() != null) member.updatePhone(request.phone());
         if (request.note() != null) member.updateNote(request.note());
         if (request.workStartTime() != null) member.updateWorkStartTime(request.workStartTime());
+        if (request.fiveDayWorkWeek() != null) member.updateFiveDayWorkWeek(request.fiveDayWorkWeek());
         return MemberInfoResponse.from(member);
     }
 

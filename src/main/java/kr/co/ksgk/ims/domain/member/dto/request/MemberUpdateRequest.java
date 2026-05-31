@@ -9,6 +9,7 @@ public record MemberUpdateRequest(
         String note,
         List<Long> managingCompanies,
         List<Long> managingBrands,
-        LocalTime workStartTime
+        LocalTime workStartTime,
+        Boolean fiveDayWorkWeek
 ) {
 }
