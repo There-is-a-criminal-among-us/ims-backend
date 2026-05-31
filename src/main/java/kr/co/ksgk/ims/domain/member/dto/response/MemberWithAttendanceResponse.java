@@ -20,6 +20,7 @@ public record MemberWithAttendanceResponse(
         List<ManagingDto> managingBrands,
         String note,
         LocalTime workStartTime,
+        boolean fiveDayWorkWeek,
         LocalDateTime todayStartTime,
         LocalDateTime todayEndTime,
         LocalDateTime createdAt,
@@ -43,6 +44,7 @@ public record MemberWithAttendanceResponse(
                 )
                 .note(member.getNote())
                 .workStartTime(member.getWorkStartTime())
+                .fiveDayWorkWeek(member.isFiveDayWorkWeek())
                 .todayStartTime(attendance.getStartTime())
                 .todayEndTime(attendance.getEndTime())
                 .createdAt(member.getCreatedAt())

@@ -20,6 +20,7 @@ public record MemberInfoResponse(
         List<ManagingDto> managingBrands,
         String note,
         LocalTime workStartTime,
+        boolean fiveDayWorkWeek,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -40,6 +41,7 @@ public record MemberInfoResponse(
                 )
                 .note(member.getNote())
                 .workStartTime(member.getWorkStartTime())
+                .fiveDayWorkWeek(member.isFiveDayWorkWeek())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .build();

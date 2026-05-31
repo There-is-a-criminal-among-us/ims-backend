@@ -50,8 +50,11 @@ public class Member extends BaseEntity {
 
     private LocalTime workStartTime;
 
+    @Column(nullable = false)
+    private boolean fiveDayWorkWeek = false;
+
     @Builder
-    public Member(String username, String password, String name, String phone, String note, Role role, LocalTime workStartTime) {
+    public Member(String username, String password, String name, String phone, String note, Role role, LocalTime workStartTime, boolean fiveDayWorkWeek) {
         this.username = username;
         this.password = password;
         this.name = name;
@@ -59,6 +62,7 @@ public class Member extends BaseEntity {
         this.note = note;
         this.role = role;
         this.workStartTime = workStartTime;
+        this.fiveDayWorkWeek = fiveDayWorkWeek;
     }
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -84,6 +88,10 @@ public class Member extends BaseEntity {
 
     public void updateWorkStartTime(LocalTime workStartTime) {
         this.workStartTime = workStartTime;
+    }
+
+    public void updateFiveDayWorkWeek(boolean fiveDayWorkWeek) {
+        this.fiveDayWorkWeek = fiveDayWorkWeek;
     }
 
     public void changePassword(String newPassword) {
