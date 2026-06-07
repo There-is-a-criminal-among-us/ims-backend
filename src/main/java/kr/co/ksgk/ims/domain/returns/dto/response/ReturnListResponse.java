@@ -30,7 +30,8 @@ public record ReturnListResponse(
     public static ReturnListResponse from(ReturnInfo returnInfo, InvoiceRepository invoiceRepository) {
         Long invoiceId = null;
         if (returnInfo.getReturnInvoice() != null) {
-            invoiceId = invoiceRepository.findByNumber(returnInfo.getReturnInvoice())
+            String normalized = returnInfo.getReturnInvoice().replaceAll("-", "").trim();
+            invoiceId = invoiceRepository.findByNormalizedNumber(normalized)
                     .map(Invoice::getId)
                     .orElse(null);
         }

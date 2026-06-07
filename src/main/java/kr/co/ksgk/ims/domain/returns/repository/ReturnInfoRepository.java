@@ -103,4 +103,7 @@ public interface ReturnInfoRepository extends JpaRepository<ReturnInfo, Long> {
             @Param("processingStatus") ProcessingStatus processingStatus,
             @Param("search") String search,
             Pageable pageable);
+
+    @Query("SELECT r FROM ReturnInfo r WHERE REPLACE(r.originalInvoice, '-', '') = :normalized")
+    Optional<ReturnInfo> findByNormalizedOriginalInvoice(@Param("normalized") String normalized);
 }

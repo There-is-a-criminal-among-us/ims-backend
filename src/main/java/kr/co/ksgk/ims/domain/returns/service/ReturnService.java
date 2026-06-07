@@ -158,13 +158,7 @@ public class ReturnService {
             if (returnInfo.getReturnInvoice() != null && !returnInfo.getReturnInvoice().trim().isEmpty()) {
                 String normalizedReturnInvoice = normalizeInvoiceNumber(returnInfo.getReturnInvoice());
 
-                // Invoice number도 정규화해서 비교
-                Optional<Invoice> invoiceOpt = invoiceRepository.findAll().stream()
-                        .filter(invoice -> {
-                            String normalizedInvoiceNumber = normalizeInvoiceNumber(invoice.getNumber());
-                            return normalizedInvoiceNumber != null && normalizedInvoiceNumber.equals(normalizedReturnInvoice);
-                        })
-                        .findFirst();
+                Optional<Invoice> invoiceOpt = invoiceRepository.findByNormalizedNumber(normalizedReturnInvoice);
 
                 if (invoiceOpt.isPresent()) {
                     Invoice invoice = invoiceOpt.get();
@@ -400,13 +394,7 @@ public class ReturnService {
     }
 
     private Optional<ReturnInfo> findReturnInfoByNormalizedInvoice(String normalizedInvoice) {
-        List<ReturnInfo> allReturnInfos = returnInfoRepository.findAll();
-        return allReturnInfos.stream()
-                .filter(returnInfo -> {
-                    String dbInvoice = normalizeInvoiceNumber(returnInfo.getOriginalInvoice());
-                    return dbInvoice != null && dbInvoice.equals(normalizedInvoice);
-                })
-                .findFirst();
+        return returnInfoRepository.findByNormalizedOriginalInvoice(normalizedInvoice);
     }
 
     private int updateReturnInvoices(Map<String, String> invoiceMap) {
@@ -420,6 +408,7 @@ public class ReturnService {
             if (returnInfoOpt.isPresent()) {
                 ReturnInfo returnInfo = returnInfoOpt.get();
                 returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null, null, null);
+                returnInfo.complete();
                 updatedCount++;
             }
         }
