@@ -88,6 +88,10 @@ public enum ErrorCode {
     DELIVERY_SHEET_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "S011", "택배표 업로드에 실패했습니다."),
     DELIVERY_SHEET_UPLOAD_IN_PROGRESS(HttpStatus.CONFLICT, "S012", "동일한 연월의 운송장 업로드가 이미 진행 중입니다."),
 
+    // Payslip
+    PAYSLIP_NOT_FOUND(HttpStatus.NOT_FOUND, "PY001", "급여 명세서를 찾을 수 없습니다."),
+    PAYSLIP_ALREADY_EXISTS(HttpStatus.CONFLICT, "PY002", "이미 해당 월의 급여 명세서가 존재합니다."),
+
     // Stock Lot
     STOCK_LOT_NOT_FOUND(HttpStatus.NOT_FOUND, "SL001", "재고 로트를 찾을 수 없습니다."),
     INSUFFICIENT_LOT_QUANTITY(HttpStatus.BAD_REQUEST, "SL002", "로트 잔여 수량이 부족합니다."),
