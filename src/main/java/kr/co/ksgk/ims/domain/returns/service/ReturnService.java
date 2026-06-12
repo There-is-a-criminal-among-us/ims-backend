@@ -408,8 +408,13 @@ public class ReturnService {
             if (returnInfoOpt.isPresent()) {
                 ReturnInfo returnInfo = returnInfoOpt.get();
                 returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null, null, null);
-                returnInfo.complete();
-                updatedCount++;
+                // invoice 테이블에 반송장번호가 실제 등록된 경우에만 완료 처리.
+                // 미등록 시에는 번호만 저장하고 스케줄러(ReturnStatusScheduler)가 매일 00:30에 처리.
+                // invoiceMap의 value는 processInvoiceExcelFile에서 이미 normalize된 값이므로 재처리 불필요.
+                if (!returnInvoice.isEmpty() && invoiceRepository.findByNormalizedNumber(returnInvoice).isPresent()) {
+                    returnInfo.complete();
+                    updatedCount++;
+                }
             }
         }
 
