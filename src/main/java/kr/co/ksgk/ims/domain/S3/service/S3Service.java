@@ -2,6 +2,7 @@ package kr.co.ksgk.ims.domain.S3.service;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import kr.co.ksgk.ims.domain.S3.dto.request.PresignedUrlUploadRequest;
 import kr.co.ksgk.ims.domain.S3.dto.response.PresignedUrlUploadResponse;
@@ -45,5 +46,18 @@ public class S3Service {
 
     public String generateStaticUrl(String keyName) {
         return "https://" + region + ".vultrobjects.com/" + bucket + "/" + keyName;
+    }
+
+    public String generatePresignedDownloadUrl(String keyName) {
+        Date expiration = new Date();
+        expiration.setTime(expiration.getTime() + TimeUnit.MINUTES.toMillis(15));
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, keyName)
+                .withMethod(HttpMethod.GET)
+                .withExpiration(expiration);
+        return amazonS3.generatePresignedUrl(generatePresignedUrlRequest).toString();
+    }
+
+    public void deleteObject(String keyName) {
+        amazonS3.deleteObject(new DeleteObjectRequest(bucket, keyName));
     }
 }

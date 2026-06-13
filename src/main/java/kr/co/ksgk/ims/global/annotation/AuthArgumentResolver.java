@@ -1,6 +1,8 @@
 package kr.co.ksgk.ims.global.annotation;
 
 import kr.co.ksgk.ims.domain.auth.dto.CustomUserDetails;
+import kr.co.ksgk.ims.global.error.ErrorCode;
+import kr.co.ksgk.ims.global.error.exception.UnauthorizedException;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,12 +25,12 @@ public class AuthArgumentResolver implements HandlerMethodArgumentResolver {
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
+            throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
         }
         Object principal = authentication.getPrincipal();
-        if (principal instanceof CustomUserDetails customUser) {
-            return customUser.authDto().memberId();
+        if (!(principal instanceof CustomUserDetails customUser)) {
+            throw new UnauthorizedException(ErrorCode.UNAUTHORIZED);
         }
-        return null;
+        return customUser.authDto().memberId();
     }
 }
