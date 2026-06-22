@@ -7,9 +7,11 @@ import kr.co.ksgk.ims.domain.delivery.dto.response.PagingDeliveryResponse;
 import kr.co.ksgk.ims.domain.delivery.entity.Delivery;
 import kr.co.ksgk.ims.domain.delivery.exception.ExcelValidationException;
 import kr.co.ksgk.ims.domain.delivery.repository.DeliveryRepository;
+import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
 import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
+import kr.co.ksgk.ims.domain.stock.service.StockLotService;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class DeliveryService {
     private final DeliveryRepository deliveryRepository;
     private final RawProductRepository rawProductRepository;
     private final StockCacheInvalidator cacheInvalidator;
+    private final StockLotService stockLotService;
 
     public PagingDeliveryResponse getAllDeliveries(String search, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         Page<Delivery> pageDelivery = deliveryRepository.searchDeliveries(search, startDate, endDate, pageable);
@@ -73,6 +76,15 @@ public class DeliveryService {
 
         List<Delivery> deliveries = createDeliveries(productQuantityMap);
         deliveryRepository.saveAll(deliveries);
+
+        // Delivery 출고에 대한 FIFO lot 차감
+        for (Delivery delivery : deliveries) {
+            for (var mapping : delivery.getRawProduct().getProductMappings()) {
+                Product product = mapping.getProduct();
+                int deductQuantity = delivery.getQuantity() * mapping.getQuantity();
+                stockLotService.deductFifo(product, deductQuantity);
+            }
+        }
 
         // 캐시 무효화: 새로운 Delivery 생성 시 - 매핑된 모든 Product 캐시 무효화
         invalidateDeliveryCaches(deliveries);
