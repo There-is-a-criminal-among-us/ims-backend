@@ -173,15 +173,27 @@ public class SettlementCalculationService {
                     .distinct()
                     .count();
 
+            // DailyStock.currentStock으로 cap: DailyStockLot.quantity가 출고 미반영으로 과대 계산될 수 있음
+            List<DailyStock> dailyStocksForCap = stockRepository.findAllByProductsAndDateBetween(
+                    List.of(product), startDate, endDate);
+            Map<LocalDate, Long> currentStockByDate = dailyStocksForCap.stream()
+                    .collect(Collectors.toMap(DailyStock::getStockDate, ds -> (long) ds.getCurrentStock()));
+
             if (storageType == StorageType.CBM) {
                 if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
                     return null;
                 }
 
-                // 무료 기간 초과 로트만 합산 (각 로트의 자체 freePeriodDays 사용)
-                long billableStock = dailyStockLots.stream()
+                // 일별 무료 기간 초과 lot 수량 합산 후 currentStock으로 cap
+                Map<LocalDate, Long> dailyBillable = dailyStockLots.stream()
                         .filter(dsl -> !dsl.isWithinFreePeriod())
-                        .mapToLong(DailyStockLot::getQuantity)
+                        .collect(Collectors.groupingBy(
+                                DailyStockLot::getStockDate,
+                                Collectors.summingLong(DailyStockLot::getQuantity)
+                        ));
+
+                long billableStock = dailyBillable.entrySet().stream()
+                        .mapToLong(e -> Math.min(e.getValue(), currentStockByDate.getOrDefault(e.getKey(), e.getValue())))
                         .sum();
 
                 BigDecimal cbm = product.getCbm();
@@ -204,16 +216,19 @@ public class SettlementCalculationService {
                 int quantityPerPallet = product.getQuantityPerPallet();
                 BigDecimal pricePerPallet = product.getStoragePricePerPallet();
 
-                // 일별로 그룹핑하여 과금 대상 수량 계산 후 팔렛 수 산출 (각 로트의 자체 freePeriodDays 사용)
-                Map<LocalDate, Integer> dailyBillableQuantities = dailyStockLots.stream()
+                // 일별 무료 기간 초과 lot 수량 합산 후 currentStock으로 cap
+                Map<LocalDate, Long> dailyBillable = dailyStockLots.stream()
                         .filter(dsl -> !dsl.isWithinFreePeriod())
                         .collect(Collectors.groupingBy(
                                 DailyStockLot::getStockDate,
-                                Collectors.summingInt(DailyStockLot::getQuantity)
+                                Collectors.summingLong(DailyStockLot::getQuantity)
                         ));
 
-                long totalPallets = dailyBillableQuantities.values().stream()
-                        .mapToLong(qty -> (long) Math.ceil((double) qty / quantityPerPallet))
+                long totalPallets = dailyBillable.entrySet().stream()
+                        .mapToLong(e -> {
+                            long capped = Math.min(e.getValue(), currentStockByDate.getOrDefault(e.getKey(), e.getValue()));
+                            return (long) Math.ceil((double) capped / quantityPerPallet);
+                        })
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
