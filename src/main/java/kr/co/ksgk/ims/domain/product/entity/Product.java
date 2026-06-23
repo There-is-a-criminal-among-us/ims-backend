@@ -78,6 +78,10 @@ public class Product extends BaseEntity {
         this.note = note;
     }
 
+    public void updateBrand(Brand brand) {
+        this.brand = brand;
+    }
+
     public void updateStorageSettings(StorageType storageType, BigDecimal cbm, BigDecimal storagePricePerCbm,
                                        Integer quantityPerPallet, BigDecimal storagePricePerPallet) {
         this.storageType = storageType;

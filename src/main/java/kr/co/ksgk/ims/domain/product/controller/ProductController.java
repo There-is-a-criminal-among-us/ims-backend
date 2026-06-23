@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMoveRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.domain.product.service.ProductService;
@@ -58,6 +59,16 @@ public class ProductController implements ProductApi {
     @PatchMapping("/{productId}")
     public ResponseEntity<SuccessResponse<?>> updateProduct(@PathVariable Long productId, @RequestBody ProductUpdateRequest request) { // ProductRequest를 직접 사용
         ProductResponse response = productService.updateProduct(productId, request);
+        return SuccessResponse.ok(response);
+    }
+
+    //브랜드 이동
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{productId}/brand")
+    public ResponseEntity<SuccessResponse<?>> moveProductBrand(
+            @PathVariable Long productId,
+            @RequestBody @Valid ProductMoveRequest request) {
+        ProductResponse response = productService.moveProductBrand(productId, request);
         return SuccessResponse.ok(response);
     }
 
