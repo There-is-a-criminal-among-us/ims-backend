@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMoveRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
@@ -55,6 +56,16 @@ public interface ProductApi {
                     schema = @Schema(implementation = ProductResponse.class))
     )
     ResponseEntity<SuccessResponse<?>> updateProduct(Long productId, ProductUpdateRequest request);
+
+    @Operation(
+            summary = "품목 브랜드 이동",
+            description = "품목을 다른 브랜드로 이동합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "품목 브랜드 이동 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ProductResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> moveProductBrand(Long productId, ProductMoveRequest request);
 
     @Operation(
             summary = "품목 삭제",

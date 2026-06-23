@@ -7,6 +7,7 @@ import kr.co.ksgk.ims.domain.invoice.repository.InvoiceProductRepository;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductMappingUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductCreateRequest;
+import kr.co.ksgk.ims.domain.product.dto.request.ProductMoveRequest;
 import kr.co.ksgk.ims.domain.product.dto.request.ProductUpdateRequest;
 import kr.co.ksgk.ims.domain.product.dto.response.*;
 import kr.co.ksgk.ims.domain.product.entity.Product;
@@ -99,6 +100,16 @@ public class ProductService {
                     request.storagePricePerPallet()
             );
         }
+        return ProductResponse.from(product);
+    }
+
+    @Transactional
+    public ProductResponse moveProductBrand(Long productId, ProductMoveRequest request) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        Brand newBrand = brandRepository.findById(request.brandId())
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BRAND_NOT_FOUND));
+        product.updateBrand(newBrand);
         return ProductResponse.from(product);
     }
 
