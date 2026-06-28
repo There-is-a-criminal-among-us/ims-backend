@@ -322,8 +322,10 @@ public class SettlementCalculationService {
             return null;
         }
 
-        // 수량: 각 row의 quantity 합산
-        int quantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
+        // 수량: costTarget=true인 OUTBOUND row 건수 (1 invoice = 1 parcel = 1 work unit)
+        int quantity = (int) allProductRows.stream()
+                .filter(r -> WorkType.OUTBOUND == r.getWorkType() && r.getCostTarget())
+                .count();
 
         // costTarget인 row만 금액 계산 (quantity * unitPrice)
         long totalAmount = 0L;
@@ -420,15 +422,14 @@ public class SettlementCalculationService {
 
     private SettlementDetail calculateDeliverySheetQuantity(Product product, SettlementItem item,
                                                              Map<Long, List<DeliverySheetRow>> rowsByProduct) {
-        List<DeliverySheetRow> rows = rowsByProduct.getOrDefault(product.getId(), List.of()).stream()
+        // 수량: costTarget=true인 OUTBOUND row 건수 (1 invoice = 1 parcel = 1 work unit)
+        int totalQuantity = (int) rowsByProduct.getOrDefault(product.getId(), List.of()).stream()
                 .filter(r -> WorkType.OUTBOUND == r.getWorkType() && r.getCostTarget())
-                .toList();
+                .count();
 
-        if (rows.isEmpty()) {
+        if (totalQuantity == 0) {
             return null;
         }
-
-        int totalQuantity = rows.stream().mapToInt(DeliverySheetRow::getQuantity).sum();
 
         Integer unitPrice = item.getUnits().stream()
                 .findFirst()
