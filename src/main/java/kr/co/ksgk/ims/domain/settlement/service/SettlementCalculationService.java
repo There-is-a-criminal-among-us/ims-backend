@@ -327,7 +327,7 @@ public class SettlementCalculationService {
                 .filter(r -> WorkType.OUTBOUND == r.getWorkType() && r.getCostTarget())
                 .count();
 
-        // costTarget인 row만 금액 계산 (quantity * unitPrice)
+        // costTarget인 row만 금액 계산 (1 row = 1 송장 = 1 운임)
         long totalAmount = 0L;
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
@@ -335,7 +335,7 @@ public class SettlementCalculationService {
                 RawProduct rp = rawProductsByName.get(row.getProductName());
                 if (rp != null && rp.getSizeUnit() != null) {
                     unitPrice = rp.getSizeUnit().getPrice();
-                    totalAmount += (long) unitPrice * row.getQuantity();
+                    totalAmount += (long) unitPrice;
                 }
             }
         }
