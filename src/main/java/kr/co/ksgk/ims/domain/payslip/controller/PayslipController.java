@@ -44,7 +44,7 @@ public class PayslipController implements PayslipApi {
         return SuccessResponse.noContent();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PART_TIME')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PART_TIME', 'EMPLOYEE')")
     @GetMapping("/member/{memberId}")
     public ResponseEntity<SuccessResponse<?>> getPayslipsByMember(
             @Auth Long requesterId,
@@ -55,7 +55,7 @@ public class PayslipController implements PayslipApi {
         return SuccessResponse.ok(response);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PART_TIME')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PART_TIME', 'EMPLOYEE')")
     @GetMapping("/member/{memberId}/{date}")
     public ResponseEntity<SuccessResponse<?>> getPayslip(
             @Auth Long requesterId,

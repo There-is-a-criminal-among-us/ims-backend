@@ -11,6 +11,7 @@ import kr.co.ksgk.ims.domain.member.dto.request.ChangePasswordRequest;
 import kr.co.ksgk.ims.domain.member.dto.request.MemberUpdateRequest;
 import kr.co.ksgk.ims.domain.member.dto.response.MemberInfoResponse;
 import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberInfoResponse;
+import kr.co.ksgk.ims.domain.member.dto.response.PagingMemberWithAttendanceResponse;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -110,4 +111,34 @@ public interface MemberApi {
     )
     @ApiResponse(responseCode = "204", description = "비밀번호 초기화 성공")
     ResponseEntity<SuccessResponse<?>> resetPassword(@PathVariable Long memberId);
+
+    @Operation(
+            summary = "직원 목록 조회",
+            description = "직원(EMPLOYEE) 회원 목록을 조회합니다. 관리자 권한이 필요합니다. (page는 0부터 시작)"
+    )
+    @ApiResponse(responseCode = "200", description = "직원 목록 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PagingMemberInfoResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> getEmployeeMembers(int page, int size);
+
+    @Operation(
+            summary = "날짜별 출근 직원 조회",
+            description = "특정 날짜에 출근한 직원(EMPLOYEE) 목록을 조회합니다. 관리자 권한이 필요합니다. (page는 0부터 시작)"
+    )
+    @ApiResponse(responseCode = "200", description = "날짜별 출근 직원 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PagingMemberWithAttendanceResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> getEmployeeMembersByDate(@PathVariable String date, int page, int size);
+
+    @Operation(
+            summary = "오늘 출근 직원 조회",
+            description = "오늘 출근한 직원(EMPLOYEE) 목록을 조회합니다. 관리자 권한이 필요합니다. (page는 0부터 시작)"
+    )
+    @ApiResponse(responseCode = "200", description = "오늘 출근 직원 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = PagingMemberWithAttendanceResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> getTodayEmployeeMembers(int page, int size);
 }

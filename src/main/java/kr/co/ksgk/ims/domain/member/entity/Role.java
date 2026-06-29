@@ -10,6 +10,7 @@ public enum Role {
     OCR("OCR 담당자"),
     MEMBER("회원"),
     PART_TIME("아르바이트"),
+    EMPLOYEE("직원"),
     ATTENDANCE("출석 담당자"),
     CS("고객서비스"),
     MANAGER("매니저")

@@ -144,4 +144,35 @@ public class MemberService {
                 .toList();
         return PagingMemberWithAttendanceResponse.of(attendancePage, memberWithAttendanceResponses);
     }
+
+    public PagingMemberInfoResponse getEmployeeMembers(Pageable pageable) {
+        Page<Member> memberPage = memberRepository.findAllByRole(Role.EMPLOYEE, pageable);
+        List<MemberInfoResponse> memberInfoResponses = memberPage.getContent().stream()
+                .map(MemberInfoResponse::from)
+                .toList();
+        return PagingMemberInfoResponse.of(memberPage, memberInfoResponses);
+    }
+
+    public PagingMemberWithAttendanceResponse getTodayEmployeeMembers(Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.EMPLOYEE, today, pageable);
+        List<MemberWithAttendanceResponse> memberWithAttendanceResponses = attendancePage.getContent().stream()
+                .map(MemberWithAttendanceResponse::from)
+                .toList();
+        return PagingMemberWithAttendanceResponse.of(attendancePage, memberWithAttendanceResponses);
+    }
+
+    public PagingMemberWithAttendanceResponse getEmployeeMembersByDate(String dateString, Pageable pageable) {
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString);
+        } catch (DateTimeParseException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
+        Page<Attendance> attendancePage = attendanceRepository.findTodayWorkingMembersByRole(Role.EMPLOYEE, date, pageable);
+        List<MemberWithAttendanceResponse> memberWithAttendanceResponses = attendancePage.getContent().stream()
+                .map(MemberWithAttendanceResponse::from)
+                .toList();
+        return PagingMemberWithAttendanceResponse.of(attendancePage, memberWithAttendanceResponses);
+    }
 }
