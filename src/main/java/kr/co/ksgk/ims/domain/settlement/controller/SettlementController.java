@@ -17,6 +17,7 @@ import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -119,14 +120,18 @@ public class SettlementController {
         return SuccessResponse.ok(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNT_MANAGER')")
     @GetMapping("/list")
     @Operation(summary = "정산서 목록 조회", description = "특정 월의 모든 정산서 목록 조회")
     @ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SettlementResponse.class)))
     public ResponseEntity<SuccessResponse<?>> getSettlements(
             @RequestParam int year,
-            @RequestParam int month) {
-        List<SettlementResponse> response = settlementManagementService.getSettlementsByYearAndMonth(year, month);
+            @RequestParam int month,
+            @Auth Long memberId,
+            Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        List<SettlementResponse> response = settlementManagementService.getSettlementsByYearAndMonth(year, month, memberId, isAdmin);
         return SuccessResponse.ok(response);
     }
 

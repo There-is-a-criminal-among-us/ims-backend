@@ -49,8 +49,21 @@ public class SettlementManagementService {
         return buildSettlementResponse(settlement, details, visibleItemIds);
     }
 
-    public List<SettlementResponse> getSettlementsByYearAndMonth(int year, int month) {
-        List<Settlement> settlements = settlementRepository.findByYearAndMonth(year, month);
+    public List<SettlementResponse> getSettlementsByYearAndMonth(int year, int month, Long memberId, boolean isAdmin) {
+        List<Settlement> settlements;
+        if (isAdmin) {
+            settlements = settlementRepository.findByYearAndMonth(year, month);
+        } else {
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+            List<Long> companyIds = member.getMemberCompanies().stream()
+                    .map(mc -> mc.getCompany().getId())
+                    .collect(Collectors.toList());
+            if (companyIds.isEmpty()) {
+                return List.of();
+            }
+            settlements = settlementRepository.findByYearAndMonthAndCompanyIdIn(year, month, companyIds);
+        }
 
         return settlements.stream()
                 .map(settlement -> {
