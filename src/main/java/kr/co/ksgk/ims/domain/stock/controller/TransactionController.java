@@ -58,14 +58,12 @@ public class TransactionController implements TransactionApi {
         return SuccessResponse.noContent();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER', 'CS')")
     @PostMapping
     public ResponseEntity<SuccessResponse<?>> createTransaction(@RequestBody TransactionRequest request) {
         TransactionResponse transactionResponse = transactionService.createTransaction(request);
         return SuccessResponse.created(transactionResponse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'OCR', 'MEMBER', 'MANAGER', 'CS')")
     @PatchMapping("/{transactionId}")
     public ResponseEntity<SuccessResponse<?>> updateTransaction(
             @PathVariable Long transactionId,

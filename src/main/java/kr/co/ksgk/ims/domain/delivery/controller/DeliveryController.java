@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,7 +55,6 @@ public class DeliveryController {
         return SuccessResponse.ok(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "엑셀 파일 업로드", description = "여러 엑셀 파일을 업로드하여 배송 정보를 일괄 등록합니다.")
     @ApiResponse(responseCode = "200", description = "엑셀 파일 업로드 성공",
