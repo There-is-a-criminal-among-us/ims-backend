@@ -7,6 +7,8 @@ import kr.co.ksgk.ims.domain.delivery.dto.response.PagingDeliveryResponse;
 import kr.co.ksgk.ims.domain.delivery.entity.Delivery;
 import kr.co.ksgk.ims.domain.delivery.exception.ExcelValidationException;
 import kr.co.ksgk.ims.domain.delivery.repository.DeliveryRepository;
+import kr.co.ksgk.ims.domain.member.entity.Member;
+import kr.co.ksgk.ims.domain.member.repository.MemberRepository;
 import kr.co.ksgk.ims.domain.product.entity.Product;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
@@ -14,6 +16,7 @@ import kr.co.ksgk.ims.domain.stock.service.StockCacheInvalidator;
 import kr.co.ksgk.ims.domain.stock.service.StockLotService;
 import kr.co.ksgk.ims.global.error.ErrorCode;
 import kr.co.ksgk.ims.global.error.exception.BusinessException;
+import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.data.domain.Page;
@@ -36,9 +39,18 @@ public class DeliveryService {
     private final RawProductRepository rawProductRepository;
     private final StockCacheInvalidator cacheInvalidator;
     private final StockLotService stockLotService;
+    private final MemberRepository memberRepository;
 
-    public PagingDeliveryResponse getAllDeliveries(String search, LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        Page<Delivery> pageDelivery = deliveryRepository.searchDeliveries(search, startDate, endDate, pageable);
+    public PagingDeliveryResponse getAllDeliveries(Long memberId, String search, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        Set<Long> brandIds = member.getMemberBrands().stream()
+                .map(mb -> mb.getBrand().getId())
+                .collect(Collectors.toSet());
+        Set<Long> companyIds = member.getMemberCompanies().stream()
+                .map(mc -> mc.getCompany().getId())
+                .collect(Collectors.toSet());
+        Page<Delivery> pageDelivery = deliveryRepository.searchDeliveries(search, startDate, endDate, brandIds, companyIds, pageable);
         List<DeliveryResponse> deliveryResponses = pageDelivery.getContent().stream()
                 .map(DeliveryResponse::from)
                 .collect(Collectors.toList());

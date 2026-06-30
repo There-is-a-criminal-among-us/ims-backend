@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,7 +27,8 @@ public class DeliveryRepositoryImpl implements DeliveryCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Delivery> searchDeliveries(String search, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<Delivery> searchDeliveries(String search, LocalDate startDate, LocalDate endDate,
+            Set<Long> memberBrandIds, Set<Long> memberCompanyIds, Pageable pageable) {
         QDelivery delivery = QDelivery.delivery;
         QRawProduct rawProduct = QRawProduct.rawProduct;
         QProduct product = QProduct.product;
@@ -38,6 +40,11 @@ public class DeliveryRepositoryImpl implements DeliveryCustomRepository {
 
         if (startDate != null) builder.and(delivery.createdAt.goe(startDate.atStartOfDay()));
         if (endDate != null) builder.and(delivery.createdAt.loe(endDate.atTime(23, 59, 59)));
+        if (!memberBrandIds.isEmpty()) {
+            builder.and(brand.id.in(memberBrandIds));
+        } else if (!memberCompanyIds.isEmpty()) {
+            builder.and(company.id.in(memberCompanyIds));
+        }
         if (search != null && !search.isBlank()) {
             builder.and(
                     rawProduct.name.containsIgnoreCase(search)

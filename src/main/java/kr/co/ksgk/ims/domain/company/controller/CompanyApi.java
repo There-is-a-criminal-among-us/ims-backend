@@ -36,6 +36,16 @@ public interface CompanyApi {
     ResponseEntity<SuccessResponse<?>> createCompany(CompanyRequest request);
 
     @Operation(
+            summary = "내가 관리하는 사업자 목록 조회",
+            description = "로그인한 멤버가 관리하는 사업자 목록을 조회합니다"
+    )
+    @ApiResponse(responseCode = "200", description = "관리 사업자 목록 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = CompanyResponse.class))
+    )
+    ResponseEntity<SuccessResponse<?>> getManagedCompanies(Long memberId);
+
+    @Operation(
             summary = "사업자 전체 목록 조회",
             description = "페이지네이션 없이 모든 사업자 목록을 조회합니다"
     )

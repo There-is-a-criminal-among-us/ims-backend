@@ -37,6 +37,12 @@ public class CompanyController implements CompanyApi {
         return SuccessResponse.created(companyResponse);
     }
 
+    @GetMapping("/managed")
+    public ResponseEntity<SuccessResponse<?>> getManagedCompanies(@Auth Long memberId) {
+        List<CompanyResponse> response = companyService.getManagedCompanies(memberId);
+        return SuccessResponse.ok(response);
+    }
+
     @GetMapping("/all")
     public ResponseEntity<SuccessResponse<?>> getAllCompaniesWithoutPaging() {
         List<CompanyResponse> response = companyService.getAllCompaniesWithoutPaging();

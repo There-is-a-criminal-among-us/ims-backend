@@ -34,7 +34,7 @@ public class AttendanceController {
     @ApiResponse(responseCode = "201", description = "출석 토큰 생성 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AttendanceTokenResponse.class)))
-    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME')")
+    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME', 'EMPLOYEE')")
     @PostMapping("/token")
     public ResponseEntity<SuccessResponse<?>> createToken(@Auth Long memberId) {
         AttendanceTokenResponse response = attendanceService.createToken(memberId);
@@ -67,7 +67,7 @@ public class AttendanceController {
     @ApiResponse(responseCode = "200", description = "근무 종료 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = AttendanceResponse.class)))
-    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME')")
+    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME', 'EMPLOYEE')")
     @PostMapping("/end")
     public ResponseEntity<SuccessResponse<?>> endShift(@Auth Long memberId) {
         AttendanceResponse response = attendanceService.endShift(memberId);
@@ -92,7 +92,7 @@ public class AttendanceController {
     @ApiResponse(responseCode = "200", description = "내 출석 목록 조회 성공",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagingAttendanceResponse.class)))
-    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME')")
+    @PreAuthorize("hasAnyRole('MEMBER', 'PART_TIME', 'EMPLOYEE')")
     @GetMapping("/me")
     public ResponseEntity<SuccessResponse<?>> getMyAttendanceList(
             @Auth Long memberId,

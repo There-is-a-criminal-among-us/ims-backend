@@ -11,12 +11,14 @@ import kr.co.ksgk.ims.domain.delivery.dto.response.ExcelUploadSuccessResponse;
 import kr.co.ksgk.ims.domain.delivery.dto.response.PagingDeliveryResponse;
 import kr.co.ksgk.ims.domain.delivery.exception.ExcelValidationException;
 import kr.co.ksgk.ims.domain.delivery.service.DeliveryService;
+import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +35,8 @@ public class DeliveryController {
 
     @GetMapping
     public ResponseEntity<SuccessResponse<?>> getAllDeliveries(
+            @Auth Long memberId,
+
             @Parameter(description = "사업자, 브랜드, 상품명 검색어")
             @RequestParam(defaultValue = "") String search,
 
@@ -48,10 +52,11 @@ public class DeliveryController {
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size
     ) {
-        PagingDeliveryResponse response = deliveryService.getAllDeliveries(search, startDate, endDate, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+        PagingDeliveryResponse response = deliveryService.getAllDeliveries(memberId, search, startDate, endDate, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         return SuccessResponse.ok(response);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/upload-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "엑셀 파일 업로드", description = "여러 엑셀 파일을 업로드하여 배송 정보를 일괄 등록합니다.")
     @ApiResponse(responseCode = "200", description = "엑셀 파일 업로드 성공",

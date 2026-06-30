@@ -81,6 +81,15 @@ public class CompanyService {
                 .build();
     }
 
+    // 관리 company 조회 (MEMBER용)
+    public List<CompanyResponse> getManagedCompanies(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        return member.getMemberCompanies().stream()
+                .map(mc -> CompanyResponse.from(mc.getCompany()))
+                .collect(Collectors.toList());
+    }
+
     // 등록
     @Transactional
     public CompanyResponse createCompany(CompanyRequest request) {

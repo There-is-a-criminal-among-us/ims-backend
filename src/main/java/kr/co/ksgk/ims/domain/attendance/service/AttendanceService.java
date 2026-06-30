@@ -132,7 +132,7 @@ public class AttendanceService {
     public AttendanceResponse updatePartTimeAttendance(Long attendanceId, AttendanceUpdateRequest request) {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.ATTENDANCE_NOT_FOUND));
-        if (attendance.getMember().getRole() != Role.PART_TIME) {
+        if (!isAttendanceTracked(attendance.getMember().getRole())) {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
         }
         attendance.updateAttendanceTimes(request.startTime(), request.endTime());
@@ -143,7 +143,7 @@ public class AttendanceService {
     public PagingAttendanceResponse getPartTimeAttendanceList(Long memberId, Integer year, Integer month, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        if (member.getRole() != Role.PART_TIME) {
+        if (!isAttendanceTracked(member.getRole())) {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
         }
         Page<Attendance> attendancePage;
@@ -164,7 +164,7 @@ public class AttendanceService {
     public AttendanceResponse createAttendance(Long memberId, AttendanceCreateRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        if (member.getRole() != Role.PART_TIME) {
+        if (!isAttendanceTracked(member.getRole())) {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE);
         }
         if (attendanceRepository.existsByMemberAndDate(member, request.date())) {
@@ -178,5 +178,9 @@ public class AttendanceService {
                 .build();
         Attendance savedAttendance = attendanceRepository.save(attendance);
         return AttendanceResponse.from(savedAttendance);
+    }
+
+    private boolean isAttendanceTracked(Role role) {
+        return role == Role.PART_TIME || role == Role.EMPLOYEE;
     }
 }
