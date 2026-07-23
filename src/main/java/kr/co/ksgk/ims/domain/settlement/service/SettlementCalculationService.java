@@ -332,7 +332,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductsByName.get(row.getProductName());
+                RawProduct rp = rawProductsByName.get(normalizeProductName(row.getProductName()));
                 if (rp != null && rp.getSizeUnit() != null) {
                     unitPrice = rp.getSizeUnit().getPrice();
                     totalAmount += (long) unitPrice;
@@ -367,7 +367,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductsByName.get(row.getProductName());
+                RawProduct rp = rawProductsByName.get(normalizeProductName(row.getProductName()));
                 if (rp != null && rp.getReturnSizeUnit() != null) {
                     unitPrice = rp.getReturnSizeUnit().getPrice();
                     totalAmount += (long) unitPrice * row.getQuantity();
@@ -443,6 +443,10 @@ public class SettlementCalculationService {
         long totalAmount = (long) unitPrice * totalQuantity;
 
         return createDetail(product, item, totalQuantity, unitPrice, totalAmount, null);
+    }
+
+    private String normalizeProductName(String name) {
+        return name != null && name.startsWith("*") ? name.substring(1) : name;
     }
 
     private SettlementDetail createDetail(Product product, SettlementItem item,
