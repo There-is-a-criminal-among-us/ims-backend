@@ -202,7 +202,7 @@ public class SettlementCalculationService {
                 totalAmount = BigDecimal.valueOf(billableStock)
                         .multiply(cbm)
                         .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
                 log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
@@ -232,7 +232,7 @@ public class SettlementCalculationService {
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
                 log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
@@ -282,7 +282,7 @@ public class SettlementCalculationService {
                 totalAmount = BigDecimal.valueOf(totalStock)
                         .multiply(cbm)
                         .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
             } else if (storageType == StorageType.PALLET) {
@@ -298,7 +298,7 @@ public class SettlementCalculationService {
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
             }
         }
@@ -332,7 +332,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductsByName.get(row.getProductName());
+                RawProduct rp = rawProductsByName.get(normalizeProductName(row.getProductName()));
                 if (rp != null && rp.getSizeUnit() != null) {
                     unitPrice = rp.getSizeUnit().getPrice();
                     totalAmount += (long) unitPrice;
@@ -367,7 +367,7 @@ public class SettlementCalculationService {
         Integer unitPrice = null;
         for (DeliverySheetRow row : rows) {
             if (row.getCostTarget()) {
-                RawProduct rp = rawProductsByName.get(row.getProductName());
+                RawProduct rp = rawProductsByName.get(normalizeProductName(row.getProductName()));
                 if (rp != null && rp.getReturnSizeUnit() != null) {
                     unitPrice = rp.getReturnSizeUnit().getPrice();
                     totalAmount += (long) unitPrice * row.getQuantity();
@@ -443,6 +443,10 @@ public class SettlementCalculationService {
         long totalAmount = (long) unitPrice * totalQuantity;
 
         return createDetail(product, item, totalQuantity, unitPrice, totalAmount, null);
+    }
+
+    private String normalizeProductName(String name) {
+        return name != null && name.startsWith("*") ? name.substring(1) : name;
     }
 
     private SettlementDetail createDetail(Product product, SettlementItem item,
