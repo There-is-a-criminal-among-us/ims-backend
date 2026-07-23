@@ -202,7 +202,7 @@ public class SettlementCalculationService {
                 totalAmount = BigDecimal.valueOf(billableStock)
                         .multiply(cbm)
                         .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
                 log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
@@ -232,7 +232,7 @@ public class SettlementCalculationService {
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
                 log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
@@ -282,7 +282,7 @@ public class SettlementCalculationService {
                 totalAmount = BigDecimal.valueOf(totalStock)
                         .multiply(cbm)
                         .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
 
             } else if (storageType == StorageType.PALLET) {
@@ -298,7 +298,7 @@ public class SettlementCalculationService {
                         .sum();
 
                 totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.HALF_UP)
+                        .setScale(0, RoundingMode.FLOOR)
                         .longValue();
             }
         }
