@@ -179,21 +179,35 @@ public class SettlementCalculationService {
             Map<LocalDate, Long> currentStockByDate = dailyStocksForCap.stream()
                     .collect(Collectors.toMap(DailyStock::getStockDate, ds -> (long) ds.getCurrentStock()));
 
+            // lot 추적 여부와 무관하게 과금되어야 하는 수량 계산
+            // - 만료된 lot 수량: 무료기간 초과분
+            // - uncovered 수량: lot로 추적되지 않는 재고 (구형 재고 등) → 즉시 과금 대상
+            Map<LocalDate, Long> dailyExpiredLot = dailyStockLots.stream()
+                    .filter(dsl -> !dsl.isWithinFreePeriod())
+                    .collect(Collectors.groupingBy(
+                            DailyStockLot::getStockDate,
+                            Collectors.summingLong(DailyStockLot::getQuantity)
+                    ));
+            Map<LocalDate, Long> dailyTotalLot = dailyStockLots.stream()
+                    .collect(Collectors.groupingBy(
+                            DailyStockLot::getStockDate,
+                            Collectors.summingLong(DailyStockLot::getQuantity)
+                    ));
+
             if (storageType == StorageType.CBM) {
                 if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
                     return null;
                 }
 
-                // 일별 무료 기간 초과 lot 수량 합산 후 currentStock으로 cap
-                Map<LocalDate, Long> dailyBillable = dailyStockLots.stream()
-                        .filter(dsl -> !dsl.isWithinFreePeriod())
-                        .collect(Collectors.groupingBy(
-                                DailyStockLot::getStockDate,
-                                Collectors.summingLong(DailyStockLot::getQuantity)
-                        ));
-
-                long billableStock = dailyBillable.entrySet().stream()
-                        .mapToLong(e -> Math.min(e.getValue(), currentStockByDate.getOrDefault(e.getKey(), e.getValue())))
+                long billableStock = currentStockByDate.entrySet().stream()
+                        .mapToLong(e -> {
+                            long current = e.getValue();
+                            if (current == 0) return 0L;
+                            long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
+                            long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
+                            long uncovered = Math.max(0, current - totalLot);
+                            return Math.min(current, expiredLot + uncovered);
+                        })
                         .sum();
 
                 BigDecimal cbm = product.getCbm();
@@ -216,18 +230,16 @@ public class SettlementCalculationService {
                 int quantityPerPallet = product.getQuantityPerPallet();
                 BigDecimal pricePerPallet = product.getStoragePricePerPallet();
 
-                // 일별 무료 기간 초과 lot 수량 합산 후 currentStock으로 cap
-                Map<LocalDate, Long> dailyBillable = dailyStockLots.stream()
-                        .filter(dsl -> !dsl.isWithinFreePeriod())
-                        .collect(Collectors.groupingBy(
-                                DailyStockLot::getStockDate,
-                                Collectors.summingLong(DailyStockLot::getQuantity)
-                        ));
-
-                long totalPallets = dailyBillable.entrySet().stream()
+                long totalPallets = currentStockByDate.entrySet().stream()
                         .mapToLong(e -> {
-                            long capped = Math.min(e.getValue(), currentStockByDate.getOrDefault(e.getKey(), e.getValue()));
-                            return (long) Math.ceil((double) capped / quantityPerPallet);
+                            long current = e.getValue();
+                            if (current == 0) return 0L;
+                            long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
+                            long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
+                            long uncovered = Math.max(0, current - totalLot);
+                            long billableUnits = Math.min(current, expiredLot + uncovered);
+                            if (billableUnits == 0) return 0L;
+                            return (long) Math.ceil((double) billableUnits / quantityPerPallet);
                         })
                         .sum();
 
