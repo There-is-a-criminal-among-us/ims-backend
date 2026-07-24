@@ -92,6 +92,34 @@ public class StockLotService {
     }
 
     /**
+     * FIFO 역차감 — 재업로드 롤백 시 기존 차감분 복원 (신규 lot부터 역순 복원)
+     * @return 실제 복원된 총 수량
+     */
+    @Transactional
+    public int reverseFifo(Product product, int quantityToReverse) {
+        if (quantityToReverse <= 0) return 0;
+
+        List<StockLot> lots = stockLotRepository.findByProductOrderByInboundDateDesc(product);
+
+        int remaining = quantityToReverse;
+        int totalRestored = 0;
+
+        for (StockLot lot : lots) {
+            if (remaining <= 0) break;
+            int restored = lot.addBack(remaining);
+            remaining -= restored;
+            totalRestored += restored;
+        }
+
+        if (remaining > 0) {
+            log.warn("FIFO 역차감 초과 - Product: {}, Requested: {}, Restored: {}, Excess: {}",
+                    product.getId(), quantityToReverse, totalRestored, remaining);
+        }
+        log.info("FIFO 역차감 완료 - Product: {}, Total Restored: {}", product.getId(), totalRestored);
+        return totalRestored;
+    }
+
+    /**
      * 특정 상품의 총 잔여 수량
      */
     public int getTotalRemainingByProduct(Product product) {

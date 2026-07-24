@@ -7,6 +7,7 @@ import kr.co.ksgk.ims.domain.product.entity.ProductMapping;
 import kr.co.ksgk.ims.domain.product.entity.RawProduct;
 import kr.co.ksgk.ims.domain.product.repository.ProductMappingRepository;
 import kr.co.ksgk.ims.domain.product.repository.RawProductRepository;
+import kr.co.ksgk.ims.domain.stock.service.StockLotService;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetRemoteAreaListResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetRemoteAreaResponse;
 import kr.co.ksgk.ims.domain.settlement.dto.response.DeliverySheetReturnListResponse;
@@ -46,6 +47,7 @@ public class DeliverySheetService {
     private final ProductMappingRepository productMappingRepository;
     private final SettlementItemRepository settlementItemRepository;
     private final SettlementCalculationService settlementCalculationService;
+    private final StockLotService stockLotService;
     private final ObjectMapper objectMapper;
     private final DeliverySheetService self;
 
@@ -63,6 +65,7 @@ public class DeliverySheetService {
             ProductMappingRepository productMappingRepository,
             SettlementItemRepository settlementItemRepository,
             @Lazy SettlementCalculationService settlementCalculationService,
+            StockLotService stockLotService,
             ObjectMapper objectMapper,
             @Lazy DeliverySheetService self) {
         this.deliverySheetRowRepository = deliverySheetRowRepository;
@@ -72,6 +75,7 @@ public class DeliverySheetService {
         this.productMappingRepository = productMappingRepository;
         this.settlementItemRepository = settlementItemRepository;
         this.settlementCalculationService = settlementCalculationService;
+        this.stockLotService = stockLotService;
         this.objectMapper = objectMapper;
         this.self = self;
     }
@@ -223,8 +227,33 @@ public class DeliverySheetService {
             return DeliverySheetUploadResponse.failure(year, month, failedRows);
         }
 
+        // 재업로드 대비: 기존 OUTBOUND 차감량 조회 (삭제 전)
+        Map<Product, Integer> oldOutboundQty = deliverySheetRowRepository
+                .sumOutboundQuantityByProduct(year, month)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (Product) row[0],
+                        row -> ((Number) row[1]).intValue()
+                ));
+
+        // 신규 OUTBOUND 차감량 계산
+        Map<Product, Integer> newOutboundQty = successRows.stream()
+                .filter(r -> WorkType.OUTBOUND == r.getWorkType())
+                .collect(java.util.stream.Collectors.groupingBy(
+                        DeliverySheetRow::getProduct,
+                        java.util.stream.Collectors.summingInt(DeliverySheetRow::getQuantity)
+                ));
+
         // 저장
         self.replaceDeliverySheetData(year, month, successRows, returnRows, remoteAreaRows);
+
+        // 기존 차감 롤백 후 신규 차감 적용
+        oldOutboundQty.forEach((product, qty) -> {
+            if (qty > 0) stockLotService.reverseFifo(product, qty);
+        });
+        newOutboundQty.forEach((product, qty) -> {
+            if (qty > 0) stockLotService.deductFifo(product, qty);
+        });
 
         // 정산 계산 트리거
         settlementCalculationService.calculateSettlements(year, month);

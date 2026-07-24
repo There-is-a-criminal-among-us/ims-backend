@@ -84,6 +84,18 @@ public class StockLot extends BaseEntity {
     }
 
     /**
+     * FIFO 역차감 (재업로드 롤백용) — initialQuantity를 초과하지 않도록 cap
+     * @return 실제 복원된 수량
+     */
+    public int addBack(int quantity) {
+        if (quantity <= 0) return 0;
+        int space = this.initialQuantity - this.remainingQuantity;
+        int actual = Math.min(quantity, space);
+        this.remainingQuantity += actual;
+        return actual;
+    }
+
+    /**
      * 특정 날짜로부터의 경과 일수 계산
      */
     public int getDaysFromInbound(LocalDate targetDate) {

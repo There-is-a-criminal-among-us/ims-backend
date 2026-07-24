@@ -33,4 +33,13 @@ public interface DeliverySheetRowRepository extends JpaRepository<DeliverySheetR
 
     List<DeliverySheetRow> findByYearAndMonthAndProductAndWorkType(
             Integer year, Integer month, Product product, WorkType workType);
+
+    @Query("""
+            SELECT r.product, COALESCE(SUM(r.quantity), 0)
+            FROM DeliverySheetRow r
+            WHERE r.year = :year AND r.month = :month
+              AND r.workType = kr.co.ksgk.ims.domain.settlement.entity.WorkType.OUTBOUND
+            GROUP BY r.product
+            """)
+    List<Object[]> sumOutboundQuantityByProduct(@Param("year") Integer year, @Param("month") Integer month);
 }
