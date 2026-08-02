@@ -37,6 +37,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class TransactionService {
 
+    /**
+     * ADJUSTMENT 그룹 중 quantity 부호와 무관하게 항상 FIFO 차감되는 타입
+     */
+    private static final Set<String> ALWAYS_DEDUCT_ADJUSTMENT_TYPES = Set.of("DAMAGED", "DISPOSAL", "LOST", "REDELIVERY");
+
     private final TransactionRepository transactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;
     private final ProductRepository productRepository;
@@ -99,28 +104,35 @@ public class TransactionService {
     }
 
     /**
-     * 트랜잭션 확정 시 StockLot 처리
+     * 트랜잭션 확정 시 StockLot 처리 (타입별 규칙)
+     * - INCOMING(기본입고): StockLot 생성 (inboundDate는 confirmedDate 기준)
+     * - RETURN_INCOMING(반품입고): 무시
+     * - OUTGOING 그룹(기본출고/풀필먼트/택배출고): FIFO 차감
+     * - REDELIVERY/DAMAGED/DISPOSAL/LOST(재배송/파손/폐기/유실): FIFO 차감
+     * - ADJUSTMENT(조정): 무시
      */
     private void handleStockLotOnConfirm(Transaction transaction) {
+        String typeName = transaction.getTransactionType().getName();
         TransactionGroup groupType = transaction.getTransactionType().getGroupType();
-        LocalDate workDate = transaction.getWorkDate() != null ? transaction.getWorkDate() : LocalDate.now();
 
-        if (groupType == TransactionGroup.INCOMING) {
-            // 입고 확정 시 무료 보관 기간 조회 후 StockLot 생성
+        if ("INCOMING".equals(typeName)) {
+            LocalDate inboundDate = transaction.getConfirmedDate();
             int freePeriodDays = storageFreePeriodService.getFreePeriodDays(
-                    transaction.getProduct(), workDate);
+                    transaction.getProduct(), inboundDate);
             StockLot stockLot = stockLotService.createLot(
                     transaction.getProduct(),
                     transaction,
-                    workDate,
+                    inboundDate,
                     transaction.getQuantity(),
                     freePeriodDays
             );
             transaction.updateStockLot(stockLot);
         } else if (groupType == TransactionGroup.OUTGOING) {
-            // 출고 확정 시 FIFO 차감
             stockLotService.deductFifo(transaction.getProduct(), transaction.getQuantity());
+        } else if (ALWAYS_DEDUCT_ADJUSTMENT_TYPES.contains(typeName)) {
+            stockLotService.deductFifo(transaction.getProduct(), Math.abs(transaction.getQuantity()));
         }
+        // RETURN_INCOMING, ADJUSTMENT: StockLot 미반영
     }
 
     @Transactional
@@ -199,6 +211,11 @@ public class TransactionService {
         }
 
         Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // ADJUSTMENT 타입은 생성과 동시에 CONFIRMED되므로 여기서 바로 StockLot 반영
+        if (transactionStatus == TransactionStatus.CONFIRMED) {
+            handleStockLotOnConfirm(savedTransaction);
+        }
 
         // TransactionWork 생성
         if (request.works() != null && !request.works().isEmpty()) {
