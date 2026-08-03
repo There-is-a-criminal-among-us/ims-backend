@@ -44,7 +44,6 @@ public class SettlementCalculationService {
     private final TransactionWorkRepository transactionWorkRepository;
     private final DailyStockLotRepository dailyStockLotRepository;
     private final CompanyItemChargeMappingRepository companyItemChargeMappingRepository;
-    private final StorageFreePeriodConfigRepository storageFreePeriodConfigRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -159,160 +158,95 @@ public class SettlementCalculationService {
             return null;
         }
 
-        // DailyStockLot 기반 계산 시도 (각 로트에 저장된 freePeriodDays 사용)
+        // DailyStock.currentStock을 기준 재고로 삼고, DailyStockLot으로 무료기간
+        // 내(covered)/만료(expired) 여부를 겹쳐서 과금 대상 수량을 계산한다.
+        // 그 날짜에 lot이 하나도 없으면(구형 재고, lot 전량 소진 등) totalLot=0이 되어
+        // uncovered = current 전체가 되므로 별도 분기 없이 자동으로 즉시 과금 처리된다.
+        List<DailyStock> dailyStocksForCap = stockRepository.findAllByProductsAndDateBetween(
+                List.of(product), startDate, endDate);
+        if (dailyStocksForCap.isEmpty()) {
+            return null;
+        }
+
+        Map<LocalDate, Long> currentStockByDate = dailyStocksForCap.stream()
+                .collect(Collectors.toMap(DailyStock::getStockDate, ds -> (long) ds.getCurrentStock()));
+
         List<DailyStockLot> dailyStockLots = dailyStockLotRepository.findByProductAndDateBetween(
                 product, startDate, endDate);
 
+        // lot 추적 여부와 무관하게 과금되어야 하는 수량 계산
+        // - 만료된 lot 수량: 무료기간 초과분
+        // - uncovered 수량: lot로 추적되지 않는 재고 (구형 재고 등) → 즉시 과금 대상
+        Map<LocalDate, Long> dailyExpiredLot = dailyStockLots.stream()
+                .filter(dsl -> !dsl.isWithinFreePeriod())
+                .collect(Collectors.groupingBy(
+                        DailyStockLot::getStockDate,
+                        Collectors.summingLong(DailyStockLot::getQuantity)
+                ));
+        Map<LocalDate, Long> dailyTotalLot = dailyStockLots.stream()
+                .collect(Collectors.groupingBy(
+                        DailyStockLot::getStockDate,
+                        Collectors.summingLong(DailyStockLot::getQuantity)
+                ));
+
+        int totalDays = currentStockByDate.size();
         long totalAmount = 0L;
-        int totalDays = 0;
 
-        if (!dailyStockLots.isEmpty()) {
-            // DailyStockLot 기반 계산 (무료 기간 적용)
-            totalDays = (int) dailyStockLots.stream()
-                    .map(DailyStockLot::getStockDate)
-                    .distinct()
-                    .count();
-
-            // DailyStock.currentStock으로 cap: DailyStockLot.quantity가 출고 미반영으로 과대 계산될 수 있음
-            List<DailyStock> dailyStocksForCap = stockRepository.findAllByProductsAndDateBetween(
-                    List.of(product), startDate, endDate);
-            Map<LocalDate, Long> currentStockByDate = dailyStocksForCap.stream()
-                    .collect(Collectors.toMap(DailyStock::getStockDate, ds -> (long) ds.getCurrentStock()));
-
-            // lot 추적 여부와 무관하게 과금되어야 하는 수량 계산
-            // - 만료된 lot 수량: 무료기간 초과분
-            // - uncovered 수량: lot로 추적되지 않는 재고 (구형 재고 등) → 즉시 과금 대상
-            Map<LocalDate, Long> dailyExpiredLot = dailyStockLots.stream()
-                    .filter(dsl -> !dsl.isWithinFreePeriod())
-                    .collect(Collectors.groupingBy(
-                            DailyStockLot::getStockDate,
-                            Collectors.summingLong(DailyStockLot::getQuantity)
-                    ));
-            Map<LocalDate, Long> dailyTotalLot = dailyStockLots.stream()
-                    .collect(Collectors.groupingBy(
-                            DailyStockLot::getStockDate,
-                            Collectors.summingLong(DailyStockLot::getQuantity)
-                    ));
-
-            if (storageType == StorageType.CBM) {
-                if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
-                    return null;
-                }
-
-                long billableStock = currentStockByDate.entrySet().stream()
-                        .mapToLong(e -> {
-                            long current = e.getValue();
-                            if (current == 0) return 0L;
-                            long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
-                            long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
-                            long uncovered = Math.max(0, current - totalLot);
-                            return Math.min(current, expiredLot + uncovered);
-                        })
-                        .sum();
-
-                BigDecimal cbm = product.getCbm();
-                BigDecimal pricePerCbm = product.getStoragePricePerCbm();
-
-                totalAmount = BigDecimal.valueOf(billableStock)
-                        .multiply(cbm)
-                        .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.FLOOR)
-                        .longValue();
-
-                log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
-                        product.getId(), dailyStockLots.size(), billableStock, totalAmount);
-
-            } else if (storageType == StorageType.PALLET) {
-                if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
-                    return null;
-                }
-
-                int quantityPerPallet = product.getQuantityPerPallet();
-                BigDecimal pricePerPallet = product.getStoragePricePerPallet();
-
-                long totalPallets = currentStockByDate.entrySet().stream()
-                        .mapToLong(e -> {
-                            long current = e.getValue();
-                            if (current == 0) return 0L;
-                            long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
-                            long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
-                            long uncovered = Math.max(0, current - totalLot);
-                            long billableUnits = Math.min(current, expiredLot + uncovered);
-                            if (billableUnits == 0) return 0L;
-                            return (long) Math.ceil((double) billableUnits / quantityPerPallet);
-                        })
-                        .sum();
-
-                totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.FLOOR)
-                        .longValue();
-
-                log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
-                        product.getId(), totalPallets, totalAmount);
-            }
-        } else {
-            // DailyStockLot 데이터가 없으면 기존 DailyStock 방식으로 폴백
-            List<DailyStock> dailyStocks = stockRepository.findAllByProductsAndDateBetween(
-                    List.of(product), startDate, endDate);
-
-            if (dailyStocks.isEmpty()) {
+        if (storageType == StorageType.CBM) {
+            if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
                 return null;
             }
 
-            // 무료 보관 기간 적용
-            Company company = product.getBrand().getCompany();
-            Optional<StorageFreePeriodConfig> config = storageFreePeriodConfigRepository
-                    .findActiveByCompanyAndProduct(company, product)
-                    .or(() -> storageFreePeriodConfigRepository.findCompanyDefault(company));
-            int freePeriodDays = config.map(StorageFreePeriodConfig::getFreePeriodDays).orElse(0);
-            if (freePeriodDays > 0) {
-                Optional<LocalDate> inboundDate = stockRepository.findFirstInboundDateByProduct(product);
-                if (inboundDate.isPresent()) {
-                    LocalDate freeUntilDate = inboundDate.get().plusDays(freePeriodDays);
-                    dailyStocks = dailyStocks.stream()
-                            .filter(ds -> ds.getStockDate().isAfter(freeUntilDate))
-                            .collect(Collectors.toList());
-                }
-            }
+            long billableStock = currentStockByDate.entrySet().stream()
+                    .mapToLong(e -> {
+                        long current = e.getValue();
+                        if (current == 0) return 0L;
+                        long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
+                        long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
+                        long uncovered = Math.max(0, current - totalLot);
+                        return Math.min(current, expiredLot + uncovered);
+                    })
+                    .sum();
 
-            if (dailyStocks.isEmpty()) {
+            BigDecimal cbm = product.getCbm();
+            BigDecimal pricePerCbm = product.getStoragePricePerCbm();
+
+            totalAmount = BigDecimal.valueOf(billableStock)
+                    .multiply(cbm)
+                    .multiply(pricePerCbm)
+                    .setScale(0, RoundingMode.FLOOR)
+                    .longValue();
+
+            log.debug("CBM 보관료 계산 - Product: {}, TotalLots: {}, BillableStock: {}, Amount: {}",
+                    product.getId(), dailyStockLots.size(), billableStock, totalAmount);
+
+        } else if (storageType == StorageType.PALLET) {
+            if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
                 return null;
             }
 
-            totalDays = dailyStocks.size();
-            log.debug("DailyStockLot 없음, DailyStock 폴백 - Product: {}, Days: {}", product.getId(), totalDays);
+            int quantityPerPallet = product.getQuantityPerPallet();
+            BigDecimal pricePerPallet = product.getStoragePricePerPallet();
 
-            if (storageType == StorageType.CBM) {
-                if (product.getCbm() == null || product.getStoragePricePerCbm() == null) {
-                    return null;
-                }
+            long totalPallets = currentStockByDate.entrySet().stream()
+                    .mapToLong(e -> {
+                        long current = e.getValue();
+                        if (current == 0) return 0L;
+                        long totalLot = dailyTotalLot.getOrDefault(e.getKey(), 0L);
+                        long expiredLot = dailyExpiredLot.getOrDefault(e.getKey(), 0L);
+                        long uncovered = Math.max(0, current - totalLot);
+                        long billableUnits = Math.min(current, expiredLot + uncovered);
+                        if (billableUnits == 0) return 0L;
+                        return (long) Math.ceil((double) billableUnits / quantityPerPallet);
+                    })
+                    .sum();
 
-                long totalStock = dailyStocks.stream().mapToLong(DailyStock::getCurrentStock).sum();
-                BigDecimal cbm = product.getCbm();
-                BigDecimal pricePerCbm = product.getStoragePricePerCbm();
+            totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
+                    .setScale(0, RoundingMode.FLOOR)
+                    .longValue();
 
-                totalAmount = BigDecimal.valueOf(totalStock)
-                        .multiply(cbm)
-                        .multiply(pricePerCbm)
-                        .setScale(0, RoundingMode.FLOOR)
-                        .longValue();
-
-            } else if (storageType == StorageType.PALLET) {
-                if (product.getQuantityPerPallet() == null || product.getStoragePricePerPallet() == null) {
-                    return null;
-                }
-
-                int quantityPerPallet = product.getQuantityPerPallet();
-                BigDecimal pricePerPallet = product.getStoragePricePerPallet();
-
-                long totalPallets = dailyStocks.stream()
-                        .mapToLong(ds -> (long) Math.ceil((double) ds.getCurrentStock() / quantityPerPallet))
-                        .sum();
-
-                totalAmount = pricePerPallet.multiply(BigDecimal.valueOf(totalPallets))
-                        .setScale(0, RoundingMode.FLOOR)
-                        .longValue();
-            }
+            log.debug("PALLET 보관료 계산 - Product: {}, TotalPallets: {}, Amount: {}",
+                    product.getId(), totalPallets, totalAmount);
         }
 
         if (totalAmount == 0) {

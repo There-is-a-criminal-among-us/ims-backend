@@ -19,17 +19,6 @@ public interface StorageFreePeriodConfigRepository extends JpaRepository<Storage
     Optional<StorageFreePeriodConfig> findByCompanyAndProduct(Company company, Product product);
 
     /**
-     * 특정 업체의 기본 설정 조회 (product가 null인 것)
-     */
-    @Query("""
-            SELECT c FROM StorageFreePeriodConfig c
-            WHERE c.company = :company
-            AND c.product IS NULL
-            AND c.isActive = true
-            """)
-    Optional<StorageFreePeriodConfig> findCompanyDefault(@Param("company") Company company);
-
-    /**
      * 특정 업체의 모든 설정 조회
      */
     List<StorageFreePeriodConfig> findByCompanyOrderByProductIdAsc(Company company);
@@ -38,19 +27,6 @@ public interface StorageFreePeriodConfigRepository extends JpaRepository<Storage
      * 특정 업체의 활성 설정만 조회
      */
     List<StorageFreePeriodConfig> findByCompanyAndIsActiveTrueOrderByProductIdAsc(Company company);
-
-    /**
-     * 특정 상품에 대한 활성 설정 조회 (업체+상품 특정 설정)
-     */
-    @Query("""
-            SELECT c FROM StorageFreePeriodConfig c
-            WHERE c.company = :company
-            AND c.product = :product
-            AND c.isActive = true
-            """)
-    Optional<StorageFreePeriodConfig> findActiveByCompanyAndProduct(
-            @Param("company") Company company,
-            @Param("product") Product product);
 
     /**
      * 특정 날짜에 유효한 설정 조회 (상품별)
