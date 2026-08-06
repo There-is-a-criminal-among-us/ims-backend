@@ -203,7 +203,7 @@ public class ProductService {
             rawProduct.getProductMappings().addAll(newMappings);
         }
 
-        List<ProductMapping> mappings = productMappingRepository.findByRawProduct(rawProduct);
+        List<ProductMapping> mappings = productMappingRepository.findByRawProductOrderByIdAsc(rawProduct);
         return ProductMappingResponse.from(mappings);
     }
 
@@ -216,7 +216,7 @@ public class ProductService {
         }
         List<ProductMappingResponse> productMappings = pageRawProduct.getContent().stream()
                 .map(rawProduct -> {
-                    List<ProductMapping> mappings = productMappingRepository.findByRawProduct(rawProduct);
+                    List<ProductMapping> mappings = productMappingRepository.findByRawProductOrderByIdAsc(rawProduct);
                     return ProductMappingResponse.from(mappings);
                 })
                 .collect(Collectors.toList());

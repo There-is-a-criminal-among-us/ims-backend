@@ -130,7 +130,7 @@ public class DeliverySheetService {
         }
 
         // 전체 ProductMapping 미리 로딩 (N+1 방지)
-        Map<Long, List<ProductMapping>> mappingsByRawProductId = productMappingRepository.findAllBy().stream()
+        Map<Long, List<ProductMapping>> mappingsByRawProductId = productMappingRepository.findAllByOrderByIdAsc().stream()
                 .collect(java.util.stream.Collectors.groupingBy(m -> m.getRawProduct().getId()));
 
         List<DeliverySheetUploadResponse.FailedRow> failedRows = new ArrayList<>();

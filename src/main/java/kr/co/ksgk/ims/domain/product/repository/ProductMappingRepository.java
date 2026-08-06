@@ -10,8 +10,8 @@ import java.util.List;
 public interface ProductMappingRepository extends JpaRepository<ProductMapping, Long> {
 
     @EntityGraph(attributePaths = {"product"})
-    List<ProductMapping> findByRawProduct(RawProduct rawProduct);
+    List<ProductMapping> findByRawProductOrderByIdAsc(RawProduct rawProduct);
 
     @EntityGraph(attributePaths = {"product", "rawProduct"})
-    List<ProductMapping> findAllBy();
+    List<ProductMapping> findAllByOrderByIdAsc();
 }
