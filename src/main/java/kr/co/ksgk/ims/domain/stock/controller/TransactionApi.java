@@ -38,7 +38,7 @@ public interface TransactionApi {
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 
-            @Parameter(description = "검색 유형 (OUTGOING | INCOMING | NAVER | COUPANG | ADJUSTMENT)")
+            @Parameter(description = "검색 유형 (OUTGOING | EXPORT_OUTGOING(수출출고) | INCOMING | NAVER_FULFILLMENT | COUPANG_FULFILLMENT | ADJUSTMENT)")
             @RequestParam(required = false) List<String> types,
 
             @Parameter(description = "검색 시작 날짜", example = "2025-01-01")
@@ -65,7 +65,8 @@ public interface TransactionApi {
             summary = "입출고 등록",
             description = """
                     새로운 입출고 내역을 생성합니다. 입출고 요청 정보를 포함한 요청 본문이 필요합니다. \s
-                    enumName은 노션 입출고, 기타수량 ENUM 페이지의 영어 ENUM명을 추가하면 됩니다. \s
+                    type에는 transaction_type에 등록된 영어 타입명을 지정합니다. \s
+                    수출출고는 EXPORT_OUTGOING이며 scheduledDate가 필수입니다. 확정 시 재고가 차감되고 기존 출고 수량에 합산됩니다. \s
                     기타수량의 경우 scheduledDate를 허용하지 않습니다."""
     )
     @ApiResponse(responseCode = "201", description = "입출고 등록 성공",

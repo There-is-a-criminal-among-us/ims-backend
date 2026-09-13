@@ -205,7 +205,8 @@ public class DailyStockScheduler {
 
     private Integer calculateOutgoing(List<Transaction> transactions) {
         return transactions.stream()
-                .filter(t -> "OUTGOING".equals(t.getTransactionType().getName()))
+                .filter(t -> "OUTGOING".equals(t.getTransactionType().getName())
+                        || "EXPORT_OUTGOING".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
     }
