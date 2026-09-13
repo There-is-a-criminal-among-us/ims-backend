@@ -33,6 +33,9 @@ public class DailyStock {
     @Column(nullable = false)
     private Integer outgoing;
 
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer exportOutgoing = 0;
+
     @Column(nullable = false)
     private Integer coupangFulfillment;
 
@@ -62,7 +65,7 @@ public class DailyStock {
 
     @Builder
     public DailyStock(Product product, Integer currentStock, Integer incoming, Integer returnIncoming,
-                     Integer outgoing, Integer coupangFulfillment, Integer naverFulfillment,
+                     Integer outgoing, Integer exportOutgoing, Integer coupangFulfillment, Integer naverFulfillment,
                      Integer deliveryOutgoing, Integer redelivery, Integer damaged, Integer disposal,
                      Integer lost, Integer adjustment, LocalDate stockDate) {
         this.product = product;
@@ -70,6 +73,7 @@ public class DailyStock {
         this.incoming = incoming;
         this.returnIncoming = returnIncoming;
         this.outgoing = outgoing;
+        this.exportOutgoing = exportOutgoing == null ? 0 : exportOutgoing;
         this.coupangFulfillment = coupangFulfillment;
         this.naverFulfillment = naverFulfillment;
         this.deliveryOutgoing = deliveryOutgoing;
@@ -86,7 +90,7 @@ public class DailyStock {
     }
 
     public int getOutboundTotal() {
-        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
+        return outgoing + exportOutgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
     }
 
     public int getAdjustmentTotal() {

@@ -66,7 +66,7 @@ public interface TransactionApi {
             description = """
                     새로운 입출고 내역을 생성합니다. 입출고 요청 정보를 포함한 요청 본문이 필요합니다. \s
                     type에는 transaction_type에 등록된 영어 타입명을 지정합니다. \s
-                    수출출고는 EXPORT_OUTGOING이며 scheduledDate가 필수입니다. 확정 시 재고가 차감되고 기존 출고 수량에 합산됩니다. \s
+                    수출출고는 EXPORT_OUTGOING이며 scheduledDate가 필수입니다. 확정 시 재고가 차감되고 재고 현황의 exportOutgoing 항목에 집계됩니다. \s
                     기타수량의 경우 scheduledDate를 허용하지 않습니다."""
     )
     @ApiResponse(responseCode = "201", description = "입출고 등록 성공",

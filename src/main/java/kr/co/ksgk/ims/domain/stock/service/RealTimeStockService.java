@@ -50,7 +50,8 @@ public class RealTimeStockService {
 
         // 캐시에서 먼저 조회
         Optional<DailyStockCache> cached = cacheRepository.findByProductIdAndStockDate(product.getId(), targetDate);
-        if (cached.isPresent()) {
+        // 구버전 캐시에는 수출출고 항목이 없으므로 다시 집계한다.
+        if (cached.isPresent() && cached.get().getExportOutgoing() != null) {
             log.debug("캐시에서 재고 데이터 반환 - Product: {}, Date: {}", product.getId(), targetDate);
             return cached;
         }
@@ -58,21 +59,21 @@ public class RealTimeStockService {
         // 캐시에 없으면 실시간 계산
         log.debug("실시간 재고 계산 - Product: {}, Date: {}", product.getId(), targetDate);
         DailyStockCache calculatedStock = calculateRealTimeStock(product, targetDate);
-        
+
         // 계산 결과를 캐시에 저장
         cacheRepository.save(calculatedStock);
         log.debug("캐시에 재고 데이터 저장 완료 - Product: {}, Date: {}", product.getId(), targetDate);
-        
+
         return Optional.of(calculatedStock);
     }
 
     public List<DailyStockCache> getTodayStockForProducts(List<Product> products) {
         LocalDate today = LocalDate.now();
         List<DailyStockCache> allStocks = new ArrayList<>();
-        
+
         for (Product product : products) {
             Optional<DailyStockCache> cached = cacheRepository.findByProductIdAndStockDate(product.getId(), today);
-            if (cached.isPresent()) {
+            if (cached.isPresent() && cached.get().getExportOutgoing() != null) {
                 log.debug("캐시에서 재고 데이터 반환 - Product: {}, Date: {}", product.getId(), today);
                 allStocks.add(cached.get());
             } else {
@@ -83,7 +84,7 @@ public class RealTimeStockService {
                 allStocks.add(calculatedStock);
             }
         }
-        
+
         return allStocks;
     }
 
@@ -104,20 +105,21 @@ public class RealTimeStockService {
         List<InvoiceProduct> invoiceProducts = invoiceProductRepository.findByProductAndInvoiceCreatedAtBetween(
                 product, startOfDay, endOfDay);
 
-                int incoming = calculateIncoming(transactions);
-                int returnIncoming = calculateReturnIncoming(transactions, invoiceProducts);
-                int outgoing = calculateOutgoing(transactions);
-                int coupangFulfillment = calculateCoupangFulfillment(transactions);
-                int naverFulfillment = calculateNaverFulfillment(transactions);
-                int deliveryOutgoing = calculateDeliveryOutgoing(deliveries, product);
-                int redelivery = calculateRedelivery(transactions);
-                int damaged = calculateDamaged(transactions);
-                int disposal = calculateDisposal(transactions);
-                int lost = calculateLost(transactions);
-                int adjustment = calculateAdjustment(transactions);
+        int incoming = calculateIncoming(transactions);
+        int returnIncoming = calculateReturnIncoming(transactions, invoiceProducts);
+        int outgoing = calculateOutgoing(transactions);
+        int exportOutgoing = calculateExportOutgoing(transactions);
+        int coupangFulfillment = calculateCoupangFulfillment(transactions);
+        int naverFulfillment = calculateNaverFulfillment(transactions);
+        int deliveryOutgoing = calculateDeliveryOutgoing(deliveries, product);
+        int redelivery = calculateRedelivery(transactions);
+        int damaged = calculateDamaged(transactions);
+        int disposal = calculateDisposal(transactions);
+        int lost = calculateLost(transactions);
+        int adjustment = calculateAdjustment(transactions);
 
         Integer currentStock = previousStock + incoming + returnIncoming
-                - outgoing - coupangFulfillment - naverFulfillment - deliveryOutgoing - redelivery
+                - outgoing - exportOutgoing - coupangFulfillment - naverFulfillment - deliveryOutgoing - redelivery
                 - damaged - disposal - lost + adjustment;
 
         return DailyStockCache.builder()
@@ -127,6 +129,7 @@ public class RealTimeStockService {
                 .incoming(incoming)
                 .returnIncoming(returnIncoming)
                 .outgoing(outgoing)
+                .exportOutgoing(exportOutgoing)
                 .coupangFulfillment(coupangFulfillment)
                 .naverFulfillment(naverFulfillment)
                 .deliveryOutgoing(deliveryOutgoing)
@@ -170,8 +173,14 @@ public class RealTimeStockService {
 
     private Integer calculateOutgoing(List<Transaction> transactions) {
         return transactions.stream()
-                .filter(t -> "OUTGOING".equals(t.getTransactionType().getName())
-                        || "EXPORT_OUTGOING".equals(t.getTransactionType().getName()))
+                .filter(t -> "OUTGOING".equals(t.getTransactionType().getName()))
+                .mapToInt(Transaction::getQuantity)
+                .sum();
+    }
+
+    private Integer calculateExportOutgoing(List<Transaction> transactions) {
+        return transactions.stream()
+                .filter(t -> "EXPORT_OUTGOING".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
     }
