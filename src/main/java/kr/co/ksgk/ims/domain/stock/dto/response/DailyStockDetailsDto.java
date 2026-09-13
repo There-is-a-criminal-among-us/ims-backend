@@ -30,6 +30,7 @@ public record DailyStockDetailsDto(
                 .outboundTotal(dailyStock.getOutboundTotal())
                 .outboundDetails(OutboundDetails.builder()
                         .outgoing(dailyStock.getOutgoing())
+                        .exportOutgoing(dailyStock.getExportOutgoing())
                         .coupangFulfillment(dailyStock.getCoupangFulfillment())
                         .naverFulfillment(dailyStock.getNaverFulfillment())
                         .deliveryOutgoing(dailyStock.getDeliveryOutgoing())
@@ -55,6 +56,7 @@ public record DailyStockDetailsDto(
     @Builder
     public record OutboundDetails(
             int outgoing,
+            int exportOutgoing,
             int coupangFulfillment,
             int naverFulfillment,
             int deliveryOutgoing

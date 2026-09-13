@@ -32,7 +32,7 @@ public class TransactionController implements TransactionApi {
             @Parameter(description = "사업자, 브랜드, 품목명 검색어")
             @RequestParam(defaultValue = "") String search,
 
-            @Parameter(description = "검색 유형 (OUTGOING | INCOMING | NAVER_FULFILLMENT | COUPANG_FULFILLMENT | ADJUSTMENT)")
+            @Parameter(description = "검색 유형 (OUTGOING | EXPORT_OUTGOING(수출출고) | INCOMING | NAVER_FULFILLMENT | COUPANG_FULFILLMENT | ADJUSTMENT)")
             @RequestParam(required = false) List<String> types,
 
             @Parameter(description = "검색 시작 날짜", example = "2025-01-01")
