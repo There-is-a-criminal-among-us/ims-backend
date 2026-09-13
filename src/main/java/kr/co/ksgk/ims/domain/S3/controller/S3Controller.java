@@ -19,7 +19,7 @@ public class S3Controller implements S3Api {
 
     private final S3Service s3Service;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'OCR')")
     @PostMapping("/presigned/upload")
     public ResponseEntity<SuccessResponse<?>> getPresignedUrl(@RequestBody PresignedUrlUploadRequest request) {
         PresignedUrlUploadResponse presignedUrlUploadResponse = s3Service.getPresignedUrl(request);
