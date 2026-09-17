@@ -10,11 +10,13 @@ import kr.co.ksgk.ims.global.error.ErrorResponse;
 import kr.co.ksgk.ims.global.error.exception.InvalidValueException;
 import kr.co.ksgk.ims.global.error.exception.UnauthorizedException;
 import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class JwtExceptionFilter extends OncePerRequestFilter {
 
@@ -27,6 +29,8 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
         } catch (UnauthorizedException e) {
             handleUnauthorizedException(response, e);
         } catch (Exception ee) {
+            log.error("Unhandled request failure method={} path={}", request.getMethod(),
+                    request.getRequestURI().replaceAll("[\\r\\n]", "_"), ee);
             handleException(response);
         }
     }
