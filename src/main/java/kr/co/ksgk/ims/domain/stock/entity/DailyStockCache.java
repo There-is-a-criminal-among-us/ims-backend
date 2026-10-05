@@ -23,6 +23,7 @@ public class DailyStockCache {
     private Integer incoming;
     private Integer returnIncoming;
     private Integer outgoing;
+    private Integer exportOutgoing;
     private Integer coupangFulfillment;
     private Integer naverFulfillment;
     private Integer deliveryOutgoing;
@@ -37,7 +38,7 @@ public class DailyStockCache {
 
     @Builder
     public DailyStockCache(Long productId, LocalDate stockDate, Integer currentStock, 
-                          Integer incoming, Integer returnIncoming, Integer outgoing,
+                          Integer incoming, Integer returnIncoming, Integer outgoing, Integer exportOutgoing,
                           Integer coupangFulfillment, Integer naverFulfillment, 
                           Integer deliveryOutgoing, Integer redelivery, Integer damaged,
                           Integer disposal, Integer lost, Integer adjustment, Long ttl) {
@@ -48,6 +49,7 @@ public class DailyStockCache {
         this.incoming = incoming;
         this.returnIncoming = returnIncoming;
         this.outgoing = outgoing;
+        this.exportOutgoing = exportOutgoing;
         this.coupangFulfillment = coupangFulfillment;
         this.naverFulfillment = naverFulfillment;
         this.deliveryOutgoing = deliveryOutgoing;
@@ -67,6 +69,7 @@ public class DailyStockCache {
                 .incoming(dailyStock.getIncoming())
                 .returnIncoming(dailyStock.getReturnIncoming())
                 .outgoing(dailyStock.getOutgoing())
+                .exportOutgoing(dailyStock.getExportOutgoing())
                 .coupangFulfillment(dailyStock.getCoupangFulfillment())
                 .naverFulfillment(dailyStock.getNaverFulfillment())
                 .deliveryOutgoing(dailyStock.getDeliveryOutgoing())
@@ -84,7 +87,7 @@ public class DailyStockCache {
     }
 
     public int getOutboundTotal() {
-        return outgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
+        return outgoing + exportOutgoing + coupangFulfillment + naverFulfillment + deliveryOutgoing;
     }
 
     public int getAdjustmentTotal() {

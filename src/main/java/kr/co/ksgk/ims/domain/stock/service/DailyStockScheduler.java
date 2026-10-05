@@ -143,6 +143,7 @@ public class DailyStockScheduler {
         int incoming = calculateIncoming(transactions);
         int returnIncoming = calculateReturnIncoming(transactions, invoiceProducts);
         int outgoing = calculateOutgoing(transactions);
+        int exportOutgoing = calculateExportOutgoing(transactions);
         int coupangFulfillment = calculateCoupangFulfillment(transactions);
         int naverFulfillment = calculateNaverFulfillment(transactions);
         int deliveryOutgoing = calculateDeliveryOutgoing(deliveries, product);
@@ -153,7 +154,7 @@ public class DailyStockScheduler {
         int adjustment = calculateAdjustment(transactions);
 
         Integer currentStock = previousStock + incoming + returnIncoming
-                - outgoing - coupangFulfillment - naverFulfillment - deliveryOutgoing - redelivery
+                - outgoing - exportOutgoing - coupangFulfillment - naverFulfillment - deliveryOutgoing - redelivery
                 - damaged - disposal - lost + adjustment;
 
         return DailyStock.builder()
@@ -162,6 +163,7 @@ public class DailyStockScheduler {
                 .incoming(incoming)
                 .returnIncoming(returnIncoming)
                 .outgoing(outgoing)
+                .exportOutgoing(exportOutgoing)
                 .coupangFulfillment(coupangFulfillment)
                 .naverFulfillment(naverFulfillment)
                 .deliveryOutgoing(deliveryOutgoing)
@@ -206,6 +208,13 @@ public class DailyStockScheduler {
     private Integer calculateOutgoing(List<Transaction> transactions) {
         return transactions.stream()
                 .filter(t -> "OUTGOING".equals(t.getTransactionType().getName()))
+                .mapToInt(Transaction::getQuantity)
+                .sum();
+    }
+
+    private Integer calculateExportOutgoing(List<Transaction> transactions) {
+        return transactions.stream()
+                .filter(t -> "EXPORT_OUTGOING".equals(t.getTransactionType().getName()))
                 .mapToInt(Transaction::getQuantity)
                 .sum();
     }

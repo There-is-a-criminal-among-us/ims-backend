@@ -95,6 +95,7 @@ public class StockService {
                 .outboundTotal(cache.getOutboundTotal())
                 .outboundDetails(DailyStockDetailsDto.OutboundDetails.builder()
                         .outgoing(cache.getOutgoing())
+                        .exportOutgoing(cache.getExportOutgoing())
                         .coupangFulfillment(cache.getCoupangFulfillment())
                         .naverFulfillment(cache.getNaverFulfillment())
                         .deliveryOutgoing(cache.getDeliveryOutgoing())
