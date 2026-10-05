@@ -25,6 +25,11 @@ import kr.co.ksgk.ims.domain.returns.service.ReturnService;
 import kr.co.ksgk.ims.global.annotation.Auth;
 import kr.co.ksgk.ims.global.common.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import kr.co.ksgk.ims.domain.returns.service.InvoiceUploadContext;
+import kr.co.ksgk.ims.domain.returns.dto.response.InvoiceUploadFailureResponse;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
@@ -36,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/returns")
@@ -172,16 +178,51 @@ public class ReturnController {
                     schema = @Schema(implementation = InvoiceUploadErrorResponse.class)
             )
     )
+    @ApiResponse(responseCode = "500", description = "처리 실패: 오류 ID와 실패 위치 반환",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = InvoiceUploadFailureResponse.class)))
     @PostMapping(value = "/upload-invoices", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadReturnInvoices(
             @Parameter(description = "업로드할 엑셀 파일", required = true)
             @RequestPart("files") List<MultipartFile> files
     ) {
+        InvoiceUploadContext context = new InvoiceUploadContext();
+        long started = System.nanoTime();
+        log.info("Return invoice upload started errorId={} files={}", context.getErrorId(),
+                files.stream().map(file -> InvoiceUploadContext.logValue(file.getOriginalFilename())).toList());
         try {
-            InvoiceUploadSuccessResponse response = returnService.uploadReturnInvoices(files);
+            InvoiceUploadSuccessResponse response = returnService.uploadReturnInvoices(files, context);
+            log.info("Return invoice upload committed errorId={} files={} completedReturns={} notFound={} elapsedMs={}",
+                    context.getErrorId(), files.size(), response.totalUpdated(), response.notFoundInvoices().size(),
+                    (System.nanoTime() - started) / 1_000_000);
             return SuccessResponse.ok(response);
         } catch (InvoiceValidationException e) {
+            log.warn("Return invoice upload validation failed errorId={} errors={}", context.getErrorId(),
+                    InvoiceUploadContext.logValue(e.getErrorResponse().toString()));
             return ResponseEntity.badRequest().body(e.getErrorResponse());
+        } catch (Exception e) {
+            String errorType = "INTERNAL_ERROR";
+            for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+                if (cause instanceof jakarta.persistence.NonUniqueResultException
+                        || cause instanceof org.hibernate.NonUniqueResultException
+                        || (cause instanceof IncorrectResultSizeDataAccessException sizeException
+                            && sizeException.getActualSize() > sizeException.getExpectedSize())) {
+                    errorType = "NON_UNIQUE_INVOICE";
+                    break;
+                }
+                if (cause instanceof DataIntegrityViolationException) errorType = "DATA_INTEGRITY_ERROR";
+            }
+            log.error("Return invoice upload failed errorId={} stage={} file={} row={} originalInvoice={} returnInvoice={} errorType={} elapsedMs={}",
+                    context.getErrorId(), context.getStage(), InvoiceUploadContext.logValue(context.getFileName()),
+                    context.getRowNumber(), InvoiceUploadContext.logValue(context.getOriginalInvoice()),
+                    InvoiceUploadContext.logValue(context.getReturnInvoice()), errorType,
+                    (System.nanoTime() - started) / 1_000_000, e);
+            String message = "NON_UNIQUE_INVOICE".equals(errorType)
+                    ? "동일한 송장번호의 데이터가 여러 건 조회되어 업로드하지 못했습니다. 관리자에게 오류 ID를 전달해 주세요."
+                    : "반송장 업로드 중 서버 오류가 발생했습니다. 관리자에게 오류 ID를 전달해 주세요.";
+            return ResponseEntity.internalServerError().body(new InvoiceUploadFailureResponse(
+                    500, "RETURN_INVOICE_UPLOAD_FAILED", message, context.getErrorId(), errorType,
+                    context.getStage(), context.getFileName(), context.getRowNumber()));
         }
     }
 

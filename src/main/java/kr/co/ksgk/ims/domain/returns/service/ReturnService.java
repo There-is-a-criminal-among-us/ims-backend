@@ -31,6 +31,7 @@ import kr.co.ksgk.ims.global.error.exception.BusinessException;
 import kr.co.ksgk.ims.global.error.exception.EntityNotFoundException;
 import kr.co.ksgk.ims.global.error.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +44,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -263,16 +265,18 @@ public class ReturnService {
     }
 
     @Transactional
-    public InvoiceUploadSuccessResponse uploadReturnInvoices(List<MultipartFile> files) {
+    public InvoiceUploadSuccessResponse uploadReturnInvoices(List<MultipartFile> files, InvoiceUploadContext context) {
         List<InvoiceUploadErrorResponse.FileErrorDetail> fileErrors = new ArrayList<>();
-        Map<String, String> invoiceMap = new HashMap<>();
+        Map<String, InvoiceUploadRow> invoiceMap = new HashMap<>();
         List<String> allNotFoundInvoices = new ArrayList<>();
 
         for (MultipartFile file : files) {
             try {
-                List<String> notFoundInvoices = processInvoiceExcelFile(file, invoiceMap, fileErrors);
+                List<String> notFoundInvoices = processInvoiceExcelFile(file, invoiceMap, context);
                 allNotFoundInvoices.addAll(notFoundInvoices);
             } catch (IOException e) {
+                log.warn("Return invoice file read failed errorId={} file={}", context.getErrorId(),
+                        InvoiceUploadContext.logValue(file.getOriginalFilename()), e);
                 fileErrors.add(InvoiceUploadErrorResponse.FileErrorDetail.builder()
                         .fileName(file.getOriginalFilename())
                         .errorType("FILE_READ_ERROR")
@@ -293,14 +297,18 @@ public class ReturnService {
             throw new InvoiceValidationException(InvoiceUploadErrorResponse.of(fileErrors));
         }
 
-        int updatedCount = updateReturnInvoices(invoiceMap);
+        int updatedCount = updateReturnInvoices(invoiceMap, context);
+        // The transactional proxy commits after this method returns. No single row owns a commit failure.
+        context.locate("TRANSACTION_COMMIT", null, null, null, null);
 
         return InvoiceUploadSuccessResponse.of(files.size(), updatedCount, allNotFoundInvoices);
     }
 
-    private List<String> processInvoiceExcelFile(MultipartFile file, Map<String, String> invoiceMap,
-                                         List<InvoiceUploadErrorResponse.FileErrorDetail> fileErrors) throws IOException {
+    private List<String> processInvoiceExcelFile(MultipartFile file, Map<String, InvoiceUploadRow> invoiceMap,
+                                                 InvoiceUploadContext context) throws IOException {
+        context.locate("READ_FILE", file.getOriginalFilename(), null, null, null);
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            context.stage("READ_HEADER");
             Sheet sheet = workbook.getSheetAt(0);
 
             Row headerRow = sheet.getRow(0);
@@ -325,6 +333,7 @@ public class ReturnService {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
+                context.locate("READ_ROW", file.getOriginalFilename(), i + 1, null, null);
                 String returnInvoice = getCellStringValue(row.getCell(returnInvoiceColumnIndex));
                 String originalInvoice = getCellStringValue(row.getCell(originalInvoiceColumnIndex));
 
@@ -340,16 +349,27 @@ public class ReturnService {
                     continue;
                 }
 
+                context.locate("LOOKUP_ORIGINAL_INVOICE", file.getOriginalFilename(), i + 1, originalInvoice, returnInvoice);
                 Optional<ReturnInfo> returnInfoOpt = findReturnInfoByNormalizedInvoice(originalInvoice);
                 if (!returnInfoOpt.isPresent()) {
                     if (!notFoundInvoices.contains(originalInvoice)) {
                         notFoundInvoices.add(originalInvoice);
                     }
                 } else {
-                    invoiceMap.put(originalInvoice, returnInvoice);
+                    InvoiceUploadRow previous = invoiceMap.put(originalInvoice,
+                            new InvoiceUploadRow(file.getOriginalFilename(), i + 1, originalInvoice, returnInvoice));
+                    if (previous != null) {
+                        log.warn("Return invoice mapping overwritten errorId={} originalInvoice={} previousFile={} previousRow={} previousReturnInvoice={} file={} row={} returnInvoice={}",
+                                context.getErrorId(), InvoiceUploadContext.logValue(originalInvoice),
+                                InvoiceUploadContext.logValue(previous.fileName()), previous.rowNumber(),
+                                InvoiceUploadContext.logValue(previous.returnInvoice()),
+                                InvoiceUploadContext.logValue(file.getOriginalFilename()), i + 1,
+                                InvoiceUploadContext.logValue(returnInvoice));
+                    }
                 }
             }
 
+            context.locate("CLOSE_FILE", file.getOriginalFilename(), null, null, null);
             return notFoundInvoices;
         }
     }
@@ -397,20 +417,25 @@ public class ReturnService {
         return returnInfoRepository.findByNormalizedOriginalInvoice(normalizedInvoice);
     }
 
-    private int updateReturnInvoices(Map<String, String> invoiceMap) {
+    private record InvoiceUploadRow(String fileName, int rowNumber, String originalInvoice, String returnInvoice) {}
+
+    private int updateReturnInvoices(Map<String, InvoiceUploadRow> invoiceMap, InvoiceUploadContext context) {
         int updatedCount = 0;
 
-        for (Map.Entry<String, String> entry : invoiceMap.entrySet()) {
-            String normalizedOriginalInvoice = entry.getKey();
-            String returnInvoice = entry.getValue();
+        for (InvoiceUploadRow row : invoiceMap.values()) {
+            String normalizedOriginalInvoice = row.originalInvoice();
+            String returnInvoice = row.returnInvoice();
+            context.locate("RELOAD_RETURN_INFO", row.fileName(), row.rowNumber(), normalizedOriginalInvoice, returnInvoice);
 
             Optional<ReturnInfo> returnInfoOpt = findReturnInfoByNormalizedInvoice(normalizedOriginalInvoice);
             if (returnInfoOpt.isPresent()) {
                 ReturnInfo returnInfo = returnInfoOpt.get();
+                context.stage("UPDATE_RETURN_INFO");
                 returnInfo.patch(null, null, null, null, null, null, null, null, null, returnInvoice, null, null, null, null, null);
                 // invoice 테이블에 반송장번호가 실제 등록된 경우에만 완료 처리.
                 // 미등록 시에는 번호만 저장하고 스케줄러(ReturnStatusScheduler)가 매일 00:30에 처리.
-                // invoiceMap의 value는 processInvoiceExcelFile에서 이미 normalize된 값이므로 재처리 불필요.
+                // 반송장번호는 processInvoiceExcelFile에서 이미 normalize된 값이므로 재처리 불필요.
+                context.stage("LOOKUP_RETURN_INVOICE");
                 if (!returnInvoice.isEmpty() && invoiceRepository.findByNormalizedNumber(returnInvoice).isPresent()) {
                     returnInfo.complete();
                     updatedCount++;
