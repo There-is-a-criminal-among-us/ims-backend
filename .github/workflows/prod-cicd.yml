@@ -61,11 +61,11 @@ jobs:
               sudo docker network create ims-network
             fi
             
-            # Redis 컨테이너 배포: 네트워크에 연결, 포트 매핑 (내부 통신용)
+            # Redis 컨테이너 배포: 내부 네트워크 전용 (외부 포트 노출 금지)
             echo "🚀 Redis 컨테이너 배포 중..."
             if [ "$(sudo docker inspect --format='{{.State.Running}}' redis-prod 2>/dev/null)" != "true" ]; then
               sudo docker pull redis:alpine
-              sudo docker run -d --name redis-prod --network ims-network -p 6379:6379 redis:alpine
+              sudo docker run -d --name redis-prod --network ims-network --restart always redis:alpine
             fi
             
             echo "🚀 최신 Docker 이미지 Pull 중..."
